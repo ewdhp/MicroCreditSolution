@@ -1,0 +1,28 @@
+using Microsoft.EntityFrameworkCore;
+using MicroCredit.Models;
+
+namespace MicroCredit.Data
+{
+    public class ApplicationDbContext : DbContext
+    {
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+            : base(options)
+        {
+        }
+
+        public DbSet<User> Users { get; set; }
+        public DbSet<Loan> Loans { get; set; }
+        public DbSet<Facebook> FacebookProfiles { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.HasDefaultSchema("Account");
+
+            modelBuilder.Entity<User>().ToTable("Users");
+            modelBuilder.Entity<Loan>().ToTable("Loans");
+            modelBuilder.Entity<Facebook>().ToTable("FacebookProfiles");
+        }
+    }
+}
