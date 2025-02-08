@@ -10,9 +10,9 @@ using System;
 
 namespace MicroCredit.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/users")]
-    [Authorize] // Require authentication for all actions in this controller
     public class UserController : ControllerBase
     {
         private readonly ApplicationDbContext _context;

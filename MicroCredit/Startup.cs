@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
+using MicroCredit.Middleware;
 using System.Text;
 using MicroCredit.Data;
 using System.Net.Http;
@@ -93,11 +94,11 @@ namespace MicroCredit
 
             app.UseRouting();
 
-            // Apply CORS before authentication
-            app.UseCors("AllowFrontend");
-
-            app.UseAuthentication(); // JWT Authentication
+            app.UseAuthentication();
             app.UseAuthorization();
+
+            // Register the JWT middleware
+            app.UseMiddleware<JwtMiddleware>();
 
             app.UseEndpoints(endpoints =>
             {

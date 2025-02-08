@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.IdentityModel.Tokens.Jwt;
+using MicroCredit.Services;
 
 namespace MicroCredit.Controllers
 {
@@ -24,11 +25,15 @@ namespace MicroCredit.Controllers
         private readonly string _twilioAuthHeader;
         private readonly IConfiguration _configuration;
         private readonly ILogger<AuthController> _logger;
+        private readonly UserFingerprintService _userFingerprintService;
+        private readonly JwtTokenService _jwtTokenService;
 
-        public AuthController(IConfiguration configuration, ILogger<AuthController> logger)
+        public AuthController(IConfiguration configuration, ILogger<AuthController> logger, UserFingerprintService userFingerprintService, JwtTokenService jwtTokenService)
         {
             _configuration = configuration;
             _logger = logger;
+            _userFingerprintService = userFingerprintService;
+            _jwtTokenService = jwtTokenService;
             _httpClient = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false });
             var authBytes = Encoding.ASCII.GetBytes($"{AccountSid}:{AuthToken}");
             _twilioAuthHeader = Convert.ToBase64String(authBytes);
@@ -113,8 +118,11 @@ namespace MicroCredit.Controllers
                     return StatusCode((int)response.StatusCode, new { message = "Verification failed" });
                 }
 
+                // Generate user fingerprint
+                var fingerprint = _userFingerprintService.GenerateUserFingerprint(HttpContext);
+
                 // Generate JWT token upon successful verification
-                var token = GenerateJwtToken(sanitizedPhoneNumber);
+                var token = _jwtTokenService.GenerateJwtToken(sanitizedPhoneNumber, fingerprint);
                 _logger.LogInformation("Verification successful for {PhoneNumber}", sanitizedPhoneNumber);
                 return Ok(new { token });
             }
@@ -123,28 +131,6 @@ namespace MicroCredit.Controllers
                 _logger.LogError(ex, "An error occurred while verifying the code for {PhoneNumber}", sanitizedPhoneNumber);
                 return StatusCode(500, new { message = "An error occurred while verifying the code" });
             }
-        }
-
-        private string GenerateJwtToken(string phoneNumber)
-        {
-            var claims = new[]
-            {
-                new Claim(JwtRegisteredClaimNames.Sub, phoneNumber),
-                new Claim("UserId", phoneNumber), // Use phone number as user ID
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-            };
-
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-            var token = new JwtSecurityToken(
-                issuer: _configuration["Jwt:Issuer"],
-                audience: _configuration["Jwt:Issuer"],
-                claims: claims,
-                expires: DateTime.Now.AddMinutes(30),
-                signingCredentials: creds);
-
-            return new JwtSecurityTokenHandler().WriteToken(token);
         }
     }
 

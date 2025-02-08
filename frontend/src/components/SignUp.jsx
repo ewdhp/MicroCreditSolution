@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import Stepper from "./Stepper";
 import Loader from "./Loader";
@@ -23,9 +24,9 @@ const SignUp = () => {
     setVerificationCode(e.target.value);
   };
 
-  const handleSubmitStep0 = (e) => {
+  const handleSubmitStep0 = async (e) => {
     e.preventDefault();
-    const phoneNumberPattern = /^\d{10}$/;
+    const phoneNumberPattern = /^\+\d{12}$/;
 
     if (!phoneNumberPattern.test(formData.phoneNumber)) {
       setAlert({ type: "error", message: "Formato de número de teléfono inválido. Debe ser un número de 10 dígitos.", isModal: true, useTransparency: false });
@@ -39,31 +40,45 @@ const SignUp = () => {
 
     setIsLoading(true);
 
-    // Simular llamada al backend
-    setTimeout(() => {
-      setCurrentStep(1); // Avanzar al siguiente paso sin mostrar una alerta de éxito
+    try {
+      const response = await axios.post("https://localhost:5001/api/auth/send", {
+        phoneNumber: formData.phoneNumber,
+        name: formData.name
+      });
+
+      if (response.status === 200) {
+        console.log("Código de verificación enviado:", response.data.code);
+        setCurrentStep(1);
+      } else {
+        setAlert({ type: "error", message: response.data.message || "Error al enviar el código. Por favor, inténtelo de nuevo.", isModal: true, useTransparency: false });
+      }
+    } catch (error) {
+      setAlert({ type: "error", message: "Error de red. Por favor, inténtelo de nuevo.", isModal: true, useTransparency: false });
+    } finally {
       setIsLoading(false);
-    }, 300);
+    }
   };
 
-  const handleSubmitStep1 = (e) => {
+  const handleSubmitStep1 = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simular llamada al backend
-    setTimeout(() => {
-      if (verificationCode === "123456") { // Código de verificación simulado
-        setCurrentStep(2); // Avanzar al siguiente paso sin mostrar una alerta de éxito
+    try {
+      const response = await axios.post("https://localhost:5001/api/auth/verify", {
+        phoneNumber: formData.phoneNumber,
+        code: verificationCode
+      });
+
+      if (response.status === 200) {
+        setCurrentStep(2);
       } else {
         const newAttempts = attempts + 1;
         setAttempts(newAttempts);
 
-        console.log(`Intentos: ${newAttempts}`);
-
         if (newAttempts < 3) {
-          setAlert({ type: "error", message: `Código inválido. Intentos restantes: ${3 - newAttempts}`, isModal: true, useTransparency: false });
+          setAlert({ type: "error", message: response.data.message || `Código inválido. Intentos restantes: ${3 - newAttempts}`, isModal: true, useTransparency: false });
         } else {
-          setAlert({ type: "error", message: "Demasiados intentos fallidos. Volviendo al primer paso.", isModal: true, useTransparency: false });
+          setAlert({ type: "error", message: response.data.message || "Demasiados intentos fallidos. Volviendo al primer paso.", isModal: true, useTransparency: false });
           setCurrentStep(0);
           setAttempts(0);
         }
@@ -71,8 +86,11 @@ const SignUp = () => {
         // Limpiar el campo de entrada para asegurar que handleCodeChange se dispare
         setVerificationCode("");
       }
+    } catch (error) {
+      setAlert({ type: "error", message: "Error de red. Por favor, inténtelo de nuevo.", isModal: true, useTransparency: false });
+    } finally {
       setIsLoading(false);
-    }, 300);
+    }
   };
 
   useEffect(() => {
