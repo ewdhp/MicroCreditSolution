@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MicroCredit.Models;
 using Microsoft.EntityFrameworkCore;
@@ -5,13 +6,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using MicroCredit.Data;
-using System.Text.RegularExpressions;
 using System;
 
 namespace MicroCredit.Controllers
 {
     [ApiController]
     [Route("api/users")]
+    [Authorize] // Require authentication for all actions in this controller
     public class UserController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -25,7 +26,13 @@ namespace MicroCredit.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<User>>> GetUsers()
         {
-            var users = await _context.Users.ToListAsync();
+            var userId = User.Claims.FirstOrDefault(c => c.Type == "UserId")?.Value;
+            if (userId == null)
+            {
+                return Unauthorized();
+            }
+
+            var users = await _context.Users.Where(u => u.Id.ToString() == userId).ToListAsync();
             if (users == null || !users.Any())
             {
                 return NotFound("No users found.");
@@ -33,10 +40,16 @@ namespace MicroCredit.Controllers
             return Ok(users);
         }
 
-        // GET: api/users/5
+        // GET: api/users/id
         [HttpGet("{id}")]
         public async Task<ActionResult<User>> GetUser(int id)
         {
+            var userId = User.Claims.FirstOrDefault(c => c.Type == "UserId")?.Value;
+            if (userId == null || id.ToString() != userId)
+            {
+                return Unauthorized();
+            }
+
             var user = await _context.Users.FindAsync(id);
 
             if (user == null)
@@ -49,38 +62,16 @@ namespace MicroCredit.Controllers
 
         // POST: api/users
         [HttpPost]
-        public async Task<ActionResult<User>> CreateUser(User user)
+        public async Task<ActionResult<User>> CreateUser([FromBody] User user)
         {
-            if (user == null)
-            {
-                return BadRequest("User data is required.");
-            }
-
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            // Check for duplicate phone number
             if (_context.Users.Any(u => u.PhoneNumber == user.PhoneNumber))
             {
                 return Conflict("A user with the same phone number already exists.");
             }
 
-            // Validate phone number format
-            if (!Regex.IsMatch(user.PhoneNumber, @"^\d{10}$"))
-            {
-                return BadRequest("Invalid phone number format. It should be a 10-digit number.");
-            }
-
-            // Validate image URLs
-            foreach (var imageUrl in user.Images)
-            {
-                if (!Uri.IsWellFormedUriString(imageUrl, UriKind.Absolute))
-                {
-                    return BadRequest("Invalid image URL format.");
-                }
-            }
+            // Sanitize input data
+            user.PhoneNumber = user.PhoneNumber.Trim();
+            user.Images = user.Images.Select(img => img.Trim()).ToList();
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
@@ -90,32 +81,22 @@ namespace MicroCredit.Controllers
 
         // PUT: api/users/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateUser(int id, User user)
+        public async Task<IActionResult> UpdateUser(int id, [FromBody] User user)
         {
+            var userId = User.Claims.FirstOrDefault(c => c.Type == "UserId")?.Value;
+            if (userId == null || id.ToString() != userId)
+            {
+                return Unauthorized();
+            }
+
             if (id != user.Id)
             {
                 return BadRequest("User ID mismatch.");
             }
 
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            // Validate phone number format
-            if (!Regex.IsMatch(user.PhoneNumber, @"^\d{10}$"))
-            {
-                return BadRequest("Invalid phone number format. It should be a 10-digit number.");
-            }
-
-            // Validate image URLs
-            foreach (var imageUrl in user.Images)
-            {
-                if (!Uri.IsWellFormedUriString(imageUrl, UriKind.Absolute))
-                {
-                    return BadRequest("Invalid image URL format.");
-                }
-            }
+            // Sanitize input data
+            user.PhoneNumber = user.PhoneNumber.Trim();
+            user.Images = user.Images.Select(img => img.Trim()).ToList();
 
             _context.Entry(user).State = EntityState.Modified;
             try
@@ -141,6 +122,12 @@ namespace MicroCredit.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(int id)
         {
+            var userId = User.Claims.FirstOrDefault(c => c.Type == "UserId")?.Value;
+            if (userId == null || id.ToString() != userId)
+            {
+                return Unauthorized();
+            }
+
             var user = await _context.Users.FindAsync(id);
             if (user == null)
             {

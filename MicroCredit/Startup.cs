@@ -1,89 +1,108 @@
-using Microsoft.EntityFrameworkCore;
-using MicroCredit.Data;
-using MicroCredit.Services;
-using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.AspNetCore.Http;
-using MicroCredit.Controllers;
-using Microsoft.AspNetCore.HttpOverrides;
-using System;
-
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using MicroCredit.Data;
+using System.Net.Http;
 
 namespace MicroCredit
 {
     public class Startup
     {
-        public IConfiguration Configuration { get; }
-
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
         }
 
+        public IConfiguration Configuration { get; }
+
         public void ConfigureServices(IServiceCollection services)
         {
-            // Configure services
-            services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseNpgsql(
-                    Configuration.GetConnectionString("DefaultConnection")));
-
-            services.AddControllersWithViews();
-            services.AddHsts(options =>
+            services.AddControllers(options =>
             {
-                options.Preload = true;
-                options.IncludeSubDomains = true;
-                options.MaxAge = TimeSpan.FromDays(365);
+                options.Filters.Add<ValidationFilter>();
             });
-            services.AddScoped<UserController>();  // Add UserController to DI container
-            services.AddScoped<LoanService>();
-            services.AddSingleton<TwilioService>();
+            services.AddDbContext<ApplicationDbContext>(options =>
+                options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
 
-            // Add services to the container.
-            services.AddEndpointsApiExplorer();
-            services.AddSwaggerGen();
-
-            // Add CORS policy
+            // Configure CORS
             services.AddCors(options =>
             {
-                options.AddPolicy("AllowAll", policy =>
-                    policy.AllowAnyOrigin()
-                          .AllowAnyMethod()
-                          .AllowAnyHeader());
+                options.AddPolicy("AllowFrontend", builder =>
+                {
+                    builder.WithOrigins("http://localhost:3000")
+                           .AllowAnyHeader()
+                           .AllowAnyMethod();
+                });
+            });
+
+            // Configure JWT authentication
+            var key = Encoding.ASCII.GetBytes(Configuration["Jwt:Key"]);
+            services.AddAuthentication(x =>
+            {
+                x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(x =>
+            {
+                x.RequireHttpsMetadata = false;
+                x.SaveToken = true;
+                x.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = Configuration["Jwt:Issuer"],
+                    ValidAudience = Configuration["Jwt:Issuer"],
+                    IssuerSigningKey = new SymmetricSecurityKey(key)
+                };
+
+                // Allow self-signed SSL certificates (For Development Only)
+                x.BackchannelHttpHandler = new HttpClientHandler
+                {
+                    ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => true
+                };
+            });
+
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy("UserPolicy", policy => policy.RequireClaim("UserId"));
             });
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            // Configure the HTTP request pipeline.
             if (env.IsDevelopment())
             {
-                app.UseSwagger();
-                app.UseSwaggerUI();
+                app.UseDeveloperExceptionPage();
             }
             else
             {
                 app.UseExceptionHandler("/Home/Error");
-                app.UseHsts(); // Enable HSTS in non-development environments
+                app.UseHsts();
             }
 
-            app.UseHttpsRedirection(); // Force HTTPS redirection
+            app.UseHttpsRedirection();
+            app.UseStaticFiles();
+
             app.UseRouting();
 
-            // Enable CORS
-            app.UseCors("AllowAll");
+            // Apply CORS before authentication
+            app.UseCors("AllowFrontend");
+
+            app.UseAuthentication(); // JWT Authentication
+            app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {
-                // Automatically maps controller routes
                 endpoints.MapControllers();
-
-                // Optionally, you can add a default health check route
-                endpoints.MapGet("/", () => Results.Ok("MicroCredit API is running."));
             });
         }
-
     }
 }

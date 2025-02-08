@@ -1,10 +1,15 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Net.Http;
+using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace MicroCredit.Controllers
 {
@@ -17,9 +22,13 @@ namespace MicroCredit.Controllers
         private const string AuthToken = "fedc8978719541bd4f46c9a7bc3875ae";
         private const string ServiceSid = "VAc6245af6c94f63ff1903cb8024c918ad";
         private readonly string _twilioAuthHeader;
+        private readonly IConfiguration _configuration;
+        private readonly ILogger<AuthController> _logger;
 
-        public AuthController()
+        public AuthController(IConfiguration configuration, ILogger<AuthController> logger)
         {
+            _configuration = configuration;
+            _logger = logger;
             _httpClient = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false });
             var authBytes = Encoding.ASCII.GetBytes($"{AccountSid}:{AuthToken}");
             _twilioAuthHeader = Convert.ToBase64String(authBytes);
@@ -30,8 +39,13 @@ namespace MicroCredit.Controllers
         [HttpPost("send")]
         public async Task<IActionResult> SendVerificationSms([FromBody] PhoneNumberRequest request)
         {
+            _logger.LogInformation("Received request to send verification SMS to {PhoneNumber}", request.PhoneNumber);
+
             if (string.IsNullOrEmpty(request.PhoneNumber) || !request.PhoneNumber.StartsWith("+"))
+            {
+                _logger.LogWarning("Invalid phone number format: {PhoneNumber}", request.PhoneNumber);
                 return BadRequest(new { message = "Phone number must be in E.164 format (e.g., +1234567890)" });
+            }
 
             var sanitizedPhoneNumber = request.PhoneNumber.Trim();
 
@@ -50,13 +64,16 @@ namespace MicroCredit.Controllers
                 if (!response.IsSuccessStatusCode)
                 {
                     var responseContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("Failed to send verification SMS: {ResponseContent}", responseContent);
                     return StatusCode((int)response.StatusCode, new { message = "Failed to send verification SMS" });
                 }
 
+                _logger.LogInformation("Verification SMS sent to {PhoneNumber}", sanitizedPhoneNumber);
                 return Ok(new { message = "Verification SMS sent" });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "An error occurred while sending verification SMS");
                 return StatusCode(500, new { message = "An error occurred while sending verification SMS" });
             }
         }
@@ -65,8 +82,13 @@ namespace MicroCredit.Controllers
         [HttpPost("verify")]
         public async Task<IActionResult> VerifyCode([FromBody] VerificationRequest request)
         {
+            _logger.LogInformation("Received request to verify code for {PhoneNumber}", request.PhoneNumber);
+
             if (string.IsNullOrEmpty(request.PhoneNumber) || string.IsNullOrEmpty(request.Code))
+            {
+                _logger.LogWarning("Phone number and code are required");
                 return BadRequest(new { message = "Phone number and code are required" });
+            }
 
             var sanitizedPhoneNumber = request.PhoneNumber.Trim();
             var sanitizedCode = request.Code.Trim();
@@ -87,17 +109,42 @@ namespace MicroCredit.Controllers
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    // Log the full response for debugging
+                    _logger.LogError("Verification failed for {PhoneNumber}: {ResponseContent}", sanitizedPhoneNumber, responseContent);
                     return StatusCode((int)response.StatusCode, new { message = "Verification failed" });
                 }
 
-                // Return the raw response content regardless of the status
-                return Ok(new { message = "Verification response", details = responseContent });
+                // Generate JWT token upon successful verification
+                var token = GenerateJwtToken(sanitizedPhoneNumber);
+                _logger.LogInformation("Verification successful for {PhoneNumber}", sanitizedPhoneNumber);
+                return Ok(new { token });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "An error occurred while verifying the code for {PhoneNumber}", sanitizedPhoneNumber);
                 return StatusCode(500, new { message = "An error occurred while verifying the code" });
             }
+        }
+
+        private string GenerateJwtToken(string phoneNumber)
+        {
+            var claims = new[]
+            {
+                new Claim(JwtRegisteredClaimNames.Sub, phoneNumber),
+                new Claim("UserId", phoneNumber), // Use phone number as user ID
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            };
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var token = new JwtSecurityToken(
+                issuer: _configuration["Jwt:Issuer"],
+                audience: _configuration["Jwt:Issuer"],
+                claims: claims,
+                expires: DateTime.Now.AddMinutes(30),
+                signingCredentials: creds);
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
         }
     }
 
