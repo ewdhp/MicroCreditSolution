@@ -7,6 +7,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using MicroCredit.Services;
+using System.ComponentModel.DataAnnotations; // Add this namespace
 
 namespace MicroCredit.Controllers
 {
@@ -81,19 +82,12 @@ namespace MicroCredit.Controllers
         {
             _logger.LogInformation("Received request to verify code for {PhoneNumber}", request.PhoneNumber);
 
-            if (string.IsNullOrEmpty(request.PhoneNumber) || string.IsNullOrEmpty(request.Code))
+            if (!ModelState.IsValid)
             {
-                _logger.LogWarning("Phone number and code are required");
-                return BadRequest(new { message = "Phone number and code are required" });
+                return BadRequest(ModelState);
             }
 
-            // Ensure the phone number is in E.164 format
             var sanitizedPhoneNumber = request.PhoneNumber.Trim();
-            if (!sanitizedPhoneNumber.StartsWith("+"))
-            {
-                _logger.LogWarning("Invalid phone number format: {PhoneNumber}", sanitizedPhoneNumber);
-                return BadRequest(new { message = "Phone number must be in E.164 format (e.g., +1234567890)" });
-            }
 
             var url = $"https://verify.twilio.com/v2/Services/{ServiceSid}/VerificationCheck";
             var payload = new FormUrlEncodedContent(new[]
@@ -151,7 +145,11 @@ namespace MicroCredit.Controllers
 
     public class VerificationRequest
     {
+        [Required(ErrorMessage = "Phone number is required")]
+        [RegularExpression(@"^\+\d{10,15}$", ErrorMessage = "Phone number must be in E.164 format (e.g., +1234567890) and have between 10 and 15 digits")]
         public string PhoneNumber { get; set; }
+
+        [Required(ErrorMessage = "Code is required")]
         public string Code { get; set; }
     }
 
