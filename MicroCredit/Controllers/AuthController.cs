@@ -1,15 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
+using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 using System.Net.Http;
-using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-using System.Collections.Generic;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using System.IdentityModel.Tokens.Jwt;
 using MicroCredit.Services;
 
 namespace MicroCredit.Controllers
@@ -23,21 +19,19 @@ namespace MicroCredit.Controllers
         private const string AuthToken = "fedc8978719541bd4f46c9a7bc3875ae";
         private const string ServiceSid = "VAc6245af6c94f63ff1903cb8024c918ad";
         private readonly string _twilioAuthHeader;
-        private readonly IConfiguration _configuration;
         private readonly ILogger<AuthController> _logger;
-        private readonly UserFingerprintService _userFingerprintService;
         private readonly JwtTokenService _jwtTokenService;
+        private readonly UserFingerprintService _userFingerprintService;
 
-        public AuthController(IConfiguration configuration, ILogger<AuthController> logger, UserFingerprintService userFingerprintService, JwtTokenService jwtTokenService)
+        public AuthController(ILogger<AuthController> logger, JwtTokenService jwtTokenService, UserFingerprintService userFingerprintService)
         {
-            _configuration = configuration;
-            _logger = logger;
-            _userFingerprintService = userFingerprintService;
-            _jwtTokenService = jwtTokenService;
-            _httpClient = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false });
+            _httpClient = new HttpClient();
             var authBytes = Encoding.ASCII.GetBytes($"{AccountSid}:{AuthToken}");
             _twilioAuthHeader = Convert.ToBase64String(authBytes);
             _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", _twilioAuthHeader);
+            _logger = logger;
+            _jwtTokenService = jwtTokenService;
+            _userFingerprintService = userFingerprintService;
         }
 
         // ✅ Send verification SMS
@@ -52,28 +46,26 @@ namespace MicroCredit.Controllers
                 return BadRequest(new { message = "Phone number must be in E.164 format (e.g., +1234567890)" });
             }
 
-            var sanitizedPhoneNumber = request.PhoneNumber.Trim();
-
             var url = $"https://verify.twilio.com/v2/Services/{ServiceSid}/Verifications";
+            var payload = new FormUrlEncodedContent(new[]
+            {
+                new KeyValuePair<string, string>("To", request.PhoneNumber),
+                new KeyValuePair<string, string>("Channel", "sms")
+            });
 
             try
             {
-                var content = new FormUrlEncodedContent(new[]
-                {
-                    new KeyValuePair<string, string>("To", sanitizedPhoneNumber),
-                    new KeyValuePair<string, string>("Channel", "sms")
-                });
-
-                var response = await _httpClient.PostAsync(url, content);
+                _logger.LogInformation("Sending request to Twilio API: {Url} with payload: {Payload}", url, JsonSerializer.Serialize(payload));
+                var response = await _httpClient.PostAsync(url, payload);
+                var responseContent = await response.Content.ReadAsStringAsync();
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    var responseContent = await response.Content.ReadAsStringAsync();
-                    _logger.LogError("Failed to send verification SMS: {ResponseContent}", responseContent);
+                    _logger.LogError("Failed to send verification SMS. Status Code: {StatusCode}, Response: {ResponseContent}", response.StatusCode, responseContent);
                     return StatusCode((int)response.StatusCode, new { message = "Failed to send verification SMS" });
                 }
 
-                _logger.LogInformation("Verification SMS sent to {PhoneNumber}", sanitizedPhoneNumber);
+                _logger.LogInformation("Verification SMS sent to {PhoneNumber}", request.PhoneNumber);
                 return Ok(new { message = "Verification SMS sent" });
             }
             catch (Exception ex)
@@ -95,36 +87,53 @@ namespace MicroCredit.Controllers
                 return BadRequest(new { message = "Phone number and code are required" });
             }
 
+            // Ensure the phone number is in E.164 format
             var sanitizedPhoneNumber = request.PhoneNumber.Trim();
-            var sanitizedCode = request.Code.Trim();
+            if (!sanitizedPhoneNumber.StartsWith("+"))
+            {
+                _logger.LogWarning("Invalid phone number format: {PhoneNumber}", sanitizedPhoneNumber);
+                return BadRequest(new { message = "Phone number must be in E.164 format (e.g., +1234567890)" });
+            }
 
             var url = $"https://verify.twilio.com/v2/Services/{ServiceSid}/VerificationCheck";
+            var payload = new FormUrlEncodedContent(new[]
+            {
+                new KeyValuePair<string, string>("To", sanitizedPhoneNumber),
+                new KeyValuePair<string, string>("Code", request.Code)
+            });
 
             try
             {
-                var content = new FormUrlEncodedContent(new[]
-                {
-                    new KeyValuePair<string, string>("To", sanitizedPhoneNumber),
-                    new KeyValuePair<string, string>("Code", sanitizedCode)
-                });
-
-                var response = await _httpClient.PostAsync(url, content);
-
+                _logger.LogInformation("Sending request to Twilio API: {Url} with payload: {Payload}", url, JsonSerializer.Serialize(payload));
+                var response = await _httpClient.PostAsync(url, payload);
                 var responseContent = await response.Content.ReadAsStringAsync();
+
+                _logger.LogInformation("Received response from Twilio API: {ResponseContent}", responseContent);
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    _logger.LogError("Verification failed for {PhoneNumber}: {ResponseContent}", sanitizedPhoneNumber, responseContent);
+                    _logger.LogError("Verification failed for {PhoneNumber}. Status Code: {StatusCode}, Response: {ResponseContent}", sanitizedPhoneNumber, response.StatusCode, responseContent);
                     return StatusCode((int)response.StatusCode, new { message = "Verification failed" });
                 }
 
-                // Generate user fingerprint
-                var fingerprint = _userFingerprintService.GenerateUserFingerprint(HttpContext);
+                var responseData = JsonSerializer.Deserialize<TwilioVerificationResponse>(responseContent);
 
-                // Generate JWT token upon successful verification
-                var token = _jwtTokenService.GenerateJwtToken(sanitizedPhoneNumber, fingerprint);
-                _logger.LogInformation("Verification successful for {PhoneNumber}", sanitizedPhoneNumber);
-                return Ok(new { token });
+                if (responseData.status == "approved" && responseData.valid)
+                {
+                    // Generate user fingerprint
+                    var fingerprint = _userFingerprintService.GenerateUserFingerprint(HttpContext);
+
+                    // Generate JWT token upon successful verification
+                    var token = _jwtTokenService.GenerateJwtToken(sanitizedPhoneNumber, fingerprint);
+
+                    _logger.LogInformation("Verification successful for {PhoneNumber}", sanitizedPhoneNumber);
+                    return Ok(new { message = "Verification successful", token });
+                }
+                else
+                {
+                    _logger.LogWarning("Invalid code for {PhoneNumber}", sanitizedPhoneNumber);
+                    return BadRequest(new { message = "Invalid code" });
+                }
             }
             catch (Exception ex)
             {
@@ -137,25 +146,19 @@ namespace MicroCredit.Controllers
     // ✅ Request models
     public class PhoneNumberRequest
     {
-        public required string PhoneNumber { get; set; }
+        public string PhoneNumber { get; set; }
     }
 
     public class VerificationRequest
     {
-        public required string PhoneNumber { get; set; }
-        public required string Code { get; set; }
+        public string PhoneNumber { get; set; }
+        public string Code { get; set; }
     }
 
     // ✅ Response model
     public class TwilioVerificationResponse
     {
-        public string Sid { get; set; }
-        public string ServiceSid { get; set; }
-        public string AccountSid { get; set; }
-        public string To { get; set; }
-        public string Channel { get; set; }
-        public string Status { get; set; }
-        public DateTime DateCreated { get; set; }
-        public DateTime DateUpdated { get; set; }
+        public string status { get; set; } // Change to lowercase to match the JSON response
+        public bool valid { get; set; } // Change to lowercase to match the JSON response
     }
 }

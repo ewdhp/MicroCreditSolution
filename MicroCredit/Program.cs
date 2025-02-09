@@ -1,5 +1,8 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+using System;
+using System.Threading;
 
 namespace MicroCredit
 {
@@ -7,7 +10,26 @@ namespace MicroCredit
     {
         public static void Main(string[] args)
         {
-            CreateHostBuilder(args).Build().Run();
+            var cancellationTokenSource = new CancellationTokenSource();
+
+            Console.CancelKeyPress += (sender, e) =>
+            {
+                e.Cancel = true;
+                cancellationTokenSource.Cancel();
+            };
+
+            var host = CreateHostBuilder(args).Build();
+
+            var lifetime = host.Services.GetRequiredService<IHostApplicationLifetime>();
+            lifetime.ApplicationStopping.Register(OnShutdown);
+
+            host.RunAsync(cancellationTokenSource.Token).GetAwaiter().GetResult();
+        }
+
+        private static void OnShutdown()
+        {
+            // Perform any necessary cleanup here
+            Console.WriteLine("Application is shutting down...");
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>

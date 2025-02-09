@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using MicroCredit.Middleware;
+using MicroCredit.Services; // Add this namespace
 using System.Text;
 using MicroCredit.Data;
 using System.Net.Http;
@@ -24,12 +25,9 @@ namespace MicroCredit
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllers(options =>
-            {
-                options.Filters.Add<ValidationFilter>();
-            });
-            services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+            // Register services
+            services.AddScoped<JwtTokenService>();
+            services.AddScoped<UserFingerprintService>();
 
             // Configure CORS
             services.AddCors(options =>
@@ -38,9 +36,12 @@ namespace MicroCredit
                 {
                     builder.WithOrigins("http://localhost:3000")
                            .AllowAnyHeader()
-                           .AllowAnyMethod();
+                           .AllowAnyMethod()
+                           .AllowCredentials();
                 });
             });
+
+            services.AddControllers();
 
             // Configure JWT authentication
             var key = Encoding.ASCII.GetBytes(Configuration["Jwt:Key"]);
@@ -64,7 +65,7 @@ namespace MicroCredit
                     IssuerSigningKey = new SymmetricSecurityKey(key)
                 };
 
-                // Allow self-signed SSL certificates (For Development Only)
+                // Allow self-signed certificates in development
                 x.BackchannelHttpHandler = new HttpClientHandler
                 {
                     ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => true
@@ -91,13 +92,15 @@ namespace MicroCredit
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
-
             app.UseRouting();
+
+            // Apply CORS policy
+            app.UseCors("AllowFrontend");
 
             app.UseAuthentication();
             app.UseAuthorization();
 
-            // Register the JWT middleware
+            // Apply JWT middleware
             app.UseMiddleware<JwtMiddleware>();
 
             app.UseEndpoints(endpoints =>
