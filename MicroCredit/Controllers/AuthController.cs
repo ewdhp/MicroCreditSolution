@@ -37,7 +37,7 @@ namespace MicroCredit.Controllers
 
         // ✅ Send verification SMS
         [HttpPost("send")]
-        public async Task<IActionResult> SendVerificationSms([FromBody] PhoneNumberRequest request)
+        public async Task<IActionResult> SendSms([FromBody] PhoneNumberRequest request)
         {
             _logger.LogInformation("Received request to send verification SMS to {PhoneNumber}", request.PhoneNumber);
 
@@ -78,7 +78,7 @@ namespace MicroCredit.Controllers
 
         // ✅ Verify code
         [HttpPost("verify")]
-        public async Task<IActionResult> VerifyCode([FromBody] VerificationRequest request)
+        public async Task<IActionResult> VerifySms([FromBody] VerificationRequest request)
         {
             _logger.LogInformation("Received request to verify code for {PhoneNumber}", request.PhoneNumber);
 

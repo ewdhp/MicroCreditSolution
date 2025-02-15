@@ -12,7 +12,6 @@ namespace MicroCredit.Data
 
         public DbSet<User> Users { get; set; }
         public DbSet<Loan> Loans { get; set; }
-        public DbSet<Facebook> FacebookProfiles { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -22,7 +21,6 @@ namespace MicroCredit.Data
 
             modelBuilder.Entity<User>().ToTable("Users");
             modelBuilder.Entity<Loan>().ToTable("Loans");
-            modelBuilder.Entity<Facebook>().ToTable("FacebookProfiles");
         }
     }
 }

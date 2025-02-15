@@ -26,6 +26,8 @@ namespace MicroCredit
         public void ConfigureServices(IServiceCollection services)
         {
             // Register services
+            services.AddDbContext<ApplicationDbContext>(options =>
+            options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection")));
             services.AddScoped<JwtTokenService>();
             services.AddScoped<UserFingerprintService>();
 

@@ -8,49 +8,59 @@ namespace MicroCredit.Models
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int Id { get; set; }
+        [Column(TypeName = "uuid")]
+        public Guid Id { get; set; }  // Use Guid for UID
 
-        [Required]
+        [Required(ErrorMessage = "User ID is required")]
         public int UserId { get; set; }  // Foreign key for User
 
-        [Required]
+        [Required(ErrorMessage = "Start date is required")]
         public DateTime StartDate { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "End date is required")]
         public DateTime EndDate { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Amount is required")]
+        [Range(0.01, double.MaxValue, ErrorMessage = "Amount must be greater than zero")]
         [Column(TypeName = "decimal(18,2)")]
         public decimal Amount { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Interest rate is required")]
+        [Range(0.01, 100.00, ErrorMessage = "Interest rate must be between 0.01 and 100.00")]
         [Column(TypeName = "decimal(5,2)")]
         public decimal InterestRate { get; set; }  // Interest rate as a percentage
 
-        [Required]
+        [Required(ErrorMessage = "Currency is required")]
+        [StringLength(3, ErrorMessage = "Currency must be a 3-letter ISO code")]
         public string Currency { get; set; }
 
-        [Required]
-        public CreditStatus Status { get; set; } = CreditStatus.Pending;
+        [Required(ErrorMessage = "Status is required")]
+        public CreditStatus Status { get; set; }
 
-        public string LoanPurpose { get; set; }  // Purpose of the loan
+        [Required(ErrorMessage = "Loan description is required")]
+        [StringLength(500, MinimumLength = 10, ErrorMessage = "Loan description must be between 10 and 500 characters")]
+        public string LoanDescription { get; set; }  // Purpose of the loan
 
         // Parameterless constructor required by EF Core
         public Loan()
         {
+            Id = Guid.NewGuid(); // Initialize Id with a new GUID
             Currency = string.Empty; // Initialize Currency to avoid null reference
+            LoanDescription = string.Empty; // Initialize LoanDescription to avoid null reference
         }
 
         // Constructor to initialize required properties
-        public Loan(int userId, DateTime startDate, DateTime endDate, decimal amount, decimal interestRate, string currency, string loanPurpose = null)
+        public Loan(int userId, DateTime startDate, DateTime endDate, decimal amount, decimal interestRate, string currency, CreditStatus status, string loanDescription)
         {
+            Id = Guid.NewGuid(); // Initialize Id with a new GUID
             UserId = userId;
             StartDate = startDate;
             EndDate = endDate;
             Amount = amount;
             InterestRate = interestRate;
-            Currency = currency ?? throw new ArgumentNullException(nameof(currency));
-            LoanPurpose = loanPurpose;
+            Currency = string.IsNullOrWhiteSpace(currency) ? "USD" : currency; // Set a default value if currency is null or empty
+            Status = status;
+            LoanDescription = string.IsNullOrWhiteSpace(loanDescription) ? throw new ArgumentNullException(nameof(loanDescription)) : loanDescription;
         }
     }
 

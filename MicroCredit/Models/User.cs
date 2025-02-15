@@ -9,39 +9,38 @@ namespace MicroCredit.Models
     public class User
     {
         [Key]
+        [Column(TypeName = "uuid")]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int Id { get; set; }
+        public Guid Id { get; set; }  // Changed from int to Guid
 
-        [Required(ErrorMessage = "Phone number is required.")]
+        [ForeignKey("FaceId")]
+        public string FaceId { get; set; }
+
+        [Required(ErrorMessage = "Phone is required.")]
         [RegularExpression(@"^\d{10}$", ErrorMessage = "Invalid phone number format. It should be a 10-digit number.")]
-        public string PhoneNumber { get; set; }
+        public string Phone { get; set; }
 
         [Required(ErrorMessage = "Name is required.")]
+        [StringLength(30, ErrorMessage = "Name must be between 5 and 30 characters.")]
         public string Name { get; set; }
 
         [Required(ErrorMessage = "Registration date is required.")]
-        public DateTime RegistrationDate { get; set; }
-
-        [Required(ErrorMessage = "At least one image is required.")]
-        [Url(ErrorMessage = "Invalid URL format.")]
-        public List<string> Images { get; set; }
+        public DateTime RegDate { get; set; }
 
         // Parameterless constructor required by EF Core
         public User()
         {
-            PhoneNumber = string.Empty; // Initialize PhoneNumber to avoid null reference
+            Phone = string.Empty; // Initialize Phone to avoid null reference
             Name = string.Empty; // Initialize Name to avoid null reference
-            RegistrationDate = DateTime.Now; // Initialize RegistrationDate to avoid null reference
-            Images = new List<string>(); // Initialize Images to avoid null reference
+            RegDate = DateTime.Now; // Initialize RegDate to avoid null reference
         }
 
         // Constructor to initialize required properties
-        public User(string phoneNumber, string name)
+        public User(string phone, string name)
         {
-            PhoneNumber = phoneNumber ?? throw new ArgumentNullException(nameof(phoneNumber));
+            Phone = phone ?? throw new ArgumentNullException(nameof(phone));
             Name = name ?? throw new ArgumentNullException(nameof(name));
-            RegistrationDate = DateTime.Now; // or set to a default value
-            Images = new List<string>();
+            RegDate = DateTime.Now; // or set to a default value
         }
     }
 }

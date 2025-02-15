@@ -32,7 +32,12 @@ namespace MicroCredit.Controllers
                 return Unauthorized();
             }
 
-            var users = await _context.Users.Where(u => u.Id.ToString() == userId).ToListAsync();
+            if (!Guid.TryParse(userId, out var userGuid))
+            {
+                return Unauthorized();
+            }
+
+            var users = await _context.Users.Where(u => u.Id == userGuid).ToListAsync();
             if (users == null || !users.Any())
             {
                 return NotFound("No users found.");
@@ -42,10 +47,10 @@ namespace MicroCredit.Controllers
 
         // GET: api/users/id
         [HttpGet("{id}")]
-        public async Task<ActionResult<User>> GetUser(int id)
+        public async Task<ActionResult<User>> GetUser(Guid id)
         {
             var userId = User.Claims.FirstOrDefault(c => c.Type == "UserId")?.Value;
-            if (userId == null || id.ToString() != userId)
+            if (userId == null || !Guid.TryParse(userId, out var userGuid) || id != userGuid)
             {
                 return Unauthorized();
             }
@@ -64,14 +69,13 @@ namespace MicroCredit.Controllers
         [HttpPost]
         public async Task<ActionResult<User>> CreateUser([FromBody] User user)
         {
-            if (_context.Users.Any(u => u.PhoneNumber == user.PhoneNumber))
+            if (_context.Users.Any(u => u.Phone == user.Phone))
             {
                 return Conflict("A user with the same phone number already exists.");
             }
 
             // Sanitize input data
-            user.PhoneNumber = user.PhoneNumber.Trim();
-            user.Images = user.Images.Select(img => img.Trim()).ToList();
+            user.Phone = user.Phone.Trim();
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
@@ -81,10 +85,10 @@ namespace MicroCredit.Controllers
 
         // PUT: api/users/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateUser(int id, [FromBody] User user)
+        public async Task<IActionResult> UpdateUser(Guid id, [FromBody] User user)
         {
             var userId = User.Claims.FirstOrDefault(c => c.Type == "UserId")?.Value;
-            if (userId == null || id.ToString() != userId)
+            if (userId == null || !Guid.TryParse(userId, out var userGuid) || id != userGuid)
             {
                 return Unauthorized();
             }
@@ -95,8 +99,7 @@ namespace MicroCredit.Controllers
             }
 
             // Sanitize input data
-            user.PhoneNumber = user.PhoneNumber.Trim();
-            user.Images = user.Images.Select(img => img.Trim()).ToList();
+            user.Phone = user.Phone.Trim();
 
             _context.Entry(user).State = EntityState.Modified;
             try
@@ -120,10 +123,10 @@ namespace MicroCredit.Controllers
 
         // DELETE: api/users/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteUser(int id)
+        public async Task<IActionResult> DeleteUser(Guid id)
         {
             var userId = User.Claims.FirstOrDefault(c => c.Type == "UserId")?.Value;
-            if (userId == null || id.ToString() != userId)
+            if (userId == null || !Guid.TryParse(userId, out var userGuid) || id != userGuid)
             {
                 return Unauthorized();
             }
@@ -140,7 +143,7 @@ namespace MicroCredit.Controllers
             return NoContent();  // No content to return, just a successful deletion
         }
 
-        private bool UserExists(int id)
+        private bool UserExists(Guid id)
         {
             return _context.Users.Any(e => e.Id == id);
         }
