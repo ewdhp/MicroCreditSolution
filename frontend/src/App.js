@@ -9,7 +9,9 @@ import DashboardLayout from './components/DashboardLayout';
 import History from './views/History';
 import Profile from './views/Profile';
 import Refer from './views/Refer';
+
 import { AuthProvider, useAuth } from './context/AuthContext';
+import './App.css';
 
 const ProtectedRoute = ({ element }) => {
   const { isAuthenticated } = useAuth();
@@ -17,10 +19,18 @@ const ProtectedRoute = ({ element }) => {
 };
 
 const App = () => {
+
+  const styles = {
+  navbar: {
+    backgroundColor: 'rgba(159, 174, 243, 0.36)', // white with 80% opacity
+    backdropFilter: 'blur(20px)', // optional: adds a blur effect to the background
+  },
+};
   return (
     <AuthProvider>
       <Router>
-        <Navbar />
+        <Navbar style={styles.navbar} />
+        
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/signup" element={<SignUp />} />
