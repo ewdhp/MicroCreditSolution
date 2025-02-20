@@ -6,6 +6,9 @@ import SignUp from './components/SignUp';
 import Login from './components/Login';
 import Dashboard from './views/Dashboard';
 import DashboardLayout from './components/DashboardLayout';
+import History from './views/History';
+import Profile from './views/Profile';
+import Refer from './views/Refer';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 const ProtectedRoute = ({ element }) => {
@@ -24,9 +27,9 @@ const App = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/dashboard" element={<ProtectedRoute element={<DashboardLayout />} />}>
             <Route index element={<Dashboard />} />
-            <Route path="history" element={<div>Historial de prestamos</div>} />
-            <Route path="profile" element={<div>Datos personales</div>} />
-            <Route path="refer" element={<div>Gana $1000 gratis</div>} />
+            <Route path="history" element={<History />} />
+            <Route path="profile" element={<Profile />} />
+            <Route path="refer" element={<Refer />} />
           </Route>
           <Route path="*" element={<Navigate to="/" />} /> {/* Redirect any unknown routes to home */}
         </Routes>
