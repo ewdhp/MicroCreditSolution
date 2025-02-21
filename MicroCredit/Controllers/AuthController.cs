@@ -16,9 +16,9 @@ namespace MicroCredit.Controllers
     public class AuthController : ControllerBase
     {
         private readonly HttpClient _httpClient;
-        private const string AccountSid = "AC23f88289374bd1212027f88ec0bf0c27";
-        private const string AuthToken = "fedc8978719541bd4f46c9a7bc3875ae";
-        private const string ServiceSid = "VAc6245af6c94f63ff1903cb8024c918ad";
+        private const string AccountSid = "";
+        private const string AuthToken = "";
+        private const string ServiceSid = "";
         private readonly string _twilioAuthHeader;
         private readonly ILogger<AuthController> _logger;
         private readonly JwtTokenService _jwtTokenService;
