@@ -16,8 +16,9 @@ namespace MicroCredit.Tests.Controllers
     [TestClass]
     public class UserControllerTests
     {
-        private ApplicationDbContext _context;
-        private UserController _controller;
+        private ApplicationDbContext? _context;
+        private UserController? _controller;
+
 
         [TestInitialize]
         public void Setup()
@@ -33,8 +34,11 @@ namespace MicroCredit.Tests.Controllers
         [TestCleanup]
         public void Cleanup()
         {
-            _context.Database.EnsureDeleted();
-            _context.Dispose();
+            if (_context != null)
+            {
+                _context.Database.EnsureDeleted();
+            }
+            _context?.Dispose();
         }
 
         [TestMethod]
@@ -46,7 +50,7 @@ namespace MicroCredit.Tests.Controllers
                 // No UserId claim
             }, "mock"));
 
-            _controller.ControllerContext = new ControllerContext
+            _controller!.ControllerContext = new ControllerContext
             {
                 HttpContext = new DefaultHttpContext { User = user }
             };
@@ -68,7 +72,7 @@ namespace MicroCredit.Tests.Controllers
         new Claim("UserId", userId.ToString())
             }, "mock"));
 
-            _controller.ControllerContext = new ControllerContext
+            _controller!.ControllerContext = new ControllerContext
             {
                 HttpContext = new DefaultHttpContext { User = user }
             };
@@ -89,7 +93,7 @@ namespace MicroCredit.Tests.Controllers
                 new Claim("UserId", userId.ToString())
             }, "mock"));
 
-            _controller.ControllerContext = new ControllerContext
+            _controller!.ControllerContext = new ControllerContext
             {
                 HttpContext = new DefaultHttpContext { User = user }
             };
@@ -99,8 +103,11 @@ namespace MicroCredit.Tests.Controllers
                 new User { Id = userId, Phone = "1234567890" }
             };
 
-            _context.Users.AddRange(users);
-            _context.SaveChanges();
+            if (_context != null)
+            {
+                _context.Users.AddRange(users);
+                _context.SaveChanges();
+            }
 
             // Act
             var result = await _controller.GetUser(userId);
@@ -108,6 +115,7 @@ namespace MicroCredit.Tests.Controllers
             // Assert
             Assert.IsInstanceOfType(result.Result, typeof(OkObjectResult));
             var okResult = result.Result as OkObjectResult;
+            Assert.IsNotNull(okResult);
             var returnValue = okResult.Value as User;
             Assert.IsNotNull(returnValue);
             Assert.AreEqual(userId, returnValue.Id);
@@ -118,13 +126,16 @@ namespace MicroCredit.Tests.Controllers
         {
             // Arrange
             var existingUser = new User { Id = Guid.NewGuid(), Phone = "1234567890" };
-            _context.Users.Add(existingUser);
-            _context.SaveChanges();
+            if (_context != null)
+            {
+                _context.Users.Add(existingUser);
+                _context.SaveChanges();
+            }
 
             var newUser = new User { Phone = "1234567890" };
 
             // Act
-            var result = await _controller.CreateUser(newUser);
+            var result = await _controller!.CreateUser(newUser);
 
             // Assert
             Assert.IsInstanceOfType(result.Result, typeof(ConflictObjectResult));
@@ -137,12 +148,13 @@ namespace MicroCredit.Tests.Controllers
             var newUser = new User { Id = Guid.NewGuid(), Phone = "0987654321" };
 
             // Act
-            var result = await _controller.CreateUser(newUser);
+            var result = await _controller!.CreateUser(newUser);
 
             // Assert
             Assert.IsInstanceOfType(result.Result, typeof(CreatedAtActionResult));
             var createdAtActionResult = result.Result as CreatedAtActionResult;
-            var returnValue = createdAtActionResult.Value as User;
+            Assert.IsNotNull(createdAtActionResult);
+            var returnValue = createdAtActionResult!.Value as User;
             Assert.IsNotNull(returnValue);
             Assert.AreEqual(newUser.Id, returnValue.Id);
         }
