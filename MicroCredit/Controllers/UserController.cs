@@ -130,6 +130,7 @@ namespace MicroCredit.Controllers
 
             return Ok(user);  // Return the updated user
         }
+
         // DELETE: api/users/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(Guid id)

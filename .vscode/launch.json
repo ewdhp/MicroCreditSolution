@@ -14,7 +14,7 @@
             "logging": {
                 "logging.diagnosticsLog.protocolMessages": false
             },
-             "env": {
+            "env": {
                 "Jwt__Key": "YourSecretKeyHere1234567890!@#$%^&*()_+ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
                 "Jwt__Issuer": "YourIssuerHere",
                 "Twilio__AccountSid": "AC23f88289374bd1212027f88ec0bf0c27",

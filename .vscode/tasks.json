@@ -2,25 +2,6 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "type": "msbuild",
-            "problemMatcher": [
-                "$msCompile"
-            ],
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            },
-            "label": "Build: MicroCredit.csproj",
-            "detail": "Build the MicroCredit.csproj project using dotnet build"
-        },
-        {
-            "type": "dotnet",
-            "task": "watch MicroCredit",
-            "file": "/home/ewd/MicroCreditSolution/MicroCredit/MicroCredit.csproj",
-            "problemMatcher": [],
-            "label": "dotnet: watch MicroCredit"
-        },
-        {
             "label": "build",
             "command": "dotnet",
             "type": "process",
@@ -28,7 +9,12 @@
                 "build",
                 "/home/ewd/MicroCreditSolution/MicroCredit/MicroCredit.csproj"
             ],
-            "problemMatcher": "$msCompile"
+            "problemMatcher": "$msCompile",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "detail": "Build the MicroCredit.csproj project using dotnet build"
         },
         {
             "label": "test",
@@ -39,6 +25,30 @@
                 "/home/ewd/MicroCreditSolution/MicroCredit.Tests/MicroCredit.Tests.csproj"
             ],
             "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "watch: build",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "watch",
+                "build",
+                "/home/ewd/MicroCreditSolution/MicroCredit/MicroCredit.csproj"
+            ],
+            "problemMatcher": "$msCompile",
+            "detail": "Watch the MicroCredit.csproj project and build on changes"
+        },
+        {
+            "label": "watch: test",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "watch",
+                "test",
+                "/home/ewd/MicroCreditSolution/MicroCredit.Tests/MicroCredit.Tests.csproj"
+            ],
+            "problemMatcher": "$msCompile",
+            "detail": "Watch the MicroCredit.Tests.csproj project and run tests on changes"
         },
         {
             "label": "build-and-test",
