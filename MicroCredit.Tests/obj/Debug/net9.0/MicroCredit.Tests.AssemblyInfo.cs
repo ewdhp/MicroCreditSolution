@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("MicroCredit.Tests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9a11898328ab2db9fcb86c4a0f3581e848b9ed52")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+76aa9eb11b7099f1acf6d6a240879547d8d94606")]
 [assembly: System.Reflection.AssemblyProductAttribute("MicroCredit.Tests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("MicroCredit.Tests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
