@@ -19,7 +19,6 @@ namespace MicroCredit.Tests.Controllers
         private ApplicationDbContext? _context;
         private UserController? _controller;
 
-
         [TestInitialize]
         public void Setup()
         {
@@ -69,7 +68,7 @@ namespace MicroCredit.Tests.Controllers
             var userId = Guid.NewGuid();
             var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
             {
-        new Claim("UserId", userId.ToString())
+                new Claim("UserId", userId.ToString())
             }, "mock"));
 
             _controller!.ControllerContext = new ControllerContext
@@ -83,6 +82,7 @@ namespace MicroCredit.Tests.Controllers
             // Assert
             Assert.IsInstanceOfType(result.Result, typeof(NotFoundObjectResult));
         }
+
         [TestMethod]
         public async Task GetUser_ReturnsOk_WhenUserFound()
         {
@@ -157,6 +157,217 @@ namespace MicroCredit.Tests.Controllers
             var returnValue = createdAtActionResult!.Value as User;
             Assert.IsNotNull(returnValue);
             Assert.AreEqual(newUser.Id, returnValue.Id);
+        }
+
+        [TestMethod]
+        public async Task UpdateUser_ReturnsUnauthorized_WhenUserIdIsNull()
+        {
+            // Arrange
+            var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+            {
+                // No UserId claim
+            }, "mock"));
+
+            _controller!.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var userId = Guid.NewGuid();
+            var updateUser = new User { Id = userId, Phone = "1234567890" };
+
+            // Act
+            var result = await _controller.UpdateUser(userId, updateUser);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(UnauthorizedResult));
+        }
+
+        [TestMethod]
+        public async Task UpdateUser_ReturnsBadRequest_WhenUserIdMismatch()
+        {
+            // Arrange
+            var userId = Guid.NewGuid();
+            var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+            {
+                new Claim("UserId", userId.ToString())
+            }, "mock"));
+
+            _controller!.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var updateUser = new User { Id = Guid.NewGuid(), Phone = "1234567890" };
+
+            // Act
+            var result = await _controller.UpdateUser(userId, updateUser);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(BadRequestObjectResult));
+        }
+
+        [TestMethod]
+        public async Task UpdateUser_ReturnsNotFound_WhenUserNotFound()
+        {
+            // Arrange
+            var userId = Guid.NewGuid();
+            var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+            {
+                new Claim("UserId", userId.ToString())
+            }, "mock"));
+
+            _controller!.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var updateUser = new User { Id = userId, Phone = "1234567890" };
+
+            // Act
+            var result = await _controller.UpdateUser(userId, updateUser);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(NotFoundObjectResult));
+        }
+
+        [TestMethod]
+        public async Task UpdateUser_ReturnsOk_WhenUserUpdated()
+        {
+            // Arrange
+            var userId = Guid.NewGuid();
+            var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+            {
+                new Claim("UserId", userId.ToString())
+            }, "mock"));
+
+            _controller!.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var existingUser = new User { Id = userId, Phone = "1234567890" };
+            if (_context != null)
+            {
+                _context.Users.Add(existingUser);
+                _context.SaveChanges();
+            }
+
+            var updateUser = new User { Id = userId, Phone = "0987654321" };
+
+            // Act
+            var result = await _controller.UpdateUser(userId, updateUser);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(OkObjectResult));
+            var okResult = result as OkObjectResult;
+            Assert.IsNotNull(okResult);
+            var returnValue = okResult.Value as User;
+            Assert.IsNotNull(returnValue);
+            Assert.AreEqual(updateUser.Phone, returnValue.Phone);
+        }
+
+        [TestMethod]
+        public async Task UpdateUser_ThrowsConcurrencyException()
+        {
+            // Arrange
+            var userId = Guid.NewGuid();
+            var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+            {
+        new Claim("UserId", userId.ToString())
+            }, "mock"));
+
+            _controller!.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var existingUser = new User { Id = userId, Phone = "1234567890", RowVersion = new byte[] { 0x00 } };
+            if (_context != null)
+            {
+                _context.Users.Add(existingUser);
+                _context.SaveChanges();
+            }
+
+            var updateUser = new User { Id = userId, Phone = "0987654321", RowVersion = new byte[] { 0x01 } };
+
+            // Simulate concurrency exception
+            _context.Entry(existingUser).OriginalValues["RowVersion"] = new byte[] { 0x00 };
+
+            // Act & Assert
+            await Assert.ThrowsExceptionAsync<DbUpdateConcurrencyException>(() => _controller.UpdateUser(userId, updateUser));
+        }
+
+        [TestMethod]
+        public async Task DeleteUser_ReturnsUnauthorized_WhenUserIdIsNull()
+        {
+            // Arrange
+            var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+            {
+                // No UserId claim
+            }, "mock"));
+
+            _controller!.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            // Act
+            var result = await _controller.DeleteUser(Guid.NewGuid());
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(UnauthorizedResult));
+        }
+
+        [TestMethod]
+        public async Task DeleteUser_ReturnsNotFound_WhenUserNotFound()
+        {
+            // Arrange
+            var userId = Guid.NewGuid();
+            var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+            {
+                new Claim("UserId", userId.ToString())
+            }, "mock"));
+
+            _controller!.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            // Act
+            var result = await _controller.DeleteUser(userId);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(NotFoundObjectResult));
+        }
+
+        [TestMethod]
+        public async Task DeleteUser_ReturnsNoContent_WhenUserDeleted()
+        {
+            // Arrange
+            var userId = Guid.NewGuid();
+            var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+            {
+                new Claim("UserId", userId.ToString())
+            }, "mock"));
+
+            _controller!.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
+
+            var existingUser = new User { Id = userId, Phone = "1234567890" };
+            if (_context != null)
+            {
+                _context.Users.Add(existingUser);
+                _context.SaveChanges();
+            }
+
+            // Act
+            var result = await _controller.DeleteUser(userId);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(NoContentResult));
         }
     }
 }

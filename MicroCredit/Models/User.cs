@@ -27,6 +27,9 @@ namespace MicroCredit.Models
         [Required(ErrorMessage = "Registration date is required.")]
         public DateTime RegDate { get; set; }
 
+        [Timestamp]
+        public byte[] RowVersion { get; set; }
+
         // Parameterless constructor required by EF Core
         public User()
         {

@@ -104,6 +104,13 @@ namespace MicroCredit.Controllers
             // Sanitize input data
             user.Phone = user.Phone.Trim();
 
+            // Detach the existing entity to avoid tracking conflicts
+            var existingUser = await _context.Users.FindAsync(id);
+            if (existingUser != null)
+            {
+                _context.Entry(existingUser).State = EntityState.Detached;
+            }
+
             _context.Entry(user).State = EntityState.Modified;
             try
             {
@@ -123,7 +130,6 @@ namespace MicroCredit.Controllers
 
             return Ok(user);  // Return the updated user
         }
-
         // DELETE: api/users/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(Guid id)
