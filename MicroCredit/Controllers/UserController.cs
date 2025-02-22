@@ -49,8 +49,11 @@ namespace MicroCredit.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<User>> GetUser(Guid id)
         {
-            var userId = User.Claims.FirstOrDefault(c => c.Type == "UserId")?.Value;
-            if (userId == null || !Guid.TryParse(userId, out var userGuid) || id != userGuid)
+            var userId = User.Claims.FirstOrDefault(
+                c => c.Type == "UserId")?.Value;
+            if (userId == null ||
+            !Guid.TryParse(userId, out var userGuid) ||
+            id != userGuid)
             {
                 return Unauthorized();
             }

@@ -1,5 +1,7 @@
+// filepath: /home/ewd/MicroCreditSolution/MicroCredit/Controllers/AuthController.cs
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration; // Add this namespace
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
@@ -7,7 +9,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using MicroCredit.Services;
-using System.ComponentModel.DataAnnotations; // Add this namespace
+using System.ComponentModel.DataAnnotations;
 
 namespace MicroCredit.Controllers
 {
@@ -16,23 +18,31 @@ namespace MicroCredit.Controllers
     public class AuthController : ControllerBase
     {
         private readonly HttpClient _httpClient;
-        private const string AccountSid = "";
-        private const string AuthToken = "";
-        private const string ServiceSid = "";
+        private readonly string _accountSid;
+        private readonly string _authToken;
+        private readonly string _serviceSid;
         private readonly string _twilioAuthHeader;
         private readonly ILogger<AuthController> _logger;
         private readonly JwtTokenService _jwtTokenService;
         private readonly UserFingerprintService _userFingerprintService;
 
-        public AuthController(ILogger<AuthController> logger, JwtTokenService jwtTokenService, UserFingerprintService userFingerprintService)
+        public AuthController(IConfiguration configuration, ILogger<AuthController> logger, JwtTokenService jwtTokenService, UserFingerprintService userFingerprintService)
         {
             _httpClient = new HttpClient();
-            var authBytes = Encoding.ASCII.GetBytes($"{AccountSid}:{AuthToken}");
+            _accountSid = configuration["Twilio:AccountSid"];
+            _authToken = configuration["Twilio:AuthToken"];
+            _serviceSid = configuration["Twilio:ServiceSid"];
+            var authBytes = Encoding.ASCII.GetBytes($"{_accountSid}:{_authToken}");
             _twilioAuthHeader = Convert.ToBase64String(authBytes);
             _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", _twilioAuthHeader);
             _logger = logger;
             _jwtTokenService = jwtTokenService;
             _userFingerprintService = userFingerprintService;
+
+            // Log the Twilio configuration values to verify they are being loaded correctly
+            _logger.LogInformation("Twilio AccountSid: {AccountSid}", _accountSid);
+            _logger.LogInformation("Twilio AuthToken: {AuthToken}", _authToken);
+            _logger.LogInformation("Twilio ServiceSid: {ServiceSid}", _serviceSid);
         }
 
         // ✅ Send verification SMS
@@ -47,7 +57,7 @@ namespace MicroCredit.Controllers
                 return BadRequest(new { message = "Phone number must be in E.164 format (e.g., +1234567890)" });
             }
 
-            var url = $"https://verify.twilio.com/v2/Services/{ServiceSid}/Verifications";
+            var url = $"https://verify.twilio.com/v2/Services/{_serviceSid}/Verifications";
             var payload = new FormUrlEncodedContent(new[]
             {
                 new KeyValuePair<string, string>("To", request.PhoneNumber),
@@ -89,7 +99,7 @@ namespace MicroCredit.Controllers
 
             var sanitizedPhoneNumber = request.PhoneNumber.Trim();
 
-            var url = $"https://verify.twilio.com/v2/Services/{ServiceSid}/VerificationCheck";
+            var url = $"https://verify.twilio.com/v2/Services/{_serviceSid}/VerificationCheck";
             var payload = new FormUrlEncodedContent(new[]
             {
                 new KeyValuePair<string, string>("To", sanitizedPhoneNumber),

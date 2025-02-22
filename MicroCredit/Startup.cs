@@ -11,6 +11,7 @@ using MicroCredit.Services; // Add this namespace
 using System.Text;
 using MicroCredit.Data;
 using System.Net.Http;
+using System;
 
 namespace MicroCredit
 {
@@ -23,6 +24,7 @@ namespace MicroCredit
 
         public IConfiguration Configuration { get; }
 
+        // filepath: /home/ewd/MicroCreditSolution/MicroCredit/Startup.cs
         public void ConfigureServices(IServiceCollection services)
         {
             // Register services
@@ -45,8 +47,13 @@ namespace MicroCredit
 
             services.AddControllers();
 
-            // Configure JWT authentication
-            var key = Encoding.ASCII.GetBytes(Configuration["Jwt:Key"]);
+            // Log the JWT key to verify it's being loaded correctly
+            var jwtKey = Configuration["Jwt:Key"];
+            if (string.IsNullOrEmpty(jwtKey))
+            {
+                throw new ArgumentNullException("Jwt:Key", "JWT Key is not configured.");
+            }
+            var key = Encoding.ASCII.GetBytes(jwtKey);
             services.AddAuthentication(x =>
             {
                 x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -79,7 +86,6 @@ namespace MicroCredit
                 options.AddPolicy("UserPolicy", policy => policy.RequireClaim("UserId"));
             });
         }
-
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())

@@ -1,19 +1,28 @@
 {
     "version": "0.2.0",
     "configurations": [
-        
         {
             "name": ".NET Core Launch (console)",
             "type": "coreclr",
             "request": "launch",
-            "preLaunchTask": "build",
-            "program": "${workspaceFolder}/bin/Debug/net9.0/MicroCredit.dll",
+            "preLaunchTask": "build-and-test",
+            "program": "/home/ewd/MicroCreditSolution/MicroCredit/bin/Debug/net9.0/MicroCredit.dll",
             "args": [],
             "cwd": "${workspaceFolder}",
             "stopAtEntry": false,
             "console": "internalConsole",
             "logging": {
                 "logging.diagnosticsLog.protocolMessages": false
+            },
+             "env": {
+                "Jwt__Key": "YourSecretKeyHere1234567890!@#$%^&*()_+ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
+                "Jwt__Issuer": "YourIssuerHere",
+                "Twilio__AccountSid": "AC23f88289374bd1212027f88ec0bf0c27",
+                "Twilio__AuthToken": "fedc8978719541bd4f46c9a7bc3875ae",
+                "Twilio__ServiceSid": "VAc6245af6c94f63ff1903cb8024c918ad"
+            },
+            "sourceFileMap": {
+                "/Views": "${workspaceFolder}/Views"
             },
             "internalConsoleOptions": "openOnSessionStart"
         }

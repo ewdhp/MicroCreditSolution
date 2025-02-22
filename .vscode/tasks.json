@@ -1,24 +1,49 @@
 {
-	"version": "2.0.0",
-	"tasks": [
-		{
-			"type": "msbuild",
-			"problemMatcher": [
-				"$msCompile"
-			],
-			"group": {
-				"kind": "build",
-				"isDefault": true
-			},
-			"label": "Build: MicroCredit.csproj",
-			"detail": "Build the MicroCredit.csproj project using dotnet build"
-		},
-		{
-			"type": "dotnet",
-			"task": "watch MicroCredit",
-			"file": "/home/ewd/MicroCreditSolution/MicroCredit/MicroCredit.csproj",
-			"problemMatcher": [],
-			"label": "dotnet: watch MicroCredit"
-		}
-	]
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "msbuild",
+            "problemMatcher": [
+                "$msCompile"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "label": "Build: MicroCredit.csproj",
+            "detail": "Build the MicroCredit.csproj project using dotnet build"
+        },
+        {
+            "type": "dotnet",
+            "task": "watch MicroCredit",
+            "file": "/home/ewd/MicroCreditSolution/MicroCredit/MicroCredit.csproj",
+            "problemMatcher": [],
+            "label": "dotnet: watch MicroCredit"
+        },
+        {
+            "label": "build",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "/home/ewd/MicroCreditSolution/MicroCredit/MicroCredit.csproj"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "test",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "test",
+                "/home/ewd/MicroCreditSolution/MicroCredit.Tests/MicroCredit.Tests.csproj"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "build-and-test",
+            "dependsOn": ["build", "test"],
+            "dependsOrder": "sequence"
+        }
+    ]
 }
