@@ -5,7 +5,7 @@
             "name": ".NET Core Launch (console)",
             "type": "coreclr",
             "request": "launch",
-            "preLaunchTask": "build-and-test",
+            "preLaunchTask": "build-test",
             "program": "/home/ewd/MicroCreditSolution/MicroCredit/bin/Debug/net9.0/MicroCredit.dll",
             "args": [],
             "cwd": "${workspaceFolder}",

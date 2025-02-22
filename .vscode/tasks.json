@@ -44,14 +44,14 @@
             "type": "process",
             "args": [
                 "watch",
-                "test",
+                "--project",
                 "/home/ewd/MicroCreditSolution/MicroCredit.Tests/MicroCredit.Tests.csproj"
             ],
             "problemMatcher": "$msCompile",
             "detail": "Watch the MicroCredit.Tests.csproj project and run tests on changes"
         },
         {
-            "label": "build-and-test",
+            "label": "build-test",
             "dependsOn": ["build", "test"],
             "dependsOrder": "sequence"
         }
