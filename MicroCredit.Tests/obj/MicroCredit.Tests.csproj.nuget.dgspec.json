@@ -1,33 +1,33 @@
 {
   "format": 1,
   "restore": {
-    "/home/ewd2955/MicroCreditSolution/MicroCredit.Tests/MicroCredit.Tests.csproj": {}
+    "/home/ewd/MicroCreditSolution/MicroCredit.Tests/MicroCredit.Tests.csproj": {}
   },
   "projects": {
-    "/home/ewd2955/MicroCreditSolution/MicroCredit.Tests/MicroCredit.Tests.csproj": {
+    "/home/ewd/MicroCreditSolution/MicroCredit.Tests/MicroCredit.Tests.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/ewd2955/MicroCreditSolution/MicroCredit.Tests/MicroCredit.Tests.csproj",
+        "projectUniqueName": "/home/ewd/MicroCreditSolution/MicroCredit.Tests/MicroCredit.Tests.csproj",
         "projectName": "MicroCredit.Tests",
-        "projectPath": "/home/ewd2955/MicroCreditSolution/MicroCredit.Tests/MicroCredit.Tests.csproj",
-        "packagesPath": "/home/ewd2955/.nuget/packages/",
-        "outputPath": "/home/ewd2955/MicroCreditSolution/MicroCredit.Tests/obj/",
+        "projectPath": "/home/ewd/MicroCreditSolution/MicroCredit.Tests/MicroCredit.Tests.csproj",
+        "packagesPath": "/home/ewd/.nuget/packages/",
+        "outputPath": "/home/ewd/MicroCreditSolution/MicroCredit.Tests/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/home/ewd2955/.nuget/NuGet/NuGet.Config"
+          "/home/ewd/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
-          "net8.0"
+          "net9.0"
         ],
         "sources": {
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
-          "net8.0": {
-            "targetAlias": "net8.0",
+          "net9.0": {
+            "targetAlias": "net9.0",
             "projectReferences": {
-              "/home/ewd2955/MicroCreditSolution/MicroCredit/MicroCredit.csproj": {
-                "projectPath": "/home/ewd2955/MicroCreditSolution/MicroCredit/MicroCredit.csproj"
+              "/home/ewd/MicroCreditSolution/MicroCredit/MicroCredit.csproj": {
+                "projectPath": "/home/ewd/MicroCreditSolution/MicroCredit/MicroCredit.csproj"
               }
             }
           }
@@ -41,15 +41,24 @@
           "enableAudit": "true",
           "auditLevel": "low",
           "auditMode": "direct"
-        }
+        },
+        "SdkAnalysisLevel": "9.0.200"
       },
       "frameworks": {
-        "net8.0": {
-          "targetAlias": "net8.0",
+        "net9.0": {
+          "targetAlias": "net9.0",
           "dependencies": {
+            "MSTest.TestAdapter": {
+              "target": "Package",
+              "version": "[3.0.2, )"
+            },
+            "MSTest.TestFramework": {
+              "target": "Package",
+              "version": "[3.0.2, )"
+            },
             "Microsoft.EntityFrameworkCore.InMemory": {
               "target": "Package",
-              "version": "[8.0.0, )"
+              "version": "[9.0.0, )"
             },
             "Microsoft.NET.Test.Sdk": {
               "target": "Package",
@@ -62,14 +71,6 @@
             "coverlet.collector": {
               "target": "Package",
               "version": "[6.0.0, )"
-            },
-            "xunit": {
-              "target": "Package",
-              "version": "[2.5.3, )"
-            },
-            "xunit.runner.visualstudio": {
-              "target": "Package",
-              "version": "[2.5.3, )"
             }
           },
           "imports": [
@@ -88,31 +89,31 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/8.0.405/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.200/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "/home/ewd2955/MicroCreditSolution/MicroCredit/MicroCredit.csproj": {
+    "/home/ewd/MicroCreditSolution/MicroCredit/MicroCredit.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/ewd2955/MicroCreditSolution/MicroCredit/MicroCredit.csproj",
+        "projectUniqueName": "/home/ewd/MicroCreditSolution/MicroCredit/MicroCredit.csproj",
         "projectName": "MicroCredit",
-        "projectPath": "/home/ewd2955/MicroCreditSolution/MicroCredit/MicroCredit.csproj",
-        "packagesPath": "/home/ewd2955/.nuget/packages/",
-        "outputPath": "/home/ewd2955/MicroCreditSolution/MicroCredit/obj/",
+        "projectPath": "/home/ewd/MicroCreditSolution/MicroCredit/MicroCredit.csproj",
+        "packagesPath": "/home/ewd/.nuget/packages/",
+        "outputPath": "/home/ewd/MicroCreditSolution/MicroCredit/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/home/ewd2955/.nuget/NuGet/NuGet.Config"
+          "/home/ewd/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
-          "net8.0"
+          "net9.0"
         ],
         "sources": {
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
-          "net8.0": {
-            "targetAlias": "net8.0",
+          "net9.0": {
+            "targetAlias": "net9.0",
             "projectReferences": {}
           }
         },
@@ -125,43 +126,52 @@
           "enableAudit": "true",
           "auditLevel": "low",
           "auditMode": "direct"
-        }
+        },
+        "SdkAnalysisLevel": "9.0.200"
       },
       "frameworks": {
-        "net8.0": {
-          "targetAlias": "net8.0",
+        "net9.0": {
+          "targetAlias": "net9.0",
           "dependencies": {
+            "Microsoft.AspNetCore.Authentication.JwtBearer": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
             "Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore": {
               "target": "Package",
-              "version": "[8.0.0, )"
+              "version": "[9.0.0, )"
             },
             "Microsoft.AspNetCore.Identity.EntityFrameworkCore": {
               "target": "Package",
-              "version": "[8.0.0, )"
+              "version": "[9.0.0, )"
             },
             "Microsoft.AspNetCore.Identity.UI": {
               "target": "Package",
-              "version": "[8.0.0, )"
+              "version": "[9.0.0, )"
             },
             "Microsoft.EntityFrameworkCore.SqlServer": {
               "target": "Package",
-              "version": "[8.0.0, )"
+              "version": "[9.0.0, )"
             },
             "Microsoft.EntityFrameworkCore.Tools": {
               "target": "Package",
-              "version": "[8.0.0, )"
+              "version": "[9.0.0, )"
             },
             "Microsoft.Extensions.Identity.Stores": {
               "target": "Package",
-              "version": "[8.0.0, )"
+              "version": "[9.0.0, )"
+            },
+            "Microsoft.IdentityModel.Tokens": {
+              "target": "Package",
+              "version": "[8.5.0, )"
             },
             "Npgsql.EntityFrameworkCore.PostgreSQL": {
               "target": "Package",
-              "version": "[8.0.0, )"
+              "version": "[9.0.0, )"
             },
             "Swashbuckle.AspNetCore": {
               "target": "Package",
-              "version": "[6.5.0, )"
+              "version": "[7.0.0, )"
             }
           },
           "imports": [
@@ -183,7 +193,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/8.0.405/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.200/PortableRuntimeIdentifierGraph.json"
         }
       }
     }
