@@ -29,7 +29,6 @@ namespace MicroCredit.Tests.Controllers
             _context = new ApplicationDbContext(options);
             _controller = new UserController(_context);
         }
-
         [TestCleanup]
         public void Cleanup()
         {
@@ -60,7 +59,6 @@ namespace MicroCredit.Tests.Controllers
             // Assert
             Assert.IsInstanceOfType(result.Result, typeof(UnauthorizedResult));
         }
-
         [TestMethod]
         public async Task GetUser_ReturnsNotFound_WhenUserNotFound()
         {
@@ -82,7 +80,6 @@ namespace MicroCredit.Tests.Controllers
             // Assert
             Assert.IsInstanceOfType(result.Result, typeof(NotFoundObjectResult));
         }
-
         [TestMethod]
         public async Task GetUser_ReturnsOk_WhenUserFound()
         {
@@ -120,7 +117,6 @@ namespace MicroCredit.Tests.Controllers
             Assert.IsNotNull(returnValue);
             Assert.AreEqual(userId, returnValue.Id);
         }
-
         [TestMethod]
         public async Task CreateUser_ReturnsConflict_WhenPhoneNumberExists()
         {
@@ -140,7 +136,6 @@ namespace MicroCredit.Tests.Controllers
             // Assert
             Assert.IsInstanceOfType(result.Result, typeof(ConflictObjectResult));
         }
-
         [TestMethod]
         public async Task CreateUser_ReturnsCreatedAtAction_WhenUserCreated()
         {
@@ -182,7 +177,6 @@ namespace MicroCredit.Tests.Controllers
             // Assert
             Assert.IsInstanceOfType(result, typeof(UnauthorizedResult));
         }
-
         [TestMethod]
         public async Task UpdateUser_ReturnsBadRequest_WhenUserIdMismatch()
         {
@@ -206,7 +200,6 @@ namespace MicroCredit.Tests.Controllers
             // Assert
             Assert.IsInstanceOfType(result, typeof(BadRequestObjectResult));
         }
-
         [TestMethod]
         public async Task UpdateUser_ReturnsNotFound_WhenUserNotFound()
         {
@@ -230,7 +223,6 @@ namespace MicroCredit.Tests.Controllers
             // Assert
             Assert.IsInstanceOfType(result, typeof(NotFoundObjectResult));
         }
-
         [TestMethod]
         public async Task UpdateUser_ReturnsOk_WhenUserUpdated()
         {
@@ -266,7 +258,6 @@ namespace MicroCredit.Tests.Controllers
             Assert.IsNotNull(returnValue);
             Assert.AreEqual(updateUser.Phone, returnValue.Phone);
         }
-
         [TestMethod]
         public async Task UpdateUser_ThrowsConcurrencyException()
         {
@@ -292,11 +283,15 @@ namespace MicroCredit.Tests.Controllers
             var updateUser = new User { Id = userId, Phone = "0987654321", RowVersion = new byte[] { 0x01 } };
 
             // Simulate concurrency exception
-            _context.Entry(existingUser).OriginalValues["RowVersion"] = new byte[] { 0x00 };
+            if (_context != null)
+            {
+                _context.Entry(existingUser).OriginalValues["RowVersion"] = new byte[] { 0x00 };
+            }
 
             // Act & Assert
             await Assert.ThrowsExceptionAsync<DbUpdateConcurrencyException>(() => _controller.UpdateUser(userId, updateUser));
         }
+
 
         [TestMethod]
         public async Task DeleteUser_ReturnsUnauthorized_WhenUserIdIsNull()
@@ -318,7 +313,6 @@ namespace MicroCredit.Tests.Controllers
             // Assert
             Assert.IsInstanceOfType(result, typeof(UnauthorizedResult));
         }
-
         [TestMethod]
         public async Task DeleteUser_ReturnsNotFound_WhenUserNotFound()
         {
@@ -340,7 +334,6 @@ namespace MicroCredit.Tests.Controllers
             // Assert
             Assert.IsInstanceOfType(result, typeof(NotFoundObjectResult));
         }
-
         [TestMethod]
         public async Task DeleteUser_ReturnsNoContent_WhenUserDeleted()
         {
