@@ -40,7 +40,8 @@ namespace MicroCredit.Controllers
             GetBytes($"{_accountSid}:{_authToken}");
             _twilioAuthHeader = Convert.ToBase64String(authBytes);
             _httpClient.DefaultRequestHeaders.Authorization = new
-            System.Net.Http.Headers.AuthenticationHeaderValue(
+            System.Net.Http.Headers
+            .AuthenticationHeaderValue(
                 "Basic", _twilioAuthHeader);
             _logger = logger;
             _jwtTokenService = jwtTokenService;
@@ -69,8 +70,7 @@ namespace MicroCredit.Controllers
                 return BadRequest(new
                 {
                     message = "Phone number must be in E.164 format"
-                }
-                );
+                });
             }
 
             var url = $"https://verify.twilio.com/v2/Services/{_serviceSid}/Verifications";
@@ -112,8 +112,7 @@ namespace MicroCredit.Controllers
                 return StatusCode(500, new
                 {
                     message = "An error occurred while sending verification SMS"
-                }
-                );
+                });
             }
         }
 
@@ -126,12 +125,8 @@ namespace MicroCredit.Controllers
                 request.PhoneNumber);
 
             if (!ModelState.IsValid)
-            {
                 return BadRequest(ModelState);
-            }
-
             var sanitizedPhoneNumber = request.PhoneNumber.Trim();
-
             var url = $"https://verify.twilio.com/v2/Services/{_serviceSid}/VerificationCheck";
             var payload = new FormUrlEncodedContent(new[]
             {
@@ -144,10 +139,10 @@ namespace MicroCredit.Controllers
                 _logger.LogInformation(
                     "Sending request to Twilio API: {Url} with payload: {Payload}",
                     url, JsonSerializer.Serialize(payload));
-
-                var response = await _httpClient.PostAsync(url, payload);
-                var responseContent = await response.Content.ReadAsStringAsync();
-
+                var response = await
+                _httpClient.PostAsync(url, payload);
+                var responseContent = await
+                response.Content.ReadAsStringAsync();
                 _logger.LogInformation(
                     "Received response from Twilio API: {ResponseContent}",
                     responseContent);
@@ -185,8 +180,7 @@ namespace MicroCredit.Controllers
                     {
                         message = "Verification successful",
                         token
-                    }
-                    );
+                    });
                 }
                 else
                 {
@@ -196,8 +190,7 @@ namespace MicroCredit.Controllers
                     return BadRequest(new
                     {
                         message = "Invalid code"
-                    }
-                    );
+                    });
                 }
             }
             catch (Exception ex)
@@ -208,8 +201,7 @@ namespace MicroCredit.Controllers
                 return StatusCode(500, new
                 {
                     message = "An error occurred while verifying the code"
-                }
-                );
+                });
             }
         }
     }

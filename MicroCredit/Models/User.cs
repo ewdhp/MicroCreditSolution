@@ -11,13 +11,14 @@ namespace MicroCredit.Models
         [Key]
         [Column(TypeName = "uuid")]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public Guid Id { get; set; }  // Changed from int to Guid
+        public Guid Id { get; set; }
 
         [ForeignKey("FaceId")]
         public string FaceId { get; set; }
 
         [Required(ErrorMessage = "Phone is required.")]
-        [RegularExpression(@"^\d{10}$", ErrorMessage = "Invalid phone number format. It should be a 10-digit number.")]
+        [RegularExpression(@"^\d{10}$",
+        ErrorMessage = "Invalid phone number format. It should be a 10-digit number.")]
         public string Phone { get; set; }
 
         [Required(ErrorMessage = "Name is required.")]
@@ -30,20 +31,18 @@ namespace MicroCredit.Models
         [Timestamp]
         public byte[] RowVersion { get; set; }
 
-        // Parameterless constructor required by EF Core
         public User()
         {
-            Phone = string.Empty; // Initialize Phone to avoid null reference
-            Name = string.Empty; // Initialize Name to avoid null reference
-            RegDate = DateTime.Now; // Initialize RegDate to avoid null reference
+            Phone = string.Empty;
+            Name = string.Empty;
+            RegDate = DateTime.Now;
         }
 
-        // Constructor to initialize required properties
         public User(string phone, string name)
         {
             Phone = phone ?? throw new ArgumentNullException(nameof(phone));
             Name = name ?? throw new ArgumentNullException(nameof(name));
-            RegDate = DateTime.Now; // or set to a default value
+            RegDate = DateTime.Now;
         }
     }
 }

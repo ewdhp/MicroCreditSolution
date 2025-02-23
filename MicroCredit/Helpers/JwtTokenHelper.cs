@@ -6,12 +6,13 @@ namespace MicroCredit.Helpers
 {
     public static class JwtTokenHelper
     {
-        public static IDictionary<string, string> ExtractClaims(string token)
+        public static IDictionary<string, string>
+        ExtractClaims(string token)
         {
             var handler = new JwtSecurityTokenHandler();
             var jwtToken = handler.ReadJwtToken(token);
-
-            var claims = jwtToken.Claims.ToDictionary(c => c.Type, c => c.Value);
+            var claims = jwtToken.Claims
+            .ToDictionary(c => c.Type, c => c.Value);
             return claims;
         }
     }

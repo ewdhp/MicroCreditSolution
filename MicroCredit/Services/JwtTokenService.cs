@@ -21,13 +21,15 @@ namespace MicroCredit.Services
             var claims = new[]
             {
                 new Claim(JwtRegisteredClaimNames.Sub, phoneNumber),
-                new Claim("UserId", phoneNumber), // Use phone number as user ID
-                new Claim("Fingerprint", fingerprint), // Add fingerprint as a claim
+                new Claim("UserId", phoneNumber),
+                new Claim("Fingerprint", fingerprint),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            var key = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+            var creds = new SigningCredentials(
+                key, SecurityAlgorithms.HmacSha256);
 
             var token = new JwtSecurityToken(
                 issuer: _configuration["Jwt:Issuer"],

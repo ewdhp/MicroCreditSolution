@@ -10,8 +10,8 @@ namespace MicroCredit
     {
         public static void Main(string[] args)
         {
-            var cancellationTokenSource = new CancellationTokenSource();
-
+            var cancellationTokenSource = new
+            CancellationTokenSource();
             Console.CancelKeyPress += (sender, e) =>
             {
                 e.Cancel = true;
@@ -19,16 +19,15 @@ namespace MicroCredit
             };
 
             var host = CreateHostBuilder(args).Build();
-
-            var lifetime = host.Services.GetRequiredService<IHostApplicationLifetime>();
+            var lifetime = host.Services
+            .GetRequiredService<IHostApplicationLifetime>();
             lifetime.ApplicationStopping.Register(OnShutdown);
-
-            host.RunAsync(cancellationTokenSource.Token).GetAwaiter().GetResult();
+            host.RunAsync(cancellationTokenSource.Token)
+            .GetAwaiter().GetResult();
         }
 
         private static void OnShutdown()
         {
-            // Perform any necessary cleanup here
             Console.WriteLine("Application is shutting down...");
         }
 
@@ -37,7 +36,9 @@ namespace MicroCredit
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();
-                    webBuilder.UseUrls("http://localhost:5000", "https://localhost:5001");
+                    webBuilder.UseUrls(
+                        "http://localhost:5000",
+                     "https://localhost:5001");
                 });
     }
 }

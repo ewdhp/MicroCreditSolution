@@ -12,8 +12,6 @@ namespace MicroCredit.Services
             var ipAddress = httpContext.Connection.RemoteIpAddress?.ToString();
             var userAgent = httpContext.Request.Headers["User-Agent"].ToString();
             var fingerprint = $"{ipAddress}-{userAgent}";
-
-            // Optionally, you can hash the fingerprint for added security
             using (var sha256 = SHA256.Create())
             {
                 var bytes = Encoding.UTF8.GetBytes(fingerprint);

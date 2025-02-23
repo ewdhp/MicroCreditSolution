@@ -24,12 +24,12 @@ namespace MicroCredit
 
         public IConfiguration Configuration { get; }
 
-        // filepath: /home/ewd/MicroCreditSolution/MicroCredit/Startup.cs
         public void ConfigureServices(IServiceCollection services)
         {
             // Register services
             services.AddDbContext<ApplicationDbContext>(options =>
-            options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection")));
+            options.UseNpgsql(Configuration
+            .GetConnectionString("DefaultConnection")));
             services.AddScoped<JwtTokenService>();
             services.AddScoped<UserFingerprintService>();
 
@@ -38,32 +38,40 @@ namespace MicroCredit
             {
                 options.AddPolicy("AllowFrontend", builder =>
                 {
-                    builder.WithOrigins("http://localhost:3000")
-                           .AllowAnyHeader()
-                           .AllowAnyMethod()
-                           .AllowCredentials();
+                    builder.WithOrigins(
+                        "http://localhost:3000")
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowCredentials();
                 });
             });
 
             services.AddControllers();
 
-            // Log the JWT key to verify it's being loaded correctly
             var jwtKey = Configuration["Jwt:Key"];
             if (string.IsNullOrEmpty(jwtKey))
             {
-                throw new ArgumentNullException("Jwt:Key", "JWT Key is not configured.");
+                throw new
+                ArgumentNullException(
+                    "Jwt:Key",
+                    "JWT Key is not configured."
+                );
             }
             var key = Encoding.ASCII.GetBytes(jwtKey);
+
             services.AddAuthentication(x =>
             {
-                x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                x.DefaultAuthenticateScheme = JwtBearerDefaults
+                .AuthenticationScheme;
+                x.DefaultChallengeScheme = JwtBearerDefaults
+                .AuthenticationScheme;
             })
             .AddJwtBearer(x =>
             {
                 x.RequireHttpsMetadata = false;
                 x.SaveToken = true;
-                x.TokenValidationParameters = new TokenValidationParameters
+                x.TokenValidationParameters = new
+                TokenValidationParameters
                 {
                     ValidateIssuer = true,
                     ValidateAudience = true,
@@ -74,24 +82,24 @@ namespace MicroCredit
                     IssuerSigningKey = new SymmetricSecurityKey(key)
                 };
 
-                // Allow self-signed certificates in development
                 x.BackchannelHttpHandler = new HttpClientHandler
                 {
-                    ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => true
+                    ServerCertificateCustomValidationCallback = (
+                        sender, cert, chain, sslPolicyErrors
+                    ) => true
                 };
             });
 
             services.AddAuthorization(options =>
             {
-                options.AddPolicy("UserPolicy", policy => policy.RequireClaim("UserId"));
+                options.AddPolicy("UserPolicy",
+                policy => policy.RequireClaim("UserId"));
             });
         }
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
-            {
                 app.UseDeveloperExceptionPage();
-            }
             else
             {
                 app.UseExceptionHandler("/Home/Error");
@@ -101,16 +109,10 @@ namespace MicroCredit
             app.UseHttpsRedirection();
             app.UseStaticFiles();
             app.UseRouting();
-
-            // Apply CORS policy
             app.UseCors("AllowFrontend");
-
             app.UseAuthentication();
             app.UseAuthorization();
-
-            // Apply JWT middleware
             app.UseMiddleware<JwtMiddleware>();
-
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();

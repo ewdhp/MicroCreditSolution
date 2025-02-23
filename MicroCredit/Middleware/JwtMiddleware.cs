@@ -22,15 +22,16 @@ namespace MicroCredit.Middleware
 
         public async Task Invoke(HttpContext context)
         {
-            var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
-
+            var token = context.Request.Headers
+            ["Authorization"].FirstOrDefault()
+            ?.Split(" ").Last();
             if (token != null)
                 AttachUserToContext(context, token);
-
             await _next(context);
         }
 
-        private void AttachUserToContext(HttpContext context, string token)
+        private void AttachUserToContext
+        (HttpContext context, string token)
         {
             try
             {
@@ -48,15 +49,15 @@ namespace MicroCredit.Middleware
                 }, out SecurityToken validatedToken);
 
                 var jwtToken = (JwtSecurityToken)validatedToken;
-                var userId = jwtToken.Claims.First(x => x.Type == "UserId").Value;
-
-                // Attach user to context on successful JWT validation
+                var userId = jwtToken.Claims
+                .First(x => x.Type == "UserId").Value;
                 context.Items["UserId"] = userId;
             }
             catch
             {
                 // Do nothing if JWT validation fails
-                // User is not attached to context so request won't have access to secure routes
+                // User is not attached to context so 
+                // request won't have access to secure routes
             }
         }
     }
