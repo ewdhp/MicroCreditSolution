@@ -54,6 +54,12 @@
             "label": "build-test",
             "dependsOn": ["build", "test"],
             "dependsOrder": "sequence"
+        },
+        {
+            "label": "clear-test-results",
+            "type": "shell",
+            "command": "rm -rf TestResults",
+            "problemMatcher": []
         }
     ]
 }

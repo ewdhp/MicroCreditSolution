@@ -1,13 +1,21 @@
 import requests
 from requests.auth import HTTPBasicAuth
 
-#send sms
-account_sid = "AC23f88289374bd1212027f88ec0bf0c27"
-auth_token = "fedc8978719541bd4f46c9a7bc3875ae"
+import requests
+from requests.auth import HTTPBasicAuth
 
-url = "https://verify.twilio.com/v2/Services/VAc6245af6c94f63ff1903cb8024c918ad/Verifications"
-data = {"To": "+523321890176", "Channel": "sms"}
+account_sid = 'AC23f88289374bd1212027f88ec0bf0c27'
+auth_token = '2269e69c15c86407bbdec1a486657b0a'
+service_sid = 'VAc6245af6c94f63ff1903cb8024c918ad'
+phone_number = '+1234567890'
 
-response = requests.post(url, data=data, auth=HTTPBasicAuth(account_sid, auth_token))
+url = f'https://verify.twilio.com/v2/Services/{service_sid}/Verifications'
+payload = {
+    'To': phone_number,
+    'Channel': 'sms'
+}
 
-print(response.json())  # Check response
+response = requests.post(url, data=payload, auth=HTTPBasicAuth(account_sid, auth_token))
+
+print(response.status_code)
+print(response.json())

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Threading;
 
@@ -10,8 +11,7 @@ namespace MicroCredit
     {
         public static void Main(string[] args)
         {
-            var cancellationTokenSource = new
-            CancellationTokenSource();
+            var cancellationTokenSource = new CancellationTokenSource();
             Console.CancelKeyPress += (sender, e) =>
             {
                 e.Cancel = true;
@@ -19,11 +19,9 @@ namespace MicroCredit
             };
 
             var host = CreateHostBuilder(args).Build();
-            var lifetime = host.Services
-            .GetRequiredService<IHostApplicationLifetime>();
+            var lifetime = host.Services.GetRequiredService<IHostApplicationLifetime>();
             lifetime.ApplicationStopping.Register(OnShutdown);
-            host.RunAsync(cancellationTokenSource.Token)
-            .GetAwaiter().GetResult();
+            host.RunAsync(cancellationTokenSource.Token).GetAwaiter().GetResult();
         }
 
         private static void OnShutdown()
@@ -36,9 +34,11 @@ namespace MicroCredit
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();
-                    webBuilder.UseUrls(
-                        "http://localhost:5000",
-                     "https://localhost:5001");
+                    webBuilder.ConfigureKestrel((context, serverOptions) =>
+                    {
+                        serverOptions.Configure(context.Configuration.GetSection("Kestrel"));
+                    });
+                    webBuilder.UseUrls("http://localhost:5000", "https://localhost:5001");
                 });
     }
 }

@@ -20,4 +20,9 @@ namespace MicroCredit.Services
             }
         }
     }
+
+    public interface IUserFingerprintService
+    {
+        string GenerateUserFingerprint(HttpContext httpContext);
+    }
 }

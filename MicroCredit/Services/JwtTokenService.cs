@@ -41,4 +41,9 @@ namespace MicroCredit.Services
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
     }
+
+    public interface IJwtTokenService
+    {
+        string GenerateJwtToken(string phoneNumber, string fingerprint);
+    }
 }
