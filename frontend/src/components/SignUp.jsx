@@ -30,47 +30,49 @@ const SignUp = () => {
     setVerificationCode(e.target.value);
   };
 
-  const handleSubmitStep0 = async (e) => {
+const handleSubmitStep0 = async (e) => {
     e.preventDefault();
     console.log("handleSubmitStep0 called with formData:", formData);
     const phoneNumberPattern = /^\+\d{12}$/;
 
     if (!phoneNumberPattern.test(formData.phoneNumber)) {
-      console.log("Invalid phone number format");
-      setAlert({ type: "error", message: "Formato de número de teléfono inválido. Debe ser un número de 10 dígitos.", isModal: true, useTransparency: false });
-      return;
+        console.log("Invalid phone number format");
+        setAlert({ type: "error", message: "Formato de número de teléfono inválido. Debe ser un número de 10 dígitos.", isModal: true, useTransparency: false });
+        return;
     }
 
     if (formData.name.trim() === "") {
-      console.log("Name cannot be empty");
-      setAlert({ type: "error", message: "El nombre no puede estar vacío.", isModal: true, useTransparency: false });
-      return;
+        console.log("Name cannot be empty");
+        setAlert({ type: "error", message: "El nombre no puede estar vacío.", isModal: true, useTransparency: false });
+        return;
     }
 
     setIsLoading(true);
 
     try {
-      const response = await axios.post("https://localhost:5001/api/auth/send", {
-        phoneNumber: formData.phoneNumber,
-        name: formData.name
-      });
+        const response = await axios.post("https://localhost:5001/api/auth/signup", {
+            phoneNumber: formData.phoneNumber,
+            name: formData.name
+        }, {
+            withCredentials: true
+        });
 
-      if (response.status === 200) {
-        console.log("Verification code sent:", response.data.code);
-        setCurrentStep(1);
-        setCountdown(30);
-        setCanResend(false);
-      } else {
-        console.log("Error sending verification code:", response.data.message);
-        setAlert({ type: "error", message: response.data.message || "Error al enviar el código. Por favor, inténtelo de nuevo.", isModal: true, useTransparency: false });
-      }
+        if (response.status === 200) {
+            console.log("Verification code sent:", response.data.code);
+            setCurrentStep(1);
+            setCountdown(30);
+            setCanResend(false);
+        } else {
+            console.log("Error sending verification code:", response.data.message);
+            setAlert({ type: "error", message: response.data.message || "Error al enviar el código. Por favor, inténtelo de nuevo.", isModal: true, useTransparency: false });
+        }
     } catch (error) {
-      console.log("Network error:", error);
-      setAlert({ type: "error", message: "Error de red. Por favor, inténtelo de nuevo.", isModal: true, useTransparency: false });
+        console.log("Network error:", error);
+        setAlert({ type: "error", message: "Error de red. Por favor, inténtelo de nuevo.", isModal: true, useTransparency: false });
     } finally {
-      setIsLoading(false);
+        setIsLoading(false);
     }
-  };
+};
 
   const handleSubmitStep1 = async (e) => {
     e.preventDefault();
@@ -137,7 +139,7 @@ const SignUp = () => {
     setCountdown(30);
 
     try {
-      const response = await axios.post("https://localhost:5001/api/auth/send", {
+      const response = await axios.post("https://localhost:5001/api/auth/signup", {
         phoneNumber: formData.phoneNumber,
         name: formData.name
       });

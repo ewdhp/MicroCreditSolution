@@ -7,7 +7,7 @@ using System.Text;
 
 namespace MicroCredit.Services
 {
-    public class JwtTokenService
+    public class JwtTokenService : IJwtTokenService
     {
         private readonly IConfiguration _configuration;
 

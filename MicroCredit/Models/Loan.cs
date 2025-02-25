@@ -7,8 +7,8 @@ namespace MicroCredit.Models
     public class Loan
     {
         [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         [Column(TypeName = "uuid")]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public Guid Id { get; set; }
 
         [Required(ErrorMessage = "User ID is required")]

@@ -44,10 +44,6 @@ namespace MicroCredit.Controllers
             _jwtTokenService = jwtTokenService;
             _userFingerprintService = userFingerprintService;
             _context = context;
-            _logger.LogInformation("Twilio AccountSid: {AccountSid}", _accountSid);
-            _logger.LogInformation("Twilio AuthToken: {AuthToken}", _authToken);
-            _logger.LogInformation("Twilio ServiceSid: {ServiceSid}", _serviceSid);
-            _logger.LogInformation("Twilio Auth Header: {AuthHeader}", _twilioAuthHeader);
         }
 
         [HttpPost("signup")]
@@ -80,59 +76,6 @@ namespace MicroCredit.Controllers
             return Ok(new { Message = "Signup successful" });
         }
 
-        [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] SMSRequest request)
-        {
-            _logger.LogInformation("Login request received for {PhoneNumber}", request.Phone);
-
-            if (!ModelState.IsValid)
-            {
-                _logger.LogInformation("Invalid model request");
-                return BadRequest(new { message = "Invalid model request" });
-            }
-
-            var user = _context.Users.FirstOrDefault(u => u.Phone == request.Phone);
-            if (user == null)
-            {
-                _logger.LogInformation("User with phone number {PhoneNumber} does not exist", request.Phone);
-                return BadRequest(new { message = "User does not exist" });
-            }
-
-            var token = _jwtTokenService.GenerateJwtToken(user.Id.ToString(), user.Name);
-
-            return Ok(new { token });
-        }
-
-        [HttpPost("resend")]
-        public async Task<IActionResult> ResendVerificationSms([FromBody] SMSRequest request)
-        {
-            _logger.LogInformation("Resend verification SMS request received for {PhoneNumber}", request.Phone);
-
-            if (!ModelState.IsValid)
-            {
-                _logger.LogInformation("Invalid model request");
-                return BadRequest(new { message = "Invalid model request" });
-            }
-
-            var existingUser = _context.Users.FirstOrDefault(u => u.Phone == request.Phone);
-            if (existingUser == null)
-            {
-                _logger.LogInformation("User with phone number {PhoneNumber} does not exist", request.Phone);
-                return BadRequest(new { message = "User does not exist" });
-            }
-
-            var result = await SendVerificationSms(request.Phone);
-
-            if (result is OkObjectResult okResult)
-            {
-                var fingerprint = _userFingerprintService.GenerateUserFingerprint(HttpContext);
-                var token = GenerateToken(request.Phone, fingerprint);
-                return Ok(new { message = "Verification SMS sent successfully. Please verify the code.", token });
-            }
-
-            return result;
-        }
-
         private async Task<IActionResult> SendVerificationSms(string phoneNumber)
         {
             var sanitizedPhoneNumber = phoneNumber.Trim();
@@ -145,8 +88,6 @@ namespace MicroCredit.Controllers
 
             try
             {
-                _logger.LogInformation("Sending request to Twilio API: {Url} with payload: {Payload}", url, JsonSerializer.Serialize(new { To = sanitizedPhoneNumber, Channel = "sms" }));
-
                 var requestMessage = new HttpRequestMessage(HttpMethod.Post, url)
                 {
                     Content = payload
@@ -155,18 +96,15 @@ namespace MicroCredit.Controllers
 
                 var response = await _httpClient.SendAsync(requestMessage);
                 var responseContent = await response.Content.ReadAsStringAsync();
-                _logger.LogInformation("Received response from Twilio API: {ResponseContent}", responseContent);
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    _logger.LogError("Failed to send verification SMS. Status code: {StatusCode}, Response: {ResponseContent}", response.StatusCode, responseContent);
                     return StatusCode((int)response.StatusCode, new { message = "Failed to send verification SMS" });
                 }
 
                 var fingerprint = _userFingerprintService.GenerateUserFingerprint(HttpContext);
                 var token = GenerateToken(sanitizedPhoneNumber, fingerprint);
 
-                _logger.LogInformation("Verification SMS sent to {PhoneNumber}", sanitizedPhoneNumber);
                 return Ok(new { message = "Verification SMS sent successfully. Please verify the code.", token });
             }
             catch (Exception ex)
@@ -176,98 +114,10 @@ namespace MicroCredit.Controllers
             }
         }
 
-        [HttpPost("verify")]
-        public async Task<IActionResult> VerifySms([FromBody] SMSRequest request)
-        {
-            _logger.LogInformation("Received request to verify code for {PhoneNumber}", request.Phone);
-
-            if (!ModelState.IsValid)
-            {
-                _logger.LogInformation("Invalid model request");
-                return BadRequest(new { message = "Invalid model request" });
-            }
-
-            // Validate the token
-            if (!ValidateToken(request.Token))
-            {
-                _logger.LogWarning("Invalid token for {PhoneNumber}", request.Phone);
-                return BadRequest(new { message = "Invalid token" });
-            }
-
-            var sanitizedPhoneNumber = request.Phone.Trim();
-            var url = $"https://verify.twilio.com/v2/Services/{_serviceSid}/VerificationCheck";
-            var payload = new FormUrlEncodedContent(new[]
-            {
-                new KeyValuePair<string, string>("To", sanitizedPhoneNumber),
-                new KeyValuePair<string, string>("Code", request.Code)
-            });
-
-            try
-            {
-                _logger.LogInformation("Sending request to Twilio API: {Url} with payload: {Payload}", url, JsonSerializer.Serialize(payload));
-                var response = await _httpClient.PostAsync(url, payload);
-                var responseContent = await response.Content.ReadAsStringAsync();
-                _logger.LogInformation("Received response from Twilio API: {ResponseContent}", responseContent);
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    _logger.LogError("Verification failed for {PhoneNumber}. Status Code: {StatusCode}, Response: {ResponseContent}", sanitizedPhoneNumber, response.StatusCode, responseContent);
-                    return StatusCode((int)response.StatusCode, new { message = "Verification failed" });
-                }
-
-                var responseData = JsonSerializer.Deserialize<TwilioVerificationResponse>(responseContent);
-                if (responseData.status == "approved" && responseData.valid)
-                {
-                    if (request.action == "signup")
-                    {
-                        var user = new User
-                        {
-                            Phone = sanitizedPhoneNumber,
-                            Name = request.Name
-                        };
-                        _context.Users.Add(user);
-                        _context.SaveChanges();
-                    }
-                    if (request.action == "login")
-                    {
-                        var user = _context.Users.FirstOrDefault(u => u.Phone == sanitizedPhoneNumber);
-                        if (user == null)
-                        {
-                            _logger.LogWarning("User not found for {PhoneNumber}", sanitizedPhoneNumber);
-                            return BadRequest(new { message = "User not found" });
-                        }
-                    }
-
-                    var fingerprint = _userFingerprintService.GenerateUserFingerprint(HttpContext);
-                    var token = _jwtTokenService.GenerateJwtToken(sanitizedPhoneNumber, fingerprint);
-                    _logger.LogInformation("Verification successful for {PhoneNumber}", sanitizedPhoneNumber);
-                    return Ok(new { message = "Verification successful", token });
-                }
-                else
-                {
-                    _logger.LogWarning("Invalid code for {PhoneNumber}", sanitizedPhoneNumber);
-                    return BadRequest(new { message = "Invalid code" });
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An error occurred while verifying the code for {PhoneNumber}", sanitizedPhoneNumber);
-                return StatusCode(500, new { message = "An error occurred while verifying the code" });
-            }
-        }
-
         private string GenerateToken(string phoneNumber, string fingerprint)
         {
-            // Combine phone number and fingerprint to generate a unique token
             var tokenData = $"{phoneNumber}:{fingerprint}";
             return Convert.ToBase64String(Encoding.UTF8.GetBytes(tokenData));
-        }
-
-        private bool ValidateToken(string token)
-        {
-            // Implement your token validation logic here
-            // For example, you can check if the token exists in a database or matches a predefined value
-            return !string.IsNullOrEmpty(token) && token == "your_predefined_token";
         }
     }
 
