@@ -70,10 +70,101 @@ namespace MicroCredit.Controllers
             {
                 var fingerprint = _userFingerprintService.GenerateUserFingerprint(HttpContext);
                 var token = GenerateToken(request.Phone, fingerprint);
+
+                var newUser = new User
+                {
+                    Phone = request.Phone,
+                    EncryptedPhase = "encryptedPhaseValue"
+                };
+
+                _context.Users.Add(newUser);
+                await _context.SaveChangesAsync();
+
                 return Ok(new { message = "Verification SMS sent successfully. Please verify the code.", token });
             }
 
             return Ok(new { Message = "Signup successful" });
+        }
+
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] SMSRequest request)
+        {
+            _logger.LogInformation("Login request received for {PhoneNumber}", request.Phone);
+
+            if (!ModelState.IsValid)
+            {
+                _logger.LogInformation("Invalid model request");
+                return BadRequest(new { message = "Invalid model request" });
+            }
+
+            var existingUser = _context.Users.FirstOrDefault(u => u.Phone == request.Phone);
+            if (existingUser == null)
+            {
+                _logger.LogInformation("User with phone number {PhoneNumber} does not exist", request.Phone);
+                return BadRequest(new { message = "User does not exist" });
+            }
+
+            var result = await SendVerificationSms(request.Phone);
+
+            if (result is OkObjectResult)
+            {
+                var fingerprint = _userFingerprintService.GenerateUserFingerprint(HttpContext);
+                var token = GenerateToken(request.Phone, fingerprint);
+                return Ok(new { message = "Verification SMS sent successfully. Please verify the code.", token });
+            }
+
+            return Ok(new { Message = "Login successful" });
+        }
+
+        [HttpPost("verify")]
+        public async Task<IActionResult> VerifyCode([FromBody] SMSRequest request)
+        {
+            _logger.LogInformation("Verification request received for {PhoneNumber}", request.Phone);
+
+            if (!ModelState.IsValid)
+            {
+                _logger.LogInformation("Invalid model request");
+                return BadRequest(new { message = "Invalid model request" });
+            }
+
+            var url = $"https://verify.twilio.com/v2/Services/{_serviceSid}/VerificationCheck";
+            var payload = new FormUrlEncodedContent(new[]
+            {
+                new KeyValuePair<string, string>("To", request.Phone),
+                new KeyValuePair<string, string>("Code", request.Code)
+            });
+
+            try
+            {
+                var requestMessage = new HttpRequestMessage(HttpMethod.Post, url)
+                {
+                    Content = payload
+                };
+                requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(System.Text.Encoding.ASCII.GetBytes($"{_accountSid}:{_authToken}")));
+
+                var response = await _httpClient.SendAsync(requestMessage);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return StatusCode((int)response.StatusCode, new { message = "Failed to verify code" });
+                }
+
+                var verificationResponse = JsonSerializer.Deserialize<TwilioVerificationResponse>(responseContent);
+                if (verificationResponse.valid)
+                {
+                    return Ok(new { message = "Code verified successfully" });
+                }
+                else
+                {
+                    return BadRequest(new { message = "Invalid verification code" });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while verifying the code");
+                return StatusCode(500, new { message = "An error occurred while verifying the code" });
+            }
         }
 
         private async Task<IActionResult> SendVerificationSms(string phoneNumber)
@@ -125,7 +216,7 @@ namespace MicroCredit.Controllers
     {
         [Required]
         [MaxLength(10)]
-        [RegularExpression(@"^(signup|login)$", ErrorMessage = "Action must be either 'signup' or 'login'")]
+        [RegularExpression(@"^(signup|login|verify)$", ErrorMessage = "Action must be either 'signup', 'login', or 'verify'")]
         public string action { get; set; }
 
         [RegularExpression(@"^\+\d{10,15}$", ErrorMessage = "Phone number must be in E.164 format")]

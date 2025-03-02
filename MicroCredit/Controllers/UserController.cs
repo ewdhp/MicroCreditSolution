@@ -23,24 +23,16 @@ namespace MicroCredit.Controllers
         }
 
         [HttpGet]
-        public async Task
-        <ActionResult<IEnumerable<User>>> GetUsers()
+        public async Task<ActionResult<IEnumerable<User>>> GetUsers()
         {
-            var userId = User.Claims
-            .FirstOrDefault(
-                c => c.Type == "UserId")
-                ?.Value;
+            var userId = User.Claims.FirstOrDefault(c => c.Type == "UserId")?.Value;
 
             if (userId == null)
                 return Unauthorized();
-            if (!Guid.TryParse(userId,
-                out var userGuid))
+            if (!Guid.TryParse(userId, out var userGuid))
                 return Unauthorized();
 
-            var users = await
-            _context.Users.Where(
-                u => u.Id == userGuid)
-                .ToListAsync();
+            var users = await _context.Users.Where(u => u.Id == userGuid).ToListAsync();
 
             if (users == null || !users.Any())
                 return NotFound("No users found.");
@@ -51,47 +43,34 @@ namespace MicroCredit.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<User>> GetUser(Guid id)
         {
-            var userId = User.Claims.FirstOrDefault(
-                c => c.Type == "UserId")
-                ?.Value;
+            var userId = User.Claims.FirstOrDefault(c => c.Type == "UserId")?.Value;
 
-            if (userId == null || !Guid.TryParse(userId,
-            out var userGuid) || id != userGuid)
+            if (userId == null || !Guid.TryParse(userId, out var userGuid) || id != userGuid)
                 return Unauthorized();
-            var user = await
-            _context.Users.FindAsync(id);
+            var user = await _context.Users.FindAsync(id);
             if (user == null)
-                return NotFound(
-                    $"User with ID {id} not found.");
+                return NotFound($"User with ID {id} not found.");
 
             return Ok(user);
         }
 
         [HttpPost]
-        public async Task<ActionResult<User>>
-        CreateUser([FromBody] User user)
+        public async Task<ActionResult<User>> CreateUser([FromBody] User user)
         {
             if (_context.Users.Any(u => u.Phone == user.Phone))
-                return Conflict(
-                    "A user with the same phone number already exists."
-                );
+                return Conflict("A user with the same phone number already exists.");
 
             user.Phone = user.Phone.Trim();
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetUser),
-            new { id = user.Id }, user);
+            return CreatedAtAction(nameof(GetUser), new { id = user.Id }, user);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult>
-        UpdateUser(Guid id, [FromBody] User user)
+        public async Task<IActionResult> UpdateUser(Guid id, [FromBody] User user)
         {
-            var userId = User.Claims
-            .FirstOrDefault(c => c.Type == "UserId")?.Value;
-            if (userId == null || !Guid.TryParse(
-                userId, out var userGuid) ||
-                id != userGuid)
+            var userId = User.Claims.FirstOrDefault(c => c.Type == "UserId")?.Value;
+            if (userId == null || !Guid.TryParse(userId, out var userGuid) || id != userGuid)
             {
                 return Unauthorized();
             }
@@ -102,12 +81,10 @@ namespace MicroCredit.Controllers
             }
 
             user.Phone = user.Phone.Trim();
-            var existingUser = await
-            _context.Users.FindAsync(id);
+            var existingUser = await _context.Users.FindAsync(id);
             if (existingUser != null)
             {
-                _context.Entry(existingUser)
-                .State = EntityState.Detached;
+                _context.Entry(existingUser).State = EntityState.Detached;
             }
             _context.Entry(user).State = EntityState.Modified;
             try
@@ -131,19 +108,13 @@ namespace MicroCredit.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(Guid id)
         {
-            var userId = User.Claims
-            .FirstOrDefault(c => c.Type == "UserId")
-                ?.Value;
+            var userId = User.Claims.FirstOrDefault(c => c.Type == "UserId")?.Value;
 
-            if (userId == null || !Guid.TryParse(
-                userId, out var userGuid) ||
-                id != userGuid)
+            if (userId == null || !Guid.TryParse(userId, out var userGuid) || id != userGuid)
                 return Unauthorized();
-            var user = await
-            _context.Users.FindAsync(id);
+            var user = await _context.Users.FindAsync(id);
             if (user == null)
-                return NotFound(
-                $"User with ID {id} not found.");
+                return NotFound($"User with ID {id} not found.");
 
             _context.Users.Remove(user);
             await _context.SaveChangesAsync();
