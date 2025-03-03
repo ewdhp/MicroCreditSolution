@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace MicroCredit.Migrations
 {
     /// <inheritdoc />
-    public partial class UpdateUserModel : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -41,7 +41,7 @@ namespace MicroCredit.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     FaceId = table.Column<string>(type: "text", nullable: true),
-                    EncryptedPhase = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
+                    Phase = table.Column<int>(type: "integer", nullable: false),
                     Phone = table.Column<string>(type: "text", nullable: false),
                     Name = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
                     RegDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
+using MicroCredit.Services;
 
 namespace MicroCredit.Models
 {
@@ -17,12 +18,8 @@ namespace MicroCredit.Models
         public string FaceId { get; set; }
 
         [Required(ErrorMessage = "Phase is required.")]
-        [NotMapped]
-        public string Phase { get; set; }
-
-        [MaxLength(256)]
-        [Required(ErrorMessage = "Phase is required.")]
-        public string EncryptedPhase { get; set; }
+        [RegularExpression(@"^[1-7]$", ErrorMessage = "Phase must be a number between 1 and 7.")]
+        public int Phase { get; set; }
 
         [Required(ErrorMessage = "Phone is required.")]
         [RegularExpression(@"^\d{10}$",
@@ -46,8 +43,8 @@ namespace MicroCredit.Models
         {
             Phone = string.Empty;
             Name = string.Empty;
-            RegDate = DateTime.Now;
-            Phase = EncryptPhase(0); // Default phase value
+            RegDate = DateTime.UtcNow;  // Use UTC instead of Local
+            Phase = 0; // Default phase value
             Fingerprint = string.Empty;
         }
 
@@ -55,15 +52,11 @@ namespace MicroCredit.Models
         {
             Phone = phone ?? throw new ArgumentNullException(nameof(phone));
             Name = name ?? throw new ArgumentNullException(nameof(name));
-            RegDate = DateTime.Now;
-            Phase = EncryptPhase(phase);
+            RegDate = DateTime.UtcNow;  // Use UTC instead of Local
+            Phase = phase;
             Fingerprint = fingerprint ?? throw new ArgumentNullException(nameof(fingerprint));
         }
 
-        private string EncryptPhase(int phase)
-        {
-            // Implement your encryption logic here
-            return Convert.ToBase64String(BitConverter.GetBytes(phase));
-        }
+
     }
 }

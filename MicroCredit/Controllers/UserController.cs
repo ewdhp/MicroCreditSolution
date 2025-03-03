@@ -7,6 +7,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using MicroCredit.Data;
 using System;
+using Microsoft.Extensions.Logging;
+using Microsoft.Build.Framework;
 
 namespace MicroCredit.Controllers
 {
@@ -17,10 +19,21 @@ namespace MicroCredit.Controllers
     {
         private readonly ApplicationDbContext _context;
 
-        public UserController(ApplicationDbContext context)
+        private readonly ILogger<UserController> _logger;
+
+        public UserController(ApplicationDbContext context, ILogger<UserController> logger)
         {
             _context = context;
+            _logger = logger;
         }
+
+        [HttpGet("all_users")]
+        public async Task<IActionResult> GetAllUsers()
+        {
+            var users = await _context.Users.ToListAsync(); // Ensure you're querying the correct DbSet
+            return Ok(users);
+        }
+
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<User>>> GetUsers()
@@ -57,12 +70,18 @@ namespace MicroCredit.Controllers
         [HttpPost]
         public async Task<ActionResult<User>> CreateUser([FromBody] User user)
         {
+            _logger.LogInformation("CreateUser request received for {PhoneNumber}", user.Phone);
+
             if (_context.Users.Any(u => u.Phone == user.Phone))
+            {
+                _logger.LogInformation("A user with the same phone number already exists: {PhoneNumber}", user.Phone);
                 return Conflict("A user with the same phone number already exists.");
+            }
 
             user.Phone = user.Phone.Trim();
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
+            _logger.LogInformation("User created successfully: {PhoneNumber}", user.Phone);
             return CreatedAtAction(nameof(GetUser), new { id = user.Id }, user);
         }
 

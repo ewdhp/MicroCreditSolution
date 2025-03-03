@@ -28,12 +28,15 @@ namespace MicroCredit
         {
             // Register services
             services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql("Host=localhost;Port=5432;Username=microcreditsuser;Password=admin;Database=microcreditsdb;"));
             services.AddScoped<JwtTokenService>();
             services.AddScoped<UserFingerprintService>();
 
             // Register IJwtTokenService
             services.AddScoped<IJwtTokenService, JwtTokenService>();
+
+            // Register HttpClient
+            services.AddHttpClient();
 
             // Configure CORS
             services.AddCors(options =>
@@ -87,7 +90,6 @@ namespace MicroCredit
                 options.AddPolicy("UserPolicy", policy => policy.RequireClaim("UserId"));
             });
         }
-
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())

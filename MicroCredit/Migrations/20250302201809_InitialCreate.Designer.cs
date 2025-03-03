@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MicroCredit.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250302113633_UpdateUserModel")]
-    partial class UpdateUserModel
+    [Migration("20250302201809_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -21,7 +21,7 @@ namespace MicroCredit.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasDefaultSchema("Account")
-                .HasAnnotation("ProductVersion", "9.0.0")
+                .HasAnnotation("ProductVersion", "9.0.2")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -71,11 +71,6 @@ namespace MicroCredit.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<string>("EncryptedPhase")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
-
                     b.Property<string>("FaceId")
                         .HasColumnType("text");
 
@@ -87,6 +82,9 @@ namespace MicroCredit.Migrations
                         .IsRequired()
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)");
+
+                    b.Property<int>("Phase")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Phone")
                         .IsRequired()

@@ -19,10 +19,6 @@ namespace MicroCredit.Data
             modelBuilder.HasDefaultSchema("Account");
             modelBuilder.Entity<User>().ToTable("Users");
             modelBuilder.Entity<Loan>().ToTable("Loans");
-            modelBuilder.Entity<User>()
-                .Property(u => u.EncryptedPhase)
-                .HasMaxLength(256)
-                .IsRequired();
         }
     }
 }
