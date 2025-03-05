@@ -52,14 +52,13 @@ def verify_sms(action):
 def create_loan(token):
     url = loan_base_url
     payload = {
-        "UserId": 1,  # Replace with the actual user ID
-        "StartDate": datetime.now().isoformat(),
-        "EndDate": (datetime.now() + timedelta(days=30)).isoformat(),
+        "StartDate": datetime.utcnow().isoformat() + "Z",  # Ensure UTC format
+        "EndDate": (datetime.utcnow() + timedelta(days=30)).isoformat() + "Z",  # Ensure UTC format
         "Amount": 1000,
         "InterestRate": 5.0,
         "Currency": "USD",
-        "Status": "Active",  # Ensure this matches the expected enum value
-        "LoanDescription": "Test Loan"
+        "Status": 1,  # Ensure this matches the expected enum value
+        "LoanDescription": "Test Loan for validation"
     }
     headers = {
         "Content-Type": "application/json",
@@ -74,7 +73,6 @@ def create_loan(token):
     else:
         print(f"Failed to create loan: {response.status_code} - {response.text}")
         return None
-
 def get_loans(token):
     url = loan_base_url
     headers = {
@@ -105,17 +103,11 @@ def get_loan(token, loan_id):
         print(f"Failed to retrieve loan: {response.status_code} - {response.text}")
         return None
 
-def update_loan(token, loan_id):
+def update_loan_status(token, loan_id, status):
     url = f"{loan_base_url}/{loan_id}"
     payload = {
-        "UserId": 1,  # Replace with the actual user ID
-        "StartDate": datetime.now().isoformat(),
-        "EndDate": (datetime.now() + timedelta(days=30)).isoformat(),
-        "Amount": 1500,
-        "InterestRate": 4.5,
-        "Currency": "USD",
-        "Status": "Active",  # Ensure this matches the expected enum value
-        "LoanDescription": "Updated Test Loan"
+        "id": loan_id,
+        "status": status
     }
     headers = {
         "Content-Type": "application/json",
@@ -123,9 +115,9 @@ def update_loan(token, loan_id):
     }
     response = requests.put(url, headers=headers, data=json.dumps(payload), verify=False)
     if response.status_code == 204:
-        print("Loan updated successfully.")
+        print("Loan status updated successfully.")
     else:
-        print(f"Failed to update loan: {response.status_code} - {response.text}")
+        print(f"Failed to update loan status: {response.status_code} - {response.text}")
 
 def delete_loan(token, loan_id):
     url = f"{loan_base_url}/{loan_id}"
@@ -159,8 +151,8 @@ if __name__ == "__main__":
             # Get the created loan
             get_loan(token, loan_id)
             
-            # Update the created loan
-            update_loan(token, loan_id)
+            # Update the status of the created loan
+            update_loan_status(token, loan_id, 2)  # Use integer value for status
             
             # Delete the created loan
             delete_loan(token, loan_id)
