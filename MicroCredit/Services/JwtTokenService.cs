@@ -1,11 +1,10 @@
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Microsoft.AspNetCore.Http;
-using System.Security.Cryptography;
 
 namespace MicroCredit.Services
 {
@@ -13,17 +12,22 @@ namespace MicroCredit.Services
     {
         string GenerateJwtToken(string phoneNumber, string fingerprint);
     }
+
     public class JwtTokenService : IJwtTokenService
     {
         private readonly IConfiguration _configuration;
+        private readonly ILogger<JwtTokenService> _logger;
 
-        public JwtTokenService(IConfiguration configuration)
+        public JwtTokenService(IConfiguration configuration, ILogger<JwtTokenService> logger)
         {
             _configuration = configuration;
+            _logger = logger;
         }
 
         public string GenerateJwtToken(string phoneNumber, string fingerprint)
         {
+            _logger.LogInformation("Generating JWT token for phone number: {PhoneNumber}", phoneNumber);
+
             var claims = new[]
             {
                 new Claim(JwtRegisteredClaimNames.Sub, phoneNumber),
@@ -32,10 +36,8 @@ namespace MicroCredit.Services
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 
-            var key = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
-            var creds = new SigningCredentials(
-                key, SecurityAlgorithms.HmacSha256);
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var token = new JwtSecurityToken(
                 issuer: _configuration["Jwt:Issuer"],
@@ -44,27 +46,10 @@ namespace MicroCredit.Services
                 expires: DateTime.Now.AddMinutes(30),
                 signingCredentials: creds);
 
-            return new JwtSecurityTokenHandler().WriteToken(token);
-        }
-    }
+            var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
+            _logger.LogInformation("Generated JWT token: {Token}", tokenString);
 
-    public interface IUserFingerprintService
-    {
-        string GenerateUserFingerprint(HttpContext httpContext);
-    }
-    public class UserFingerprintService
-    {
-        public string GenerateUserFingerprint(HttpContext httpContext)
-        {
-            var ipAddress = httpContext.Connection.RemoteIpAddress?.ToString();
-            var userAgent = httpContext.Request.Headers["User-Agent"].ToString();
-            var fingerprint = $"{ipAddress}-{userAgent}";
-            using (var sha256 = SHA256.Create())
-            {
-                var bytes = Encoding.UTF8.GetBytes(fingerprint);
-                var hash = sha256.ComputeHash(bytes);
-                return Convert.ToBase64String(hash);
-            }
+            return tokenString;
         }
     }
 }

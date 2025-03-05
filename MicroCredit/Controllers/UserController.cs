@@ -1,14 +1,12 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using MicroCredit.Data;
 using MicroCredit.Models;
-using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
-using MicroCredit.Data;
-using System;
-using Microsoft.Extensions.Logging;
-using Microsoft.Build.Framework;
+using Microsoft.EntityFrameworkCore;
 
 namespace MicroCredit.Controllers
 {
@@ -18,53 +16,12 @@ namespace MicroCredit.Controllers
     public class UserController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
-
         private readonly ILogger<UserController> _logger;
 
         public UserController(ApplicationDbContext context, ILogger<UserController> logger)
         {
             _context = context;
             _logger = logger;
-        }
-
-        [HttpGet("all_users")]
-        public async Task<IActionResult> GetAllUsers()
-        {
-            var users = await _context.Users.ToListAsync(); // Ensure you're querying the correct DbSet
-            return Ok(users);
-        }
-
-
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<User>>> GetUsers()
-        {
-            var userId = User.Claims.FirstOrDefault(c => c.Type == "UserId")?.Value;
-
-            if (userId == null)
-                return Unauthorized();
-            if (!Guid.TryParse(userId, out var userGuid))
-                return Unauthorized();
-
-            var users = await _context.Users.Where(u => u.Id == userGuid).ToListAsync();
-
-            if (users == null || !users.Any())
-                return NotFound("No users found.");
-
-            return Ok(users);
-        }
-
-        [HttpGet("{id}")]
-        public async Task<ActionResult<User>> GetUser(Guid id)
-        {
-            var userId = User.Claims.FirstOrDefault(c => c.Type == "UserId")?.Value;
-
-            if (userId == null || !Guid.TryParse(userId, out var userGuid) || id != userGuid)
-                return Unauthorized();
-            var user = await _context.Users.FindAsync(id);
-            if (user == null)
-                return NotFound($"User with ID {id} not found.");
-
-            return Ok(user);
         }
 
         [HttpPost]
@@ -81,68 +38,81 @@ namespace MicroCredit.Controllers
             user.Phone = user.Phone.Trim();
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
-            _logger.LogInformation("User created successfully: {PhoneNumber}", user.Phone);
+
+            _logger.LogInformation("User created successfully with phone number: {PhoneNumber}", user.Phone);
             return CreatedAtAction(nameof(GetUser), new { id = user.Id }, user);
         }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateUser(Guid id, [FromBody] User user)
+        [HttpGet]
+        public async Task<IActionResult> GetUser()
         {
             var userId = User.Claims.FirstOrDefault(c => c.Type == "UserId")?.Value;
-            if (userId == null || !Guid.TryParse(userId, out var userGuid) || id != userGuid)
+            if (userId == null)
             {
-                return Unauthorized();
+                _logger.LogWarning("UserId claim not found in token.");
+                return Unauthorized(new { message = "UserId claim not found in token." });
             }
 
-            if (id != user.Id)
+            _logger.LogInformation("UserId claim found: {UserId}", userId);
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Phone == userId);
+            if (user == null)
             {
-                return BadRequest("User ID mismatch.");
+                _logger.LogWarning("User with ID {UserId} not found.", userId);
+                return NotFound(new { message = $"User with ID {userId} not found." });
             }
 
-            user.Phone = user.Phone.Trim();
-            var existingUser = await _context.Users.FindAsync(id);
-            if (existingUser != null)
-            {
-                _context.Entry(existingUser).State = EntityState.Detached;
-            }
-            _context.Entry(user).State = EntityState.Modified;
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!UserExists(id))
-                {
-                    return NotFound($"User with ID {id} not found.");
-                }
-                else
-                {
-                    throw;
-                }
-            }
             return Ok(user);
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteUser(Guid id)
+        [HttpDelete]
+        public async Task<IActionResult> DeleteUser()
         {
             var userId = User.Claims.FirstOrDefault(c => c.Type == "UserId")?.Value;
+            if (userId == null)
+            {
+                _logger.LogWarning("UserId claim not found in token.");
+                return Unauthorized(new { message = "UserId claim not found in token." });
+            }
 
-            if (userId == null || !Guid.TryParse(userId, out var userGuid) || id != userGuid)
-                return Unauthorized();
-            var user = await _context.Users.FindAsync(id);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Phone == userId);
             if (user == null)
-                return NotFound($"User with ID {id} not found.");
+            {
+                _logger.LogWarning("User with ID {UserId} not found.", userId);
+                return NotFound(new { message = $"User with ID {userId} not found." });
+            }
 
             _context.Users.Remove(user);
             await _context.SaveChangesAsync();
+            _logger.LogInformation("User with ID {UserId} deleted successfully.", userId);
             return NoContent();
         }
 
-        private bool UserExists(Guid id)
+        [HttpPut]
+        public async Task<IActionResult> UpdateUser([FromBody] User updatedUser)
         {
-            return _context.Users.Any(e => e.Id == id);
+            var userId = User.Claims.FirstOrDefault(c => c.Type == "UserId")?.Value;
+            if (userId == null)
+            {
+                _logger.LogWarning("UserId claim not found in token.");
+                return Unauthorized(new { message = "UserId claim not found in token." });
+            }
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Phone == userId);
+            if (user == null)
+            {
+                _logger.LogWarning("User with ID {UserId} not found.", userId);
+                return NotFound(new { message = $"User with ID {userId} not found." });
+            }
+
+            user.Name = updatedUser.Name;
+            user.Fingerprint = updatedUser.Fingerprint;
+            user.Phase = updatedUser.Phase;
+
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync();
+            _logger.LogInformation("User with ID {UserId} updated successfully.", userId);
+            return Ok(user);
         }
     }
 }

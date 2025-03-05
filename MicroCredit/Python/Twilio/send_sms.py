@@ -5,7 +5,7 @@ import requests
 from requests.auth import HTTPBasicAuth
 
 account_sid = 'AC23f88289374bd1212027f88ec0bf0c27'
-auth_token = '2269e69c15c86407bbdec1a486657b0a'
+auth_token = '18182fad02f4ea41bb604545545e8a64'
 service_sid = 'VAc6245af6c94f63ff1903cb8024c918ad'
 phone_number = '+523321890176'
 
