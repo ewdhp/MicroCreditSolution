@@ -12,7 +12,7 @@ namespace MicroCredit.Models
         public Guid Id { get; set; }
 
         [Required(ErrorMessage = "User ID is required")]
-        public int UserId { get; set; }
+        public Guid UserId { get; set; }  // Changed to Guid
 
         [Required(ErrorMessage = "Start date is required")]
         public DateTime StartDate { get; set; }
@@ -21,14 +21,12 @@ namespace MicroCredit.Models
         public DateTime EndDate { get; set; }
 
         [Required(ErrorMessage = "Amount is required")]
-        [Range(0.01, double.MaxValue,
-        ErrorMessage = "Amount must be greater than zero")]
+        [Range(0.01, double.MaxValue, ErrorMessage = "Amount must be greater than zero")]
         [Column(TypeName = "decimal(18,2)")]
         public decimal Amount { get; set; }
 
         [Required(ErrorMessage = "Interest rate is required")]
-        [Range(0.01, 100.00,
-        ErrorMessage = "Interest rate must be between 0.01 and 100.00")]
+        [Range(0.01, 100.00, ErrorMessage = "Interest rate must be between 0.01 and 100.00")]
         [Column(TypeName = "decimal(5,2)")]
         public decimal InterestRate { get; set; }
 
@@ -40,8 +38,7 @@ namespace MicroCredit.Models
         public CreditStatus Status { get; set; }
 
         [Required(ErrorMessage = "Loan description is required")]
-        [StringLength(500, MinimumLength = 10,
-        ErrorMessage = "Loan description must be between 10 and 500 characters")]
+        [StringLength(500, MinimumLength = 10, ErrorMessage = "Loan description must be between 10 and 500 characters")]
         public string LoanDescription { get; set; }
 
         public Loan()
@@ -51,9 +48,7 @@ namespace MicroCredit.Models
             LoanDescription = string.Empty;
         }
 
-        public Loan(int userId, DateTime startDate, DateTime endDate,
-        decimal amount, decimal interestRate, string currency,
-        CreditStatus status, string loanDescription)
+        public Loan(Guid userId, DateTime startDate, DateTime endDate, decimal amount, decimal interestRate, string currency, CreditStatus status, string loanDescription)
         {
             Id = Guid.NewGuid();
             UserId = userId;
@@ -61,15 +56,9 @@ namespace MicroCredit.Models
             EndDate = endDate;
             Amount = amount;
             InterestRate = interestRate;
-            Currency = string
-            .IsNullOrWhiteSpace(currency) ?
-            "USD" : currency;
+            Currency = string.IsNullOrWhiteSpace(currency) ? "USD" : currency;
             Status = status;
-            LoanDescription = string
-            .IsNullOrWhiteSpace(loanDescription) ?
-            throw new ArgumentNullException(
-                nameof(loanDescription))
-                : loanDescription;
+            LoanDescription = string.IsNullOrWhiteSpace(loanDescription) ? throw new ArgumentNullException(nameof(loanDescription)) : loanDescription;
         }
     }
 
@@ -81,4 +70,15 @@ namespace MicroCredit.Models
         Paid,      // Successfully paid
         Canceled   // Canceled credit
     }
+
+    public class LoanStatusUpdate
+    {
+        [Required]
+        public Guid Id { get; set; }
+
+        [Required]
+        public CreditStatus Status { get; set; }
+    }
+
+
 }

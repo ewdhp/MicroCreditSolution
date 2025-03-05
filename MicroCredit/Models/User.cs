@@ -10,27 +10,31 @@ namespace MicroCredit.Models
     public class User
     {
         [Key]
+        [DatabaseGenerated(
+        DatabaseGeneratedOption.Identity)]
         [Column(TypeName = "uuid")]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public Guid Id { get; set; }
 
         [ForeignKey("FaceId")]
         public string FaceId { get; set; }
 
         [Required(ErrorMessage = "Phase is required.")]
-        [RegularExpression(@"^[1-7]$", ErrorMessage = "Phase must be a number between 1 and 7.")]
+        [RegularExpression(@"^[1-7]$",
+        ErrorMessage = "Phase must be a number")]
         public int Phase { get; set; }
 
         [Required(ErrorMessage = "Phone is required.")]
         [RegularExpression(@"^\d{10}$",
-        ErrorMessage = "Invalid phone number format. It should be a 10-digit number.")]
+        ErrorMessage = "Invalid phone number format." +
+        " It should be a 10-digit number.")]
         public string Phone { get; set; }
 
         [Required(ErrorMessage = "Name is required.")]
-        [StringLength(30, ErrorMessage = "Name must be between 5 and 30 characters.")]
+        [StringLength(30, ErrorMessage =
+        "Name must be between 5 and 30 characters.")]
         public string Name { get; set; }
 
-        [Required(ErrorMessage = "Registration date is required.")]
+        [Required(ErrorMessage = "Reg date is required.")]
         public DateTime RegDate { get; set; }
 
         [Timestamp]

@@ -1,10 +1,15 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
+using MicroCredit.Models;
+using MicroCredit.Data;
 
 namespace MicroCredit.Services
 {
@@ -17,21 +22,30 @@ namespace MicroCredit.Services
     {
         private readonly IConfiguration _configuration;
         private readonly ILogger<JwtTokenService> _logger;
+        private readonly ApplicationDbContext _context;
 
-        public JwtTokenService(IConfiguration configuration, ILogger<JwtTokenService> logger)
+        public JwtTokenService(IConfiguration configuration, ILogger<JwtTokenService> logger, ApplicationDbContext context)
         {
             _configuration = configuration;
             _logger = logger;
+            _context = context;
         }
 
         public string GenerateJwtToken(string phoneNumber, string fingerprint)
         {
             _logger.LogInformation("Generating JWT token for phone number: {PhoneNumber}", phoneNumber);
 
+            var user = _context.Users.FirstOrDefault(u => u.Phone == phoneNumber);
+            if (user == null)
+            {
+                throw new Exception("User not found");
+            }
+
             var claims = new[]
             {
                 new Claim(JwtRegisteredClaimNames.Sub, phoneNumber),
-                new Claim("UserId", phoneNumber),
+                new Claim("PhoneNumber", phoneNumber),
+                new Claim("Id", user.Id.ToString()), // Use "Id" instead of "UserId"
                 new Claim("Fingerprint", fingerprint),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
@@ -50,6 +64,22 @@ namespace MicroCredit.Services
             _logger.LogInformation("Generated JWT token: {Token}", tokenString);
 
             return tokenString;
+        }
+    }
+
+    public class FingerprintService
+    {
+        public string GenerateFingerprint(HttpContext context)
+        {
+            var ipAddress = context.Connection.RemoteIpAddress?.ToString();
+            var userAgent = context.Request.Headers["User-Agent"].ToString();
+            var fingerprint = $"{ipAddress}-{userAgent}";
+            using (var sha256 = SHA256.Create())
+            {
+                var bytes = Encoding.UTF8.GetBytes(fingerprint);
+                var hash = sha256.ComputeHash(bytes);
+                return Convert.ToBase64String(hash);
+            }
         }
     }
 }
