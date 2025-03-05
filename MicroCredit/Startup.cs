@@ -8,6 +8,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using MicroCredit.Middleware;
 using MicroCredit.Services;
+using MicroCredit.ModelBinders;
 using System.Text;
 using MicroCredit.Data;
 using System.Net.Http;
@@ -50,7 +51,10 @@ namespace MicroCredit
                 });
             });
 
-            services.AddControllers();
+            services.AddControllers(options =>
+            {
+                options.ModelBinderProviders.Insert(0, new PhaseRequestModelBinderProvider());
+            });
 
             var jwtKey = Configuration["Jwt:Key"];
             if (string.IsNullOrEmpty(jwtKey))

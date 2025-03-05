@@ -105,5 +105,28 @@ namespace MicroCredit.Controllers
 
             return NoContent();
         }
+
+        [HttpPut("reset-phase")]
+        public async Task<IActionResult> ResetPhase([FromBody] PhaseResetRequest request)
+        {
+            var userId = User.Claims.FirstOrDefault(c => c.Type == "Id")?.Value;
+            if (userId == null)
+            {
+                return Unauthorized(new { message = "Id claim not found in token." });
+            }
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id.ToString() == userId);
+            if (user == null)
+            {
+                return NotFound(new { message = "User not found" });
+            }
+
+            user.Phase = request.Phase;
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
     }
 }

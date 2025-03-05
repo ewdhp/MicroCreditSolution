@@ -1,28 +1,31 @@
 using MicroCredit.Interfaces;
-using System;
-using System.Collections.Generic;
-using MicroCredit.Services;
 using MicroCredit.Models;
+using Newtonsoft.Json.Linq;
+using System;
 
 namespace MicroCredit.Factories
 {
-    public static class PhaseValidatorFactory
+    public static class PhaseRequestFactory
     {
-        private static readonly Dictionary<Type, Type> ValidatorMap = new Dictionary<Type, Type>
+        public static IPhaseRequest CreateRequest(JObject data)
         {
-            { typeof(LoanRequest), typeof(LoanPhase) },
-            { typeof(ApprovalRequest), typeof(ApprovalPhase) },
-            { typeof(DisburseRequest), typeof(DisbursePhase) }
-        };
-
-        public static IPhase CreateValidator(IPhaseRequest request)
-        {
-            var requestType = request.GetType();
-            if (ValidatorMap.TryGetValue(requestType, out var validatorType))
+            var requestType = data["RequestType"]?.ToString();
+            if (string.IsNullOrEmpty(requestType))
             {
-                return (IPhase)Activator.CreateInstance(validatorType);
+                throw new ArgumentException("Request type is required");
             }
-            throw new ArgumentException("Invalid request type");
+
+            switch (requestType)
+            {
+                case "LoanRequest":
+                    return data.ToObject<LoanRequest>();
+                case "ApprovalRequest":
+                    return data.ToObject<ApprovalRequest>();
+                case "DisburseRequest":
+                    return data.ToObject<DisburseRequest>();
+                default:
+                    throw new ArgumentException("Invalid request type");
+            }
         }
     }
 }

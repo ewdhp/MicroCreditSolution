@@ -45,7 +45,7 @@ namespace MicroCredit.Services
             {
                 new Claim(JwtRegisteredClaimNames.Sub, phoneNumber),
                 new Claim("PhoneNumber", phoneNumber),
-                new Claim("Id", user.Id.ToString()), // Use "Id" instead of "UserId"
+                new Claim("Id", user.Id.ToString()),
                 new Claim("Fingerprint", fingerprint),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };

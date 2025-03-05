@@ -10,6 +10,11 @@ namespace MicroCredit.Services
             var loanRequest = request as LoanRequest;
             return loanRequest != null && loanRequest.Somefield;
         }
+
+        public bool IsValidTransition(int currentPhase)
+        {
+            return currentPhase == (int)PhaseEnum.Loan;
+        }
     }
 
     public class ApprovalPhase : IPhase
@@ -19,6 +24,11 @@ namespace MicroCredit.Services
             var approvalRequest = request as ApprovalRequest;
             return approvalRequest != null && approvalRequest.Somefield;
         }
+
+        public bool IsValidTransition(int currentPhase)
+        {
+            return currentPhase == (int)PhaseEnum.Approval;
+        }
     }
 
     public class DisbursePhase : IPhase
@@ -27,6 +37,11 @@ namespace MicroCredit.Services
         {
             var disburseRequest = request as DisburseRequest;
             return disburseRequest != null && disburseRequest.Somefield;
+        }
+
+        public bool IsValidTransition(int currentPhase)
+        {
+            return currentPhase == (int)PhaseEnum.Disburse;
         }
     }
 }

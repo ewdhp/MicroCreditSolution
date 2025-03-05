@@ -2,12 +2,12 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using MicroCredit.Data;
-using MicroCredit.Factories;
 using MicroCredit.Interfaces;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using MicroCredit.ModelBinders;
 
 namespace MicroCredit.Controllers
 {
@@ -26,7 +26,7 @@ namespace MicroCredit.Controllers
         }
 
         [HttpPost("next-phase")]
-        public async Task<IActionResult> NextPhase([FromBody] IPhaseRequest request)
+        public async Task<IActionResult> Phase([ModelBinder(BinderType = typeof(PhaseRequestModelBinder))] IPhaseRequest request)
         {
             var userId = User.Claims.FirstOrDefault(c => c.Type == "Id")?.Value; // Use "Id" instead of "UserId"
             if (userId == null)
@@ -40,8 +40,8 @@ namespace MicroCredit.Controllers
                 return NotFound(new { message = "User not found" });
             }
 
-            var validator = PhaseValidatorFactory.CreateValidator(request);
-            bool isValid = ValidatePhase(request, validator);
+            var phase = request.GetPhase();
+            bool isValid = ValidatePhase(request, phase);
 
             if (isValid)
             {
@@ -54,15 +54,15 @@ namespace MicroCredit.Controllers
             return Ok(new { success = false, currentPhase = user.Phase });
         }
 
-        private bool ValidatePhase(IPhaseRequest request, IPhase validator)
+        private bool ValidatePhase(IPhaseRequest request, IPhase phase)
         {
             // Assuming each phase class has a Validate method
-            var method = validator.GetType().GetMethod("Validate");
+            var method = phase.GetType().GetMethod("Validate");
             if (method != null)
             {
-                return (bool)method.Invoke(validator, new object[] { request });
+                return (bool)method.Invoke(phase, new object[] { request });
             }
-            throw new InvalidOperationException("Validator does not have a Validate method");
+            throw new InvalidOperationException("Phase does not have a Validate method");
         }
     }
 }
