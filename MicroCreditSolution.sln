@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MicroCredit", "MicroCredit\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4F-00C04F79EFBC}") = "MicroCredit.Tests", "MicroCredit.Tests\MicroCredit.Tests.csproj", "{234C5D78-7250-416E-B8E3-517515A806A7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebApi", "WebApi\WebApi.csproj", "{ED84641E-3052-4966-B738-C9EB50574F20}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -41,6 +43,18 @@ Global
 		{234C5D78-7250-416E-B8E3-517515A806A7}.Release|x64.Build.0 = Release|Any CPU
 		{234C5D78-7250-416E-B8E3-517515A806A7}.Release|x86.ActiveCfg = Release|Any CPU
 		{234C5D78-7250-416E-B8E3-517515A806A7}.Release|x86.Build.0 = Release|Any CPU
+		{ED84641E-3052-4966-B738-C9EB50574F20}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ED84641E-3052-4966-B738-C9EB50574F20}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ED84641E-3052-4966-B738-C9EB50574F20}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{ED84641E-3052-4966-B738-C9EB50574F20}.Debug|x64.Build.0 = Debug|Any CPU
+		{ED84641E-3052-4966-B738-C9EB50574F20}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{ED84641E-3052-4966-B738-C9EB50574F20}.Debug|x86.Build.0 = Debug|Any CPU
+		{ED84641E-3052-4966-B738-C9EB50574F20}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ED84641E-3052-4966-B738-C9EB50574F20}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ED84641E-3052-4966-B738-C9EB50574F20}.Release|x64.ActiveCfg = Release|Any CPU
+		{ED84641E-3052-4966-B738-C9EB50574F20}.Release|x64.Build.0 = Release|Any CPU
+		{ED84641E-3052-4966-B738-C9EB50574F20}.Release|x86.ActiveCfg = Release|Any CPU
+		{ED84641E-3052-4966-B738-C9EB50574F20}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
