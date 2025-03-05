@@ -117,6 +117,15 @@ namespace MicroCredit.Controllers
 
             _logger.LogInformation("User found in database: {User}", user);
 
+            // Check if there is an active or due loan for the user
+            var existingLoan = await _context.Loans
+                .FirstOrDefaultAsync(l => l.UserId == userId && (l.Status == CreditStatus.Active || l.Status == CreditStatus.Due));
+            if (existingLoan != null)
+            {
+                _logger.LogWarning("User already has an active or due loan. Loan ID: {LoanId}", existingLoan.Id);
+                return BadRequest(new { message = "User already has an active or due loan" });
+            }
+
             loan.UserId = userId.Value;
             _context.Loans.Add(loan);
             await _context.SaveChangesAsync();
@@ -145,6 +154,31 @@ namespace MicroCredit.Controllers
                 return NotFound(new { message = "Loan not found" });
             }
             return Ok(loan);
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteLoan(Guid id)
+        {
+            var userId = GetAuthenticatedUserId();
+            if (userId == null)
+            {
+                _logger.LogWarning("Invalid user ID in token.");
+                return BadRequest(new { message = "Invalid user ID" });
+            }
+
+            var loan = await _context.Loans.FirstOrDefaultAsync(l => l.Id == id && l.UserId == userId);
+            if (loan == null)
+            {
+                _logger.LogWarning("Loan not found for User ID: {UserId}", userId);
+                return NotFound(new { message = "Loan not found" });
+            }
+
+            _context.Loans.Remove(loan);
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Loan deleted with ID: {LoanId} for User ID: {UserId}", loan.Id, userId);
+
+            return NoContent();
         }
     }
 }

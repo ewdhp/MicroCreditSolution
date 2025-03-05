@@ -73,6 +73,7 @@ def create_loan(token):
     else:
         print(f"Failed to create loan: {response.status_code} - {response.text}")
         return None
+
 def get_loans(token):
     url = loan_base_url
     headers = {
@@ -130,6 +131,12 @@ def delete_loan(token, loan_id):
     else:
         print(f"Failed to delete loan: {response.status_code} - {response.text}")
 
+def delete_all_loans(token):
+    loans = get_loans(token)
+    if loans:
+        for loan in loans:
+            delete_loan(token, loan['id'])
+
 if __name__ == "__main__":
     # First, try to signup to get the token
     send_sms("signup")
@@ -156,3 +163,6 @@ if __name__ == "__main__":
             
             # Delete the created loan
             delete_loan(token, loan_id)
+        
+        # Optionally, delete all loans for the user
+        delete_all_loans(token)
