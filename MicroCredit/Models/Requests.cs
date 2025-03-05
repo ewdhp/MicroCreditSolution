@@ -47,4 +47,24 @@ namespace MicroCredit.Models
         Approval = 2,
         Disburse = 3
     }
+
+    public class GetReferrerIdByCodeRequest
+    {
+        public string Code { get; set; }
+    }
+
+    // filepath: /home/ewd/MicroCreditSolution/MicroCredit/Models/Responses/GetReferrerIdByCodeResponse.cs
+    public class GetReferrerIdByCodeResponse
+    {
+        public string ReferrerId { get; set; }
+    }
+
+    // filepath: /home/ewd/MicroCreditSolution/MicroCredit/Models/Requests/LinkReferralRequest.cs
+    public class LinkReferralRequest
+    {
+        public string Id { get; set; }
+        public string Code { get; set; }
+    }
+
+    // Repeat similar structure for other requests and responses
 }
