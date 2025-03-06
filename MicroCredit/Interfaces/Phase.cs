@@ -11,12 +11,14 @@ namespace MicroCredit.Interfaces
 
     public interface IPhaseRequest
     {
-        string RequestType { get; }
+        public string Type { get; }
+        public string Action { get; set; }
+
     }
 
     public interface IPhaseViewResponse
     {
-        string ResponseType { get; }
+        public string Type { get; }
     }
 
 }

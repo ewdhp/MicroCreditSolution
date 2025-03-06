@@ -9,6 +9,8 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using MicroCredit.Services;
+using Microsoft.Extensions.DependencyInjection;
+using MicroCredit.ModelBinders;
 
 namespace MicroCredit.Controllers
 {
@@ -19,31 +21,43 @@ namespace MicroCredit.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<PhaseController> _logger;
-        private readonly Dictionary<int, Func<IPhase>> _phaseFactory = new Dictionary<int, Func<IPhase>>
-        {
-            { 1, () => new LoanPhaseService() },
-            { 2, () => new ApprovalPhaseService() },
-            { 3, () => new DisbursementPhaseService() }
-        };
+        private readonly Dictionary<string, Func<IPhase>> _phases;
 
-        public PhaseController(ApplicationDbContext context, ILogger<PhaseController> logger)
+        public PhaseController(ApplicationDbContext context, ILogger<PhaseController> logger, IServiceProvider serviceProvider)
         {
             _context = context;
             _logger = logger;
+            _phases = new Dictionary<string, Func<IPhase>>
+        {
+            { "Loan", () => serviceProvider.GetRequiredService<LoanPhaseService>() },
+            { "Approval", () => serviceProvider.GetRequiredService<ApprovalPhaseService>() },
+            { "Disbursement", () => serviceProvider.GetRequiredService<DisbursementPhaseService>() }
+        };
+
+            // Log the phase services to verify they are correctly resolved
+            _logger.LogInformation("Phase services initialized: {Phases}", _phases.Keys);
         }
 
-        // Endpoint that uses the dict to call the correct phase service comparing the 
-        // actual user.Phase value, but first checking claims and first or default
-        [HttpGet("current")]
-        public async Task<IActionResult> GetCurrentPhaseView()
+        [HttpPost("phase")]
+        public async Task<IActionResult> Phase([PhaseRequestModelBinder] IPhaseRequest request)
         {
+            if (request == null)
+            {
+                _logger.LogWarning("Request is null.");
+                return BadRequest(new { message = "Request is null" });
+            }
+
+            _logger.LogInformation("Received request: {Action} {Type}", request.Action, request.Type);
+
             var userId = User.Claims.FirstOrDefault(c => c.Type == "Id")?.Value;
             if (userId == null)
             {
                 _logger.LogWarning("Id claim not found in token.");
                 return Unauthorized(new { message = "Id claim not found in token." });
             }
+
             _logger.LogInformation("Id claim found: {Id}", userId);
+
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Id.ToString() == userId);
             if (user == null)
             {
@@ -51,30 +65,76 @@ namespace MicroCredit.Controllers
                 return NotFound(new { message = "User not found" });
             }
 
-            //if user phase is greater than the dict size, return a 404
-            if (user.Phase > _phaseFactory.Count)
+            _logger.LogInformation("User found: {User}", user);
+
+            if (string.IsNullOrEmpty(request.Type))
             {
-                return NotFound(new { message = "Invalid Phase size" });
+                _logger.LogWarning("Request Type is null or empty.");
+                return BadRequest(new { message = "Request Type is null or empty" });
             }
 
-            var phaseService = _phaseFactory[user.Phase]();
-            //if the phaseService is null, return a 404
+            if (string.IsNullOrEmpty(request.Action))
+            {
+                _logger.LogWarning("Request Action is null or empty.");
+                return BadRequest(new { message = "Request Action is null or empty" });
+            }
+
+            _logger.LogInformation("Request Type: {Type}, Action: {Action}", request.Type, request.Action);
+
+            if (!_phases.ContainsKey(request.Type))
+            {
+                _logger.LogWarning("Phase Type not found: {Type}", request.Type);
+                return NotFound(new { message = "Phase Type not found" });
+            }
+
+            var phaseService = _phases[request.Type]();
             if (phaseService == null)
             {
-                return NotFound(new { message = "Phase not found" });
+                _logger.LogWarning("Phase Service not found for Type: {Type}", request.Type);
+                return NotFound(new { message = "Phase Type not found" });
             }
 
-            var phaseView = phaseService.GetPhaseView();
-            //if the phaseView is null, return a 404
-            if (phaseView == null)
+            _logger.LogInformation("Phase found: {PhaseService}", request.Type);
+
+            IPhaseViewResponse phaseViewResponse = null;
+
+            if (request.Action == "validate")
             {
-                return NotFound(new { message = "Phase view not found" });
+                if (!phaseService.ValidatePhase(request))
+                {
+                    _logger.LogWarning("Phase validation failed for Type: {Type}", request.Type);
+                    return NotFound(new { message = "Not validated" });
+                }
             }
-            //increment the user phase by one and update the model
+            else if (request.Action == "view")
+            {
+                phaseViewResponse = phaseService.GetPhaseView();
+                if (phaseViewResponse == null)
+                {
+                    _logger.LogWarning("Phase view not found for Type: {Type}", request.Type);
+                    return NotFound(new { message = "Phase view not found" });
+                }
+            }
+            else
+            {
+                _logger.LogWarning("Action not found: {Action}", request.Action);
+                return NotFound(new { message = "Action not found" });
+            }
+
             user.Phase++;
             _context.Users.Update(user);
             await _context.SaveChangesAsync();
-            return Ok(phaseView);
+
+            if (request.Action == "validate")
+            {
+                return Ok(new { message = "Phase Validated" });
+            }
+            else if (request.Action == "view")
+            {
+                return Ok(phaseViewResponse);
+            }
+
+            return NotFound(new { message = "Action not found" });
         }
     }
 }

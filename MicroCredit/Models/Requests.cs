@@ -1,20 +1,24 @@
 using MicroCredit.Interfaces;
-using MicroCredit.Services;
 
 namespace MicroCredit.Models
 {
     public class LoanRequest : IPhaseRequest
     {
-        public string RequestType => "LoanRequest";
+        public string Type { get; set; }
+        public string Action { get; set; }
+
     }
     public class ApprovalRequest : IPhaseRequest
     {
-        public string RequestType => "ApprovalRequest";
+        public string Type { get; set; }
+        public string Action { get; set; }
 
     }
     public class DisburseRequest : IPhaseRequest
     {
-        public string RequestType => "DisburseRequest";
+        public string Type { get; set; }
+        public string Action { get; set; }
+
     }
     public class PhaseResetRequest
     {

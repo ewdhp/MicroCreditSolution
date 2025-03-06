@@ -6,16 +6,15 @@ namespace MicroCredit.Models
 {
     public class LoanResponse : IPhaseViewResponse
     {
-        public string ResponseType { get; set; }
+        public string Type => "Loan view";
     }
     public class ApprovalResponse : IPhaseViewResponse
     {
-        public string ResponseType { get; set; }
-
+        public string Type => "Approval view";
     }
     public class DisburseResponse : IPhaseViewResponse
     {
-        public string ResponseType { get; set; }
+        public string Type => "Disburse view";
     }
 
 }
