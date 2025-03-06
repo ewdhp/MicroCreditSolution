@@ -13,6 +13,8 @@ using System.Text;
 using MicroCredit.Data;
 using System.Net.Http;
 using System;
+using Microsoft.Extensions.Logging;
+using MicroCredit.Logging;
 
 namespace MicroCredit
 {
@@ -102,6 +104,14 @@ namespace MicroCredit
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            var loggingSection = Configuration.GetSection("Logging");
+            app.ApplicationServices.GetRequiredService<ILoggerFactory>()
+            .AddProvider(new CustomLoggerProvider(LogLevel.Information));
+
+
+
+
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();

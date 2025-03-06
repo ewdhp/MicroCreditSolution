@@ -28,15 +28,29 @@ namespace MicroCredit.ModelBinders
             using (var reader = new StreamReader(request.Body))
             {
                 var body = await reader.ReadToEndAsync();
-                var model = JsonSerializer.Deserialize<PhaseRequest>(body, new JsonSerializerOptions
+                var phaseRequest = JsonSerializer.Deserialize<PhaseRequest>(body, new JsonSerializerOptions
                 {
                     PropertyNameCaseInsensitive = true
                 });
 
                 // Add logging to verify the values
-                Console.WriteLine($"Model Binder: Type: {model?.Type}, Action: {model?.Action}");
+                Console.WriteLine($"Model Binder: Type: {phaseRequest?.Type}, Action: {phaseRequest?.Action}");
 
-                if (model == null || string.IsNullOrEmpty(model.Type) || string.IsNullOrEmpty(model.Action))
+                if (phaseRequest == null || string.IsNullOrEmpty(phaseRequest.Type) || string.IsNullOrEmpty(phaseRequest.Action))
+                {
+                    bindingContext.Result = ModelBindingResult.Failed();
+                    return;
+                }
+
+                IPhaseRequest model = phaseRequest.Type switch
+                {
+                    "Loan" => JsonSerializer.Deserialize<LoanRequest>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }),
+                    "Approval" => JsonSerializer.Deserialize<ApprovalRequest>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }),
+                    "Disburse" => JsonSerializer.Deserialize<DisburseRequest>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }),
+                    _ => null
+                };
+
+                if (model == null)
                 {
                     bindingContext.Result = ModelBindingResult.Failed();
                     return;

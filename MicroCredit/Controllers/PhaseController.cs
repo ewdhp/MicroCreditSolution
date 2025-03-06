@@ -28,24 +28,30 @@ namespace MicroCredit.Controllers
             _context = context;
             _logger = logger;
             _phases = new Dictionary<string, Func<IPhase>>
-        {
-            { "Loan", () => serviceProvider.GetRequiredService<LoanPhaseService>() },
-            { "Approval", () => serviceProvider.GetRequiredService<ApprovalPhaseService>() },
-            { "Disbursement", () => serviceProvider.GetRequiredService<DisbursementPhaseService>() }
-        };
+            {
+                { "Loan", () => serviceProvider.GetRequiredService<LoanPhaseService>() },
+                { "Approval", () => serviceProvider.GetRequiredService<ApprovalPhaseService>() },
+                { "Disbursement", () => serviceProvider.GetRequiredService<DisbursementPhaseService>() }
+            };
 
             // Log the phase services to verify they are correctly resolved
             _logger.LogInformation("Phase services initialized: {Phases}", _phases.Keys);
         }
 
         [HttpPost("phase")]
-        public async Task<IActionResult> Phase([PhaseRequestModelBinder] IPhaseRequest request)
+        public async Task<IActionResult>
+        Phase([PhaseRequestModelBinder] IPhaseRequest request)
         {
+            _logger.LogInformation(
+                "ENDPOINT REQUEST IN PhaseController.Phase" +
+                "( IPhaseRequest{{ Type:{Type}, Action:{Action} }} )",
+                request.Action, request.Type);
+
             if (request == null)
-            {
-                _logger.LogWarning("Request is null.");
-                return BadRequest(new { message = "Request is null" });
-            }
+                return BadRequest(new
+                {
+                    message = "Request is null"
+                });
 
             _logger.LogInformation("Received request: {Action} {Type}", request.Action, request.Type);
 
@@ -94,15 +100,14 @@ namespace MicroCredit.Controllers
                 return NotFound(new { message = "Phase Type not found" });
             }
 
-            _logger.LogInformation("Phase found: {PhaseService}", request.Type);
-
             IPhaseViewResponse phaseViewResponse = null;
 
             if (request.Action == "validate")
             {
+                _logger.LogInformation("Validating phase for Type: {Type}", request.Type);
                 if (!phaseService.ValidatePhase(request))
                 {
-                    _logger.LogWarning("Phase validation failed for Type: {Type}", request.Type);
+                    _logger.LogError("Phase validation failed for Type: {Type}", request.Type);
                     return NotFound(new { message = "Not validated" });
                 }
             }
