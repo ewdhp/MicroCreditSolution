@@ -3,45 +3,43 @@ using MicroCredit.Models;
 
 namespace MicroCredit.Services
 {
-    public class LoanPhase : IPhase
+    public class LoanPhaseService : IPhase
     {
-        public bool Validate(IPhaseRequest request)
+        public IPhaseViewResponse GetPhaseView()
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public bool ValidatePhase(IPhaseRequest request)
         {
             var loanRequest = request as LoanRequest;
-            return loanRequest != null && loanRequest.Somefield;
-        }
-
-        public bool IsValidTransition(int currentPhase)
-        {
-            return currentPhase == (int)PhaseEnum.Loan;
+            return loanRequest != null;
         }
     }
-
-    public class ApprovalPhase : IPhase
+    public class ApprovalPhaseService : IPhase
     {
-        public bool Validate(IPhaseRequest request)
+        public IPhaseViewResponse GetPhaseView()
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public bool ValidatePhase(IPhaseRequest request)
         {
             var approvalRequest = request as ApprovalRequest;
-            return approvalRequest != null && approvalRequest.Somefield;
-        }
-
-        public bool IsValidTransition(int currentPhase)
-        {
-            return currentPhase == (int)PhaseEnum.Approval;
+            return approvalRequest != null;
         }
     }
-
-    public class DisbursePhase : IPhase
+    public class DisbursementPhaseService : IPhase
     {
-        public bool Validate(IPhaseRequest request)
+        public IPhaseViewResponse GetPhaseView()
         {
-            var disburseRequest = request as DisburseRequest;
-            return disburseRequest != null && disburseRequest.Somefield;
+            throw new System.NotImplementedException();
         }
 
-        public bool IsValidTransition(int currentPhase)
+        public bool ValidatePhase(IPhaseRequest request)
         {
-            return currentPhase == (int)PhaseEnum.Disburse;
+            var disburseRequest = request as DisburseRequest;
+            return disburseRequest != null;
         }
     }
 }

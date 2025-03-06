@@ -1,14 +1,22 @@
+using System;
+
 namespace MicroCredit.Interfaces
 {
+
     public interface IPhase
     {
-        bool Validate(IPhaseRequest request);
-        bool IsValidTransition(int currentPhase);
+        IPhaseViewResponse GetPhaseView();
+        bool ValidatePhase(IPhaseRequest request);
     }
 
     public interface IPhaseRequest
     {
         string RequestType { get; }
-        IPhase GetPhase();
     }
+
+    public interface IPhaseViewResponse
+    {
+        string ResponseType { get; }
+    }
+
 }
