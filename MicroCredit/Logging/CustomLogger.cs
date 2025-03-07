@@ -3,12 +3,12 @@ using System;
 
 namespace MicroCredit.Logging
 {
-    public class CustomLogger : ILogger
+    public class LoggerCustom : ILogger
     {
         private readonly string _name;
         private readonly LogLevel _minLogLevel;
 
-        public CustomLogger(string name, LogLevel minLogLevel)
+        public LoggerCustom(string name, LogLevel minLogLevel)
         {
             _name = name;
             _minLogLevel = minLogLevel;
@@ -29,7 +29,7 @@ namespace MicroCredit.Logging
             {
                 LogLevel.Trace => "\u001b[37m", // White
                 LogLevel.Debug => "\u001b[36m", // Cyan
-                LogLevel.Information => "\u001b[0m", // No color for standard Information logs
+                LogLevel.Information => "\u001b[36m",
                 LogLevel.Warning => "\u001b[33m", // Yellow
                 LogLevel.Error => "\u001b[31m", // Red
                 LogLevel.Critical => "\u001b[35m", // Magenta
@@ -46,7 +46,7 @@ namespace MicroCredit.Logging
         }
 
         // Custom log method for informational logs
-        public void Log(string message, params object[] args)
+        public void LogCustom(string message, params object[] args)
         {
             var color = "\u001b[32m"; // Green for custom informational logs
             var formattedMessage = string.Format(message, args);
@@ -54,18 +54,18 @@ namespace MicroCredit.Logging
         }
     }
 
-    public class CustomLoggerProvider : ILoggerProvider
+    public class LoggerCustomProvider : ILoggerProvider
     {
         private readonly LogLevel _minLogLevel;
 
-        public CustomLoggerProvider(LogLevel minLogLevel)
+        public LoggerCustomProvider(LogLevel minLogLevel)
         {
             _minLogLevel = minLogLevel;
         }
 
         public ILogger CreateLogger(string categoryName)
         {
-            return new CustomLogger(categoryName, _minLogLevel);
+            return new LoggerCustom(categoryName, _minLogLevel);
         }
 
         public void Dispose() { }

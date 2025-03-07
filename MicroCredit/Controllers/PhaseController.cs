@@ -12,6 +12,7 @@ using MicroCredit.Services;
 using Microsoft.Extensions.DependencyInjection;
 using MicroCredit.ModelBinders;
 
+
 namespace MicroCredit.Controllers
 {
     [Authorize]
@@ -23,10 +24,14 @@ namespace MicroCredit.Controllers
         private readonly ILogger<PhaseController> _logger;
         private readonly Dictionary<string, Func<IPhase>> _phases;
 
-        public PhaseController(ApplicationDbContext context, ILogger<PhaseController> logger, IServiceProvider serviceProvider)
+        public PhaseController(
+            ApplicationDbContext context,
+            ILogger<PhaseController> logger,
+            IServiceProvider serviceProvider)
         {
             _context = context;
             _logger = logger;
+
             _phases = new Dictionary<string, Func<IPhase>>
             {
                 { "Loan", () => serviceProvider.GetRequiredService<LoanPhaseService>() },
@@ -34,81 +39,76 @@ namespace MicroCredit.Controllers
                 { "Disbursement", () => serviceProvider.GetRequiredService<DisbursementPhaseService>() }
             };
 
-            // Log the phase services to verify they are correctly resolved
-            _logger.LogInformation("Phase services initialized: {Phases}", _phases.Keys);
+            _logger.Log(LogLevel.Information, new EventId(0, "PhaseServicesInitialized"), (object)null, null, (state, exception) => $"Phase services initialized: {string.Join(", ", _phases.Keys)}");
         }
 
         [HttpPost("phase")]
-        public async Task<IActionResult>
-        Phase([PhaseRequestModelBinder] IPhaseRequest request)
+        public async Task<IActionResult> Phase([PhaseRequestModelBinder] IPhaseRequest request)
         {
-            _logger.LogInformation(
-                "ENDPOINT REQUEST IN PhaseController.Phase" +
-                "( IPhaseRequest{{ Type:{Type}, Action:{Action} }} )",
-                request.Action, request.Type);
+            _logger.Log(LogLevel.Information, new EventId(0, "EndpointRequest"), (object)null, null, (state, exception) => $"ENDPOINT REQUEST IN PhaseController.Phase ( IPhaseRequest{{ Type:{request.Type}, Action:{request.Action} }} )");
 
             if (request == null)
-                return BadRequest(new
-                {
-                    message = "Request is null"
-                });
+                return BadRequest(new { message = "Request is null" });
 
-            _logger.LogInformation("Received request: {Action} {Type}", request.Action, request.Type);
+            _logger.Log(LogLevel.Information, new EventId(0, "ReceivedRequest"), (object)null, null, (state, exception) => $"Received request: {request.Action} {request.Type}");
 
             var userId = User.Claims.FirstOrDefault(c => c.Type == "Id")?.Value;
+
             if (userId == null)
             {
                 _logger.LogWarning("Id claim not found in token.");
-                return Unauthorized(new { message = "Id claim not found in token." });
+                return Unauthorized(new { message = "Id claim not found." });
             }
 
-            _logger.LogInformation("Id claim found: {Id}", userId);
+            _logger.Log(LogLevel.Information, new EventId(0, "IdClaimFound"), (object)null, null, (state, exception) => $"Id claim found: {userId}");
 
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Id.ToString() == userId);
+
             if (user == null)
             {
-                _logger.LogInformation("User with Id {Id} not found.", userId);
-                return NotFound(new { message = "User not found" });
+                _logger.LogWarning("User with Id {Id} not found.", userId);
+                return NotFound(new { message = "User not found." });
             }
 
-            _logger.LogInformation("User found: {User}", user);
+            _logger.Log(LogLevel.Information, new EventId(0, "UserFound"), (object)null, null, (state, exception) => $"User found: {user}");
 
             if (string.IsNullOrEmpty(request.Type))
             {
                 _logger.LogWarning("Request Type is null or empty.");
-                return BadRequest(new { message = "Request Type is null or empty" });
+                return BadRequest(new { message = "Request Type is null or empty." });
             }
 
             if (string.IsNullOrEmpty(request.Action))
             {
                 _logger.LogWarning("Request Action is null or empty.");
-                return BadRequest(new { message = "Request Action is null or empty" });
+                return BadRequest(new { message = "Action is null or empty." });
             }
 
-            _logger.LogInformation("Request Type: {Type}, Action: {Action}", request.Type, request.Action);
+            _logger.Log(LogLevel.Information, new EventId(0, "RequestDetails"), (object)null, null, (state, exception) => $"Request Type: {request.Type}, Action: {request.Action}");
 
             if (!_phases.ContainsKey(request.Type))
             {
                 _logger.LogWarning("Phase Type not found: {Type}", request.Type);
-                return NotFound(new { message = "Phase Type not found" });
+                return NotFound(new { message = "Phase Type not found." });
             }
 
             var phaseService = _phases[request.Type]();
+
             if (phaseService == null)
             {
-                _logger.LogWarning("Phase Service not found for Type: {Type}", request.Type);
+                _logger.LogWarning("Phase not found: {Type}", request.Type);
                 return NotFound(new { message = "Phase Type not found" });
             }
 
             IPhaseViewResponse phaseViewResponse = null;
-
             if (request.Action == "validate")
             {
-                _logger.LogInformation("Validating phase for Type: {Type}", request.Type);
-                if (!phaseService.ValidatePhase(request))
+                _logger.Log(LogLevel.Information, new EventId(0, "ValidatingPhase"), (object)null, null, (state, exception) => $"Validating phase: {request.Type}");
+
+                if (!phaseService.ValidatePhase(request, userId))
                 {
-                    _logger.LogError("Phase validation failed for Type: {Type}", request.Type);
-                    return NotFound(new { message = "Not validated" });
+                    _logger.LogWarning("Validation failed: {Type}", request.Type);
+                    return NotFound(new { message = "Phase service not validated" });
                 }
             }
             else if (request.Action == "view")
@@ -116,7 +116,7 @@ namespace MicroCredit.Controllers
                 phaseViewResponse = phaseService.GetPhaseView();
                 if (phaseViewResponse == null)
                 {
-                    _logger.LogWarning("Phase view not found for Type: {Type}", request.Type);
+                    _logger.LogWarning("Phase view not found: {Type}", request.Type);
                     return NotFound(new { message = "Phase view not found" });
                 }
             }
@@ -129,15 +129,10 @@ namespace MicroCredit.Controllers
             user.Phase++;
             _context.Users.Update(user);
             await _context.SaveChangesAsync();
-
             if (request.Action == "validate")
-            {
                 return Ok(new { message = "Phase Validated" });
-            }
             else if (request.Action == "view")
-            {
                 return Ok(phaseViewResponse);
-            }
 
             return NotFound(new { message = "Action not found" });
         }

@@ -21,44 +21,53 @@ namespace MicroCredit.Models
         public DateTime EndDate { get; set; }
 
         [Required(ErrorMessage = "Amount is required")]
-        [Range(0.01, double.MaxValue, ErrorMessage = "Amount must be greater than zero")]
+        [Range(50, 350, ErrorMessage = "Amount must be greater than zero")]
         [Column(TypeName = "decimal(18,2)")]
         public decimal Amount { get; set; }
 
         [Required(ErrorMessage = "Interest rate is required")]
-        [Range(0.01, 100.00, ErrorMessage = "Interest rate must be between 0.01 and 100.00")]
         [Column(TypeName = "decimal(5,2)")]
-        public decimal InterestRate { get; set; }
+        public decimal InterestRate { get; } = 0.9M;
 
         [Required(ErrorMessage = "Currency is required")]
         [StringLength(3, ErrorMessage = "Currency must be a 3-letter ISO code")]
-        public string Currency { get; set; }
+        public string Currency { get; } = "MXN";
 
         [Required(ErrorMessage = "Status is required")]
         public CreditStatus Status { get; set; }
 
         [Required(ErrorMessage = "Loan description is required")]
-        [StringLength(500, MinimumLength = 10, ErrorMessage = "Loan description must be between 10 and 500 characters")]
-        public string LoanDescription { get; set; }
+        [StringLength(500, MinimumLength = 10,
+        ErrorMessage = "Loan description must be between 10 and 500 characters")]
+        public string LoanDescription => "Credito por 30 dias con 3% de interes diario";
 
-        public Loan()
+        public Loan() { }
+
+        public Loan(Guid userId, decimal amount, DateTime endDate)
         {
-            Id = Guid.NewGuid();
-            Currency = string.Empty;
-            LoanDescription = string.Empty;
+            if (!((endDate - DateTime.Now).Days > 30))
+            {
+                Id = Guid.NewGuid();
+                UserId = userId;
+                StartDate = DateTime.Now;
+                EndDate = endDate;
+                Amount = amount;
+                Status = CreditStatus.Pending;
+            }
         }
 
-        public Loan(Guid userId, DateTime startDate, DateTime endDate, decimal amount, decimal interestRate, string currency, CreditStatus status, string loanDescription)
+        public decimal DailyInterest()
         {
-            Id = Guid.NewGuid();
-            UserId = userId;
-            StartDate = startDate;
-            EndDate = endDate;
-            Amount = amount;
-            InterestRate = interestRate;
-            Currency = string.IsNullOrWhiteSpace(currency) ? "USD" : currency;
-            Status = status;
-            LoanDescription = string.IsNullOrWhiteSpace(loanDescription) ? throw new ArgumentNullException(nameof(loanDescription)) : loanDescription;
+            return InterestRate * Amount / 30;
+        }
+
+        public decimal CurrentInterest()
+        {
+            var totalDays = (EndDate - StartDate).Days;
+            var elapsedDays = (DateTime.Now - StartDate).Days;
+            if (!(elapsedDays < 0))
+                return InterestRate * Amount * totalDays / totalDays;
+            return 0;
         }
     }
 

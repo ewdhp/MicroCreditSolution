@@ -24,7 +24,10 @@ namespace MicroCredit.Services
         private readonly ILogger<JwtTokenService> _logger;
         private readonly ApplicationDbContext _context;
 
-        public JwtTokenService(IConfiguration configuration, ILogger<JwtTokenService> logger, ApplicationDbContext context)
+        public JwtTokenService(
+            IConfiguration configuration,
+            ILogger<JwtTokenService> logger,
+             ApplicationDbContext context)
         {
             _configuration = configuration;
             _logger = logger;
@@ -33,13 +36,17 @@ namespace MicroCredit.Services
 
         public string GenerateJwtToken(string phoneNumber, string fingerprint)
         {
-            _logger.LogInformation("Generating JWT token for phone number: {PhoneNumber}", phoneNumber);
+            _logger.LogInformation(
+                "Generating JWT token for phone number:" +
+                " {PhoneNumber}", phoneNumber
+                );
 
-            var user = _context.Users.FirstOrDefault(u => u.Phone == phoneNumber);
+            var user = _context.Users
+            .FirstOrDefault(u => u.Phone == phoneNumber);
+
             if (user == null)
-            {
-                throw new Exception("User not found");
-            }
+                throw new
+                Exception("User not found");
 
             var claims = new[]
             {
@@ -47,11 +54,14 @@ namespace MicroCredit.Services
                 new Claim("PhoneNumber", phoneNumber),
                 new Claim("Id", user.Id.ToString()),
                 new Claim("Fingerprint", fingerprint),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+                new Claim(JwtRegisteredClaimNames.Jti,
+                Guid.NewGuid().ToString())
             };
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            var key = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+            var creds = new SigningCredentials(
+                key, SecurityAlgorithms.HmacSha256);
 
             var token = new JwtSecurityToken(
                 issuer: _configuration["Jwt:Issuer"],
@@ -60,8 +70,13 @@ namespace MicroCredit.Services
                 expires: DateTime.Now.AddMinutes(30),
                 signingCredentials: creds);
 
-            var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
-            _logger.LogInformation("Generated JWT token: {Token}", tokenString);
+            var tokenString = new
+            JwtSecurityTokenHandler().WriteToken(token);
+
+            _logger.LogInformation(
+                "Generated JWT token: {Token}",
+                tokenString
+                );
 
             return tokenString;
         }

@@ -1,3 +1,4 @@
+using System;
 using MicroCredit.Interfaces;
 
 namespace MicroCredit.Models
@@ -6,7 +7,8 @@ namespace MicroCredit.Models
     {
         public string Type { get; set; }
         public string Action { get; set; }
-
+        public decimal Amount { get; set; }
+        public DateTime EndDate { get; set; }
     }
     public class ApprovalRequest : IPhaseRequest
     {

@@ -100,17 +100,15 @@ namespace MicroCredit
             {
                 options.AddPolicy("UserPolicy", policy => policy.RequireClaim("UserId"));
             });
+
+            // Register the custom logger provider
+            services.AddSingleton<ILoggerProvider, LoggerCustomProvider>(provider => new LoggerCustomProvider(LogLevel.Information));
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            var loggingSection = Configuration.GetSection("Logging");
-            app.ApplicationServices.GetRequiredService<ILoggerFactory>()
-            .AddProvider(new CustomLoggerProvider(LogLevel.Information));
-
-
-
-
+            var loggerFactory = app.ApplicationServices.GetRequiredService<ILoggerFactory>();
+            loggerFactory.AddProvider(new LoggerCustomProvider(LogLevel.Information));
 
             if (env.IsDevelopment())
             {

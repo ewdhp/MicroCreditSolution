@@ -1,5 +1,6 @@
 import requests
 import json
+from datetime import datetime, timedelta
 
 # Configuration
 auth_base_url = "https://localhost:5001/api/testauth"
@@ -65,9 +66,13 @@ def reset_phase(token, phase):
 
 def call_phase(token, request_type, phase_action):
     url = phase_base_url
+    end_date = (datetime.now() + timedelta(days=10)).strftime('%Y-%m-%d')
+
     payload = {
         "Type": request_type,
-        "Action": phase_action
+        "Action": phase_action,
+        "Amount": 100,
+        "EndDate": end_date
     }
     headers = {
         "Content-Type": "application/json",
