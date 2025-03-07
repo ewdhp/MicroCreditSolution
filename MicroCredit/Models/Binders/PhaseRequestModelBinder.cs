@@ -46,7 +46,7 @@ namespace MicroCredit.ModelBinders
                 {
                     "Loan" => JsonSerializer.Deserialize<LoanRequest>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }),
                     "Approval" => JsonSerializer.Deserialize<ApprovalRequest>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }),
-                    "Disburse" => JsonSerializer.Deserialize<DisburseRequest>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }),
+                    "Disbursement" => JsonSerializer.Deserialize<DisburseRequest>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }),
                     _ => null
                 };
 

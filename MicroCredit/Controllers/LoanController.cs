@@ -122,7 +122,7 @@ namespace MicroCredit.Controllers
             return NoContent();
         }
 
-        [HttpGet]
+        [HttpPost]
         public async Task<IActionResult> GetUserLoans()
         {
             var userId = GetAuthenticatedUserId();

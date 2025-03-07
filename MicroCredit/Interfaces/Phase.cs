@@ -1,12 +1,13 @@
 using System;
+using System.Threading.Tasks;
 
 namespace MicroCredit.Interfaces
 {
 
     public interface IPhase
     {
-        IPhaseViewResponse GetPhaseView();
-        bool ValidatePhase(IPhaseRequest request, string userId);
+        public IPhaseViewResponse GetPhaseView();
+        public Task<bool> ValidatePhase(IPhaseRequest request, string userId);
     }
 
     public interface IPhaseRequest

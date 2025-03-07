@@ -48,11 +48,12 @@ namespace MicroCredit.Models
             if (!((endDate - DateTime.Now).Days > 30))
             {
                 Id = Guid.NewGuid();
-                UserId = userId;
                 StartDate = DateTime.Now;
+                UserId = userId;
                 EndDate = endDate;
                 Amount = amount;
                 Status = CreditStatus.Pending;
+
             }
         }
 
@@ -73,11 +74,12 @@ namespace MicroCredit.Models
 
     public enum CreditStatus
     {
-        Pending,   // Approved but not yet disbursed
-        Active,    // Within valid date range, waiting to be paid
-        Due,       // Payment deadline passed, overdue
+        Pending,   // Creadted but not yet approved
+        Approved, // Approved but not yet disbursed
+        Active,    // Disbursed and active
+        Due,       // Payment deadline passed
         Paid,      // Successfully paid
-        Canceled   // Canceled credit
+        Canceled,   // Canceled credit
     }
 
     public class LoanStatusUpdate

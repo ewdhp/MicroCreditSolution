@@ -107,8 +107,6 @@ namespace MicroCredit
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            var loggerFactory = app.ApplicationServices.GetRequiredService<ILoggerFactory>();
-            loggerFactory.AddProvider(new LoggerCustomProvider(LogLevel.Information));
 
             if (env.IsDevelopment())
             {
