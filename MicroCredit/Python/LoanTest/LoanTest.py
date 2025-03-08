@@ -50,15 +50,10 @@ def verify_sms(action):
         return None
 
 def create_loan(token):
-    url = loan_base_url
+    url = f"{loan_base_url}/create"
     payload = {
-        "StartDate": datetime.utcnow().isoformat() + "Z",  # Ensure UTC format
+        "Amount": 100,
         "EndDate": (datetime.utcnow() + timedelta(days=30)).isoformat() + "Z",  # Ensure UTC format
-        "Amount": 1000,
-        "InterestRate": 5.0,
-        "Currency": "USD",
-        "Status": 1,  # Ensure this matches the expected enum value
-        "LoanDescription": "Test Loan for validation"
     }
     headers = {
         "Content-Type": "application/json",
@@ -136,6 +131,7 @@ def delete_all_loans(token):
     if loans:
         for loan in loans:
             delete_loan(token, loan['id'])
+    print("All loans deleted successfully.")
 
 if __name__ == "__main__":
     # First, try to signup to get the token
@@ -147,9 +143,13 @@ if __name__ == "__main__":
         send_sms("login")
         token = verify_sms("login")
     
-    if token and token != "USER_EXISTS":
+    if token and token != "USER_EXISTS":      
+       # Delete all loans for the user
+        delete_all_loans(token)
+
         # Create a loan
         loan_id = create_loan(token)
+        print(f"Loan id: {loan_id}")
         
         if loan_id:
             # Get all loans
@@ -163,6 +163,3 @@ if __name__ == "__main__":
             
             # Delete the created loan
             delete_loan(token, loan_id)
-        
-        # Optionally, delete all loans for the user
-        delete_all_loans(token)

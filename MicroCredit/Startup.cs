@@ -43,6 +43,12 @@ namespace MicroCredit
             // Register IJwtTokenService
             services.AddScoped<IJwtTokenService, JwtTokenService>();
 
+            // Http context accessor
+            services.AddHttpContextAccessor();
+
+            // Register IUserContextService
+            services.AddScoped<IUserContextService, UserContextService>();
+
             // Register HttpClient
             services.AddHttpClient();
 
@@ -105,9 +111,8 @@ namespace MicroCredit
             services.AddSingleton<ILoggerProvider, LoggerCustomProvider>(provider => new LoggerCustomProvider(LogLevel.Information));
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory)
         {
-
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -125,6 +130,10 @@ namespace MicroCredit
             app.UseAuthentication();
             app.UseAuthorization();
             app.UseMiddleware<JwtMiddleware>();
+
+            // Add custom logger provider to the logger factory
+            loggerFactory.AddProvider(new LoggerCustomProvider(LogLevel.Information));
+
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();

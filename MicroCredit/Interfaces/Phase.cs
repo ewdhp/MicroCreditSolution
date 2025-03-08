@@ -6,8 +6,7 @@ namespace MicroCredit.Interfaces
 
     public interface IPhase
     {
-        public IPhaseViewResponse GetPhaseView();
-        public Task<bool> ValidatePhase(IPhaseRequest request, string userId);
+        Task<bool> ProcessPhase(IPhaseRequest request);
     }
 
     public interface IPhaseRequest

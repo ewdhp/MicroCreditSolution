@@ -46,16 +46,18 @@ namespace MicroCredit.Controllers
         [HttpPost("phase")]
         public async Task<IActionResult> Phase([PhaseRequestModelBinder] IPhaseRequest request)
         {
-            _logger.Log(LogLevel.Information, new EventId(0, "EndpointRequest"),
-            (object)null, null, (state, exception) => $"ENDPOINT REQUEST IN PhaseController.Phase" +
+            _logger.Log(LogLevel.Information,
+            new EventId(0, "EndpointRequest"),
+            (object)null, null,
+            (state, exception) => $"ENDPOINT REQUEST IN PhaseController.Phase" +
             " ( IPhaseRequest{{ Type:{request.Type}, Action:{request.Action} }} )");
-            if (request == null)
-                return BadRequest(new { message = "Request is null" });
-            _logger.Log(LogLevel.Information, new EventId(0, "ReceivedRequest"),
-            (object)null, null, (state, exception) => $"Received request: " +
-            "{request.Action} {request.Type}");
-            var userId = User.Claims.FirstOrDefault(c => c.Type == "Id")?.Value;
 
+            if (request == null)
+                return BadRequest(new
+                { message = "Request is null" });
+
+            var userId = User.Claims
+            .FirstOrDefault(c => c.Type == "Id")?.Value;
             if (userId == null)
             {
                 _logger.LogWarning("Id claim not found in token.");
@@ -142,21 +144,12 @@ namespace MicroCredit.Controllers
                 (state, exception) =>
                 $"Validating phase: {request.Type}");
 
-                var validationResult = await
-                phaseService.ValidatePhase(request, userId);
-                if (validationResult == false)
+                var success = await
+                phaseService.ProcessPhase(request);
+                if (!success)
                 {
                     _logger.LogWarning("Validation failed: {Type}", request.Type);
                     return NotFound(new { message = "Phase service not validated" });
-                }
-            }
-            else if (request.Action == "view")
-            {
-                phaseViewResponse = phaseService.GetPhaseView();
-                if (phaseViewResponse == null)
-                {
-                    _logger.LogWarning("Phase view not found: {Type}", request.Type);
-                    return NotFound(new { message = "Phase view not found" });
                 }
             }
             else

@@ -98,8 +98,8 @@ if __name__ == "__main__":
     
     if token and token != "USER_EXISTS":
         reset_phase(token, 1)
-        #call_phase(token, "Loan", "validate")
-        #call_phase(token, "Loan", "view")
+        call_phase(token, "Loan", "validate")
+        call_phase(token, "Approval", "validate")
         call_phase(token, "Disbursement", "validate")
     else:
         print("Failed to retrieve token")
