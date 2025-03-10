@@ -65,7 +65,7 @@ namespace MicroCredit.Controllers
             // Check if the user already has an active or due loan
             var existingLoan = await _context.Loans
                 .FirstOrDefaultAsync(l => l.UserId == userId &&
-                    (l.Status == CreditStatus.Active || l.Status == CreditStatus.Due));
+                    (l.Status == CStatus.Active || l.Status == CStatus.Due));
 
             if (existingLoan != null)
             {
@@ -76,7 +76,7 @@ namespace MicroCredit.Controllers
             loan.UserId = userId;
             loan.StartDate = DateTime.UtcNow; // Ensure UTC
             loan.EndDate = loan.EndDate.ToUniversalTime(); // Ensure UTC
-            loan.Status = CreditStatus.Pending;
+            loan.Status = CStatus.Pending;
 
             _context.Loans.Add(loan);
             await _context.SaveChangesAsync();

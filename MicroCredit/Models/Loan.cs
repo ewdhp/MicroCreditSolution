@@ -34,7 +34,7 @@ namespace MicroCredit.Models
         public string Currency { get; } = "MXN";
 
         [Required(ErrorMessage = "Status is required")]
-        public CreditStatus Status { get; set; }
+        public CStatus Status { get; set; }
 
         [Required(ErrorMessage = "Loan description is required")]
         [StringLength(500, MinimumLength = 10,
@@ -52,7 +52,7 @@ namespace MicroCredit.Models
                 UserId = userId;
                 EndDate = endDate;
                 Amount = amount;
-                Status = CreditStatus.Pending;
+                Status = CStatus.Pending;
             }
         }
 
@@ -70,19 +70,19 @@ namespace MicroCredit.Models
             return 0;
         }
 
-        public CreditStatus GetNextPhase(CreditStatus currentStatus)
+        public CStatus Next(CStatus currentStatus)
         {
             return currentStatus switch
             {
-                CreditStatus.Initial => CreditStatus.Pending,
-                CreditStatus.Pending => CreditStatus.Approved,
-                CreditStatus.Approved => CreditStatus.Accepted,
-                CreditStatus.Accepted => CreditStatus.Disbursed,
-                CreditStatus.Disbursed => CreditStatus.Active,
-                CreditStatus.Active => CreditStatus.Paid,
-                CreditStatus.Paid => CreditStatus.Initial,
-                CreditStatus.Due => CreditStatus.Canceled,
-                CreditStatus.Canceled => CreditStatus.Initial,
+                CStatus.Initial => CStatus.Pending,
+                CStatus.Pending => CStatus.Approved,
+                CStatus.Approved => CStatus.Accepted,
+                CStatus.Accepted => CStatus.Disbursed,
+                CStatus.Disbursed => CStatus.Active,
+                CStatus.Active => CStatus.Paid,
+                CStatus.Paid => CStatus.Initial,
+                CStatus.Due => CStatus.Canceled,
+                CStatus.Canceled => CStatus.Initial,
                 _ => throw new ArgumentOutOfRangeException(
                     nameof(currentStatus), currentStatus, null)
             };
@@ -90,11 +90,11 @@ namespace MicroCredit.Models
 
         public void ProcessNextPhase()
         {
-            Status = GetNextPhase(Status);
+            Status = Next(Status);
         }
     }
 
-    public enum CreditStatus
+    public enum CStatus
     {
         Initial,   // Initial status
         Pending,   // Created but not yet approved
@@ -113,6 +113,6 @@ namespace MicroCredit.Models
         public Guid Id { get; set; }
 
         [Required]
-        public CreditStatus Status { get; set; }
+        public CStatus Status { get; set; }
     }
 }

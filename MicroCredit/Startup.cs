@@ -15,6 +15,8 @@ using System.Net.Http;
 using System;
 using Microsoft.Extensions.Logging;
 using MicroCredit.Logging;
+using MicroCredit.Controllers;
+using MicroCredit.Interfaces;
 
 namespace MicroCredit
 {
@@ -36,10 +38,12 @@ namespace MicroCredit
             services.AddScoped<FingerprintService>();
 
             // Register phase services
-            services.AddScoped<LoanPhaseService>();
-            services.AddScoped<ApprovalPhaseService>();
-            services.AddScoped<DisbursementPhaseService>();
-
+            services.AddScoped<IPhase, InitialService>();
+            services.AddScoped<IPhase, PendingService>();
+            services.AddScoped<IPhase, ApprovalService>();
+            services.AddScoped<IPhaseFactory, PhaseFactory>();
+            services.AddScoped<PhaseService>();
+            services.AddScoped<PhaseController>();
             // Register IJwtTokenService
             services.AddScoped<IJwtTokenService, JwtTokenService>();
 

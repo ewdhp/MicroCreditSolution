@@ -44,9 +44,15 @@ namespace MicroCredit.ModelBinders
 
                 IPhaseRequest model = phaseRequest.Type switch
                 {
-                    "Loan" => JsonSerializer.Deserialize<LoanRequest>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }),
-                    "Approval" => JsonSerializer.Deserialize<ApprovalRequest>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }),
-                    "Disbursement" => JsonSerializer.Deserialize<DisburseRequest>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }),
+                    "Initial" => JsonSerializer.Deserialize<InitialRequest>
+                    (body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }),
+
+                    "Pending" => JsonSerializer.Deserialize<PendingRequest>
+                    (body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }),
+
+                    "Approved" => JsonSerializer.Deserialize<ApprovalRequest>
+                    (body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }),
+
                     _ => null
                 };
 

@@ -3,24 +3,22 @@ using MicroCredit.Interfaces;
 
 namespace MicroCredit.Models
 {
-    public class LoanRequest : IPhaseRequest
+    public class InitialRequest : IPhaseRequest
     {
         public string Type { get; set; }
         public string Action { get; set; }
         public decimal Amount { get; set; }
         public DateTime EndDate { get; set; }
     }
+    public class PendingRequest : IPhaseRequest
+    {
+        public string Type { get; set; }
+        public string Action { get; set; }
+    }
     public class ApprovalRequest : IPhaseRequest
     {
         public string Type { get; set; }
         public string Action { get; set; }
-
-    }
-    public class DisburseRequest : IPhaseRequest
-    {
-        public string Type { get; set; }
-        public string Action { get; set; }
-
     }
     public class PhaseResetRequest
     {

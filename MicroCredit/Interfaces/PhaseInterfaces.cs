@@ -1,12 +1,14 @@
 using System;
 using System.Threading.Tasks;
+using MicroCredit.Models;
 
 namespace MicroCredit.Interfaces
 {
 
     public interface IPhase
     {
-        Task<bool> CompleteAsync(IPhaseRequest request);
+        Task<(bool, IPhaseResponse)>
+        CompleteAsync(IPhaseRequest request);
     }
 
     public interface IPhaseRequest
@@ -16,9 +18,14 @@ namespace MicroCredit.Interfaces
 
     }
 
-    public interface IPhaseViewResponse
+    public interface IPhaseResponse
     {
         public string Type { get; }
+    }
+
+    public interface IPhaseFactory
+    {
+        IPhase GetPhaseService(CStatus status);
     }
 
 }

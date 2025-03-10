@@ -6,46 +6,88 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using MicroCredit.Data;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
+using MicroCredit.ModelBinders;
 
 namespace MicroCredit.Services
 {
+
+    public class PhaseFactory : IPhaseFactory
+    {
+        private readonly IServiceProvider _serviceProvider;
+
+        public PhaseFactory(IServiceProvider serviceProvider)
+        {
+            _serviceProvider = serviceProvider;
+        }
+
+        public IPhase GetPhaseService(CStatus status)
+        {
+            return status switch
+            {
+                CStatus.Initial => _serviceProvider
+                .GetRequiredService<InitialService>(),
+
+                CStatus.Pending => _serviceProvider
+                .GetRequiredService<PendingService>(),
+
+                CStatus.Approved => _serviceProvider
+                .GetRequiredService<ApprovalService>(),
+                // Add other phases as needed
+                _ => throw new ArgumentOutOfRangeException
+                (nameof(status), status, null)
+            };
+        }
+    }
+
     public class PhaseService
     {
         private readonly ILogger<PhaseService> _logger;
         private readonly ApplicationDbContext _dbContext;
-        private readonly IUserContextService _userContextService;
+        private readonly IUserContextService _userCS;
+        private readonly IPhaseFactory _pFactory;
 
         public PhaseService(
             ILogger<PhaseService> logger,
             ApplicationDbContext dbContext,
-            IUserContextService userContextService)
+            IUserContextService userCS,
+            IPhaseFactory phaseFactory)
         {
             _logger = logger;
             _dbContext = dbContext;
-            _userContextService = userContextService;
+            _userCS = userCS;
+            _pFactory = phaseFactory;
         }
 
-
-        public async Task<(bool success, string msg)> UpdStatus(
-            Guid loanId, CreditStatus currentStatus,
-            CreditStatus nextStatus)
+        public async Task<(bool success, string msg)>
+        CompletePhase(CStatus current, CStatus next)
         {
-            var loan = await GetLoanById(loanId);
-            if (loan == null) return
-            (false, "Loan not found");
-            if (loan.Status != currentStatus)
-                return (false, "Status mismatch");
-            loan.Status = nextStatus;
+            var loan = await GetLoanById();
+            if (loan == null) return (false, "Loan not found");
+            if (loan.Status != current) return (false, "Status mismatch");
+
+            var phaseService = _pFactory
+            .GetPhaseService(current);
+            var result = await phaseService
+                .CompleteAsync(
+                    new PhaseRequest
+                    {
+                        Type = "Phase",
+                        Action = "UpdateStatus"
+                    });
+
+            if (!result.Item1) return (false, "Phase service failed");
+
+            loan.Status = next;
             _dbContext.Loans.Update(loan);
             await _dbContext.SaveChangesAsync();
             return (true, "Loan status updated");
         }
 
-        public async Task<Loan> GetLoanById(Guid loanId)
+        public async Task<Loan> GetLoanById()
         {
             Guid userId;
-
-            try { userId = _userContextService.GetUserId(); }
+            try { userId = _userCS.GetUserId(); }
             catch (UnauthorizedAccessException ex)
             {
                 _logger.LogError(ex.Message);
@@ -53,72 +95,71 @@ namespace MicroCredit.Services
             }
 
             var loan = await _dbContext.Loans
-            .FirstOrDefaultAsync(
-                l => l.Id == loanId &&
-                l.UserId == userId);
+            .FirstOrDefaultAsync(l => l.UserId == userId);
+            if (loan == null) _logger.LogWarning("Loan not found");
 
-            if (loan == null)
-                _logger.LogWarning
-                ("Loan not found");
             return loan;
         }
 
-        public CreditStatus GetNextPhase(CreditStatus currentStatus)
+        public CStatus Next(CStatus currentStatus)
         {
             return currentStatus switch
             {
-                CreditStatus.Initial => CreditStatus.Pending,
-                CreditStatus.Pending => CreditStatus.Approved,
-                CreditStatus.Approved => CreditStatus.Accepted,
-                CreditStatus.Accepted => CreditStatus.Disbursed,
-                CreditStatus.Disbursed => CreditStatus.Active,
-                CreditStatus.Active => CreditStatus.Paid,
-                CreditStatus.Paid => CreditStatus.Initial,
-                CreditStatus.Due => CreditStatus.Canceled,
-                CreditStatus.Canceled => CreditStatus.Initial,
-                _ => throw new ArgumentOutOfRangeException(
-                    nameof(currentStatus), currentStatus, null)
+                CStatus.Initial => CStatus.Pending,
+                CStatus.Pending => CStatus.Approved,
+                CStatus.Approved => CStatus.Accepted,
+                CStatus.Accepted => CStatus.Disbursed,
+                CStatus.Disbursed => CStatus.Active,
+                CStatus.Active => CStatus.Paid,
+                CStatus.Paid => CStatus.Initial,
+                CStatus.Due => CStatus.Canceled,
+                CStatus.Canceled => CStatus.Initial,
+                _ => throw new ArgumentOutOfRangeException
+                (nameof(currentStatus), currentStatus, null)
             };
         }
 
-        public async Task<(bool success, string msg)> Reset(Guid loanId)
+        public async Task<(bool success, string msg)> Reset()
         {
-            var loan = await GetLoanById(loanId);
-            if (loan == null) { return (false, "Loan not found"); }
-            if (loan.Status != CreditStatus.Paid) return
-            (false, "Loan is not in the Paid status.");
-            loan.Status = CreditStatus.Initial;
+            var loan = await GetLoanById();
+            if (loan == null) return (false, "Loan not found");
+            if (loan.Status != CStatus.Paid)
+                return (false, "Loan is not in the Paid status.");
+
+            loan.Status = CStatus.Initial;
             _dbContext.Loans.Update(loan);
             await _dbContext.SaveChangesAsync();
-            return (true, "Loan status reseted");
-        }
 
+            return (true, "Loan status reset");
+        }
     }
 
 
-    public class LoanPhaseService : IPhase
+    public class InitialService : IPhase
     {
-        private readonly ILogger<LoanPhaseService> _logger;
+        private readonly ILogger<InitialService> _logger;
         private readonly ApplicationDbContext _dbContext;
-        private readonly IUserContextService _userContextService;
+        private readonly IUserContextService _userCS;
 
-        public LoanPhaseService(
-            ILogger<LoanPhaseService> logger,
+        public InitialService(
+            ILogger<InitialService> logger,
             ApplicationDbContext dbContext,
-            IUserContextService userContextService)
+            IUserContextService userCS)
         {
             _logger = logger;
             _dbContext = dbContext;
-            _userContextService = userContextService;
+            _userCS = userCS;
         }
 
-        public async Task<bool> CompleteAsync(IPhaseRequest request)
+        public async Task<(bool, IPhaseResponse)>
+        CompleteAsync(IPhaseRequest request)
         {
 
-            var r = request as LoanRequest;
-            var userId = _userContextService.GetUserId();
-            if (userId == Guid.Empty) return await
-            Task.FromResult(false);
+            var r = request as InitialRequest;
+            var userId = _userCS.GetUserId();
+            if (userId == Guid.Empty)
+                return await Task.FromResult
+                ((false, (IPhaseResponse)null));
 
             var loan = new Loan
             {
@@ -128,10 +169,8 @@ namespace MicroCredit.Services
                 .SpecifyKind(
                     r.EndDate,
                     DateTimeKind.Utc
-                    ),
+                ),
             };
-
-            _logger.LogInformation("Loan created");
 
             try
             {
@@ -142,92 +181,74 @@ namespace MicroCredit.Services
             {
                 _logger.LogError
                 ($"Update Loan Error: {ex.Message}");
-                return await Task.FromResult(false);
+                return await Task.FromResult
+                ((false, (IPhaseResponse)null));
             }
 
-            return await Task.FromResult(true);
+            _logger.LogInformation("Loan created");
+            return await Task.FromResult
+            ((false, (IPhaseResponse)null));
         }
     }
 
-    public class ApprovalPhaseService : IPhase
+    public class PendingService : IPhase
     {
-        private readonly ILogger<LoanPhaseService> _logger;
+        private readonly ILogger<PendingService> _logger;
         private readonly ApplicationDbContext _dbContext;
-        private readonly IUserContextService _userContextService;
+        private readonly IUserContextService _userCS;
 
-        public ApprovalPhaseService(
-            ILogger<LoanPhaseService> logger,
+        public PendingService(
+            ILogger<PendingService> logger,
             ApplicationDbContext dbContext,
-            IUserContextService userContextService)
+            IUserContextService userCS)
         {
             _logger = logger;
             _dbContext = dbContext;
-            _userContextService = userContextService;
+            _userCS = userCS;
         }
 
-        public async Task<bool> CompleteAsync(IPhaseRequest request)
+        public async Task<(bool, IPhaseResponse)>
+        CompleteAsync(IPhaseRequest request)
         {
             Guid userId;
-            try { userId = _userContextService.GetUserId(); }
+
+            try { userId = _userCS.GetUserId(); }
             catch (UnauthorizedAccessException ex)
             {
-                _logger.LogError(ex.Message); return
-            await Task.FromResult(false);
+                _logger.LogError(ex.Message);
+                return await Task.FromResult
+                ((false, (IPhaseResponse)null));
             }
 
             if (userId == Guid.Empty)
-            {
-                _logger.LogError("Invalid user ID");
-                return await Task.FromResult(false);
-            }
-            _logger.LogInformation("User ID: {UserId}", userId);
-
-
-            var approvalRequest = request as ApprovalRequest;
-
-
-            _logger.LogInformation(
-               "SERVICE: ApprovalPhaseService,\n" +
-               "METHOD: ProcessPhase\n, " +
-               "PARAMETERS: ApprovalRequest\n" +
-               "{{ Type:{Type}, Action:{Action} }}\n",
-               request.Type,
-               request.Action);
-
+                return await Task.FromResult
+                ((false, (IPhaseResponse)null));
+            var approvalRequest = request as PendingRequest;
             var existingLoan = await _dbContext.Loans
                 .FirstOrDefaultAsync(
                 l => l.UserId == userId &&
-                l.Status == CreditStatus.Pending);
-
+                l.Status == CStatus.Pending);
             if (existingLoan == null)
-            {
-                _logger.LogInformation("Loan Not found");
-                return await Task.FromResult(false);
-            }
+                return await Task.FromResult
+                ((false, (IPhaseResponse)null));
 
-            _logger.LogInformation(
-                "Loan found : {Amount}",
-                existingLoan.Amount);
-
-            existingLoan.Status = CreditStatus.Approved;
+            existingLoan.Status = CStatus.Approved;
             _dbContext.Loans.Update(existingLoan);
             _logger.LogInformation("Loan updated to Approved");
-
             await _dbContext.SaveChangesAsync();
-            _logger.LogInformation("Loan saved to database");
-
-            return await Task.FromResult(true);
+            return await Task.FromResult
+            ((false, (IPhaseResponse)null));
         }
     }
 
-    public class DisbursementPhaseService : IPhase
+    public class ApprovalService : IPhase
     {
-        private readonly ILogger<DisbursementPhaseService> _logger;
+        private readonly ILogger<ApprovalService> _logger;
         private readonly ApplicationDbContext _dbContext;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public DisbursementPhaseService(
-            ILogger<DisbursementPhaseService> logger,
+        public ApprovalService(
+            ILogger<ApprovalService> logger,
             ApplicationDbContext dbContext,
             IHttpContextAccessor httpContextAccessor)
         {
@@ -236,15 +257,14 @@ namespace MicroCredit.Services
             _httpContextAccessor = httpContextAccessor;
         }
 
-        public async Task<bool> CompleteAsync(IPhaseRequest request)
+        public async Task<(bool, IPhaseResponse)>
+        CompleteAsync(IPhaseRequest request)
         {
             var userId = _httpContextAccessor
             .HttpContext.User.FindFirst("sub")?.Value;
-            _logger.LogInformation(
-            "ProcessPhase called with request: {Request}",
-            request.Action);
-            var disburseRequest = request as DisburseRequest;
-            return await Task.FromResult(true);
+            var approvalRequest = request as ApprovalRequest;
+            return await Task.FromResult
+            ((false, (IPhaseResponse)null));
         }
     }
 }
