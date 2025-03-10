@@ -4,8 +4,8 @@ from datetime import datetime, timedelta
 
 # Configuration
 auth_base_url = "https://localhost:5001/api/testauth"
-phase_base_url = "https://localhost:5001/api/phases/phase"
-user_base_url = "https://localhost:5001/api/users"
+phase_base_url = "https://localhost:5001/api/phases"
+loan_base_url = "https://localhost:5001/api/loans"
 phone_number = "+523321890176"
 verification_code = "123456"  # Replace with the actual verification code
 
@@ -50,56 +50,98 @@ def verify_sms(action):
         print(f"Failed to verify code: {response.status_code} - {response.text}")
         return None
 
-def reset_phase(token, phase):
-    url = f"{user_base_url}/reset-phase"
+def create_loan(token):
+    url = f"{loan_base_url}/create"
     payload = {
-        "Phase": phase
+        "Amount": 100,
+        "EndDate": (datetime.utcnow() + timedelta(days=30)).isoformat() + "Z",  # Ensure UTC format
     }
     headers = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {token}"
     }
-    print(f"Resetting phase to {phase} with token {token}...")
-    response = requests.put(url, headers=headers, data=json.dumps(payload), verify=False)
+    response = requests.post(url, headers=headers, data=json.dumps(payload), verify=False)
+    if response.status_code == 201:
+        loan_id = response.json().get("id")
+        print("Loan created successfully.")
+        print(f"Loan ID: {loan_id}")
+        return loan_id
+    else:
+        print(f"Failed to create loan: {response.status_code} - {response.text}")
+        return None
+
+def reset_phase(token):
+    url = f"{phase_base_url}/reset"
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {token}"
+    }
+    print(f"Resetting phase with token {token}...")
+    response = requests.post(url, headers=headers, verify=False)
     print(f"reset_phase status code: {response.status_code}")
     print(f"reset_phase response: {response.text}")
 
-def call_phase(token, request_type, phase_action):
-    url = phase_base_url
-    end_date = (datetime.now() + timedelta(days=10)).strftime('%Y-%m-%d')
-
-    payload = {
-        "Type": request_type,
-        "Action": phase_action,
-        "Amount": 100,
-        "EndDate": end_date
-    }
+def call_next_phase(token):
+    url = f"{phase_base_url}/next-phase"
     headers = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {token}"
     }
-    print(f"Calling phase with type {request_type} and action {phase_action} using token {token}...")
-    response = requests.post(url, headers=headers, data=json.dumps(payload), verify=False)
-    print(f"call_phase status code: {response.status_code}")
+    print(f"Calling next phase using token {token}...")
+    response = requests.post(url, headers=headers, verify=False)
+    print(f"call_next_phase status code: {response.status_code}")
     try:
-        print(f"call_phase response: {response.json()}")
+        print(f"call_next_phase response: {response.json()}")
     except json.JSONDecodeError:
         print("Response is not in JSON format or is empty")
 
+
+def delete_all_loans(token):
+    loans = get_loans(token)
+    if loans:
+        for loan in loans:
+            delete_loan(token, loan['id'])
+    print("All loans deleted successfully.")
+
+def get_loans(token):
+    url = loan_base_url
+    headers = {
+        "Authorization": f"Bearer {token}"
+    }
+    response = requests.get(url, headers=headers, verify=False)
+    if response.status_code == 200:
+        loans = response.json()
+        print("Loans retrieved successfully.")
+        print(loans)
+        return loans
+    else:
+        print(f"Failed to retrieve loans: {response.status_code} - {response.text}")
+        return None
+def delete_loan(token, loan_id):
+    url = f"{loan_base_url}/{loan_id}"
+    headers = {
+        "Authorization": f"Bearer {token}"
+    }
+    response = requests.delete(url, headers=headers, verify=False)
+    if response.status_code == 204:
+        print("Loan deleted successfully.")
+    else:
+        print(f"Failed to delete loan: {response.status_code} - {response.text}")
+    print(f"Loan deleted")
+
 if __name__ == "__main__":
-     # First, try to signup to get the token
+
     send_sms("signup")
     token = verify_sms("signup")
     
     if token == "USER_EXISTS":
-        # If user already exists, login to get the token
+
         send_sms("login")
         token = verify_sms("login")
     
-    if token and token != "USER_EXISTS":
-        reset_phase(token, 1)
-        call_phase(token, "Loan", "validate")
-        call_phase(token, "Approval", "validate")
-        call_phase(token, "Disbursement", "validate")
+    if token and token != "USER_EXISTS":      
+        call_next_phase(token) 
+        reset_phase(token)
+
     else:
         print("Failed to retrieve token")

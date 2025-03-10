@@ -27,7 +27,7 @@ namespace MicroCredit.ModelBinders
                 throw new ArgumentNullException(nameof(context));
             }
 
-            if (context.Metadata.IsComplexType && context.Metadata.ModelType == typeof(IPhaseRequest))
+            if (context.Metadata.IsComplexType && context.Metadata.ModelType == typeof(IPhaseReq))
             {
                 return new BinderTypeModelBinder(typeof(PhaseRequestModelBinder));
             }

@@ -4,15 +4,15 @@ using System;
 
 namespace MicroCredit.Models
 {
-    public class LoanResponse : IPhaseViewResponse
+    public class InitialResponse : IPhaseRes
     {
         public string Type => "Loan view";
     }
-    public class ApprovalResponse : IPhaseViewResponse
+    public class PendingResponse : IPhaseRes
     {
         public string Type => "Approval view";
     }
-    public class DisburseResponse : IPhaseViewResponse
+    public class ApprovalResponse : IPhaseRes
     {
         public string Type => "Disburse view";
     }

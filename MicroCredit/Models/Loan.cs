@@ -76,13 +76,8 @@ namespace MicroCredit.Models
             {
                 CStatus.Initial => CStatus.Pending,
                 CStatus.Pending => CStatus.Approved,
-                CStatus.Approved => CStatus.Accepted,
-                CStatus.Accepted => CStatus.Disbursed,
-                CStatus.Disbursed => CStatus.Active,
+                CStatus.Approved => CStatus.Active,
                 CStatus.Active => CStatus.Paid,
-                CStatus.Paid => CStatus.Initial,
-                CStatus.Due => CStatus.Canceled,
-                CStatus.Canceled => CStatus.Initial,
                 _ => throw new ArgumentOutOfRangeException(
                     nameof(currentStatus), currentStatus, null)
             };
@@ -96,15 +91,13 @@ namespace MicroCredit.Models
 
     public enum CStatus
     {
-        Initial,   // Initial status
-        Pending,   // Created but not yet approved
-        Approved, // Approved but not yet Accepeted
-        Accepted, // Accepted but not yet disbursed
-        Disbursed, // Disbursed but not yet active
-        Active,    // Disbursed and active
-        Paid,      // Paid credit
-        Due,       // Payment deadline passed   
-        Canceled,   // Canceled credit
+        Initial,  
+        Pending,  
+        Approved, 
+        Active, 
+        Paid,     
+        Due,       
+        Canceled,  
     }
 
     public class LoanStatusUpdate

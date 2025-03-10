@@ -7,18 +7,17 @@ namespace MicroCredit.Interfaces
 
     public interface IPhase
     {
-        Task<(bool, IPhaseResponse)>
-        CompleteAsync(IPhaseRequest request);
+        Task<(bool, IPhaseRes)> CompleteAsync(IPhaseReq request);
     }
 
-    public interface IPhaseRequest
+    public interface IPhaseReq
     {
         public string Type { get; }
         public string Action { get; set; }
 
     }
 
-    public interface IPhaseResponse
+    public interface IPhaseRes
     {
         public string Type { get; }
     }

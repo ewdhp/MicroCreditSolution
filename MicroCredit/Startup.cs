@@ -38,12 +38,14 @@ namespace MicroCredit
             services.AddScoped<FingerprintService>();
 
             // Register phase services
-            services.AddScoped<IPhase, InitialService>();
-            services.AddScoped<IPhase, PendingService>();
-            services.AddScoped<IPhase, ApprovalService>();
+            services.AddScoped<InitialService>();
+            services.AddScoped<PendingService>();
+            services.AddScoped<ApprovalService>();
+            // Add other phase services as needed
             services.AddScoped<IPhaseFactory, PhaseFactory>();
             services.AddScoped<PhaseService>();
             services.AddScoped<PhaseController>();
+
             // Register IJwtTokenService
             services.AddScoped<IJwtTokenService, JwtTokenService>();
 
@@ -113,6 +115,13 @@ namespace MicroCredit
 
             // Register the custom logger provider
             services.AddSingleton<ILoggerProvider, LoggerCustomProvider>(provider => new LoggerCustomProvider(LogLevel.Information));
+
+            // Configure logging levels
+            services.AddLogging(loggingBuilder =>
+            {
+                loggingBuilder.AddFilter("Microsoft", LogLevel.Warning);
+                loggingBuilder.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.Warning);
+            });
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory)
@@ -135,8 +144,6 @@ namespace MicroCredit
             app.UseAuthorization();
             app.UseMiddleware<JwtMiddleware>();
 
-            // Add custom logger provider to the logger factory
-            loggerFactory.AddProvider(new LoggerCustomProvider(LogLevel.Information));
 
             app.UseEndpoints(endpoints =>
             {

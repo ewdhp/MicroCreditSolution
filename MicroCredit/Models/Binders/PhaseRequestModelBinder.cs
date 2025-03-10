@@ -42,7 +42,7 @@ namespace MicroCredit.ModelBinders
                     return;
                 }
 
-                IPhaseRequest model = phaseRequest.Type switch
+                IPhaseReq model = phaseRequest.Type switch
                 {
                     "Initial" => JsonSerializer.Deserialize<InitialRequest>
                     (body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }),
@@ -67,7 +67,7 @@ namespace MicroCredit.ModelBinders
         }
     }
 
-    public class PhaseRequest : IPhaseRequest
+    public class PhaseRequest : IPhaseReq
     {
         public string Type { get; set; }
         public string Action { get; set; }
