@@ -21,17 +21,20 @@ namespace MicroCredit.Controllers
         private readonly IJwtTokenService _jwtTokenService;
         private readonly ApplicationDbContext _context;
         private readonly FingerprintService _fingerprintService;
+        private readonly IUserContextService _userContextService;
 
         public TestAuthController(
             ILogger<TestAuthController> logger,
             IJwtTokenService jwtTokenService,
             ApplicationDbContext context,
-            FingerprintService fingerprintService)
+            FingerprintService fingerprintService,
+            IUserContextService userContextService)
         {
             _logger = logger;
             _jwtTokenService = jwtTokenService;
             _context = context;
             _fingerprintService = fingerprintService;
+            _userContextService = userContextService;
         }
 
         [HttpPost("send")]

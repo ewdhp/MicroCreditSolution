@@ -6,7 +6,7 @@ namespace MicroCredit.Interfaces
 
     public interface IPhase
     {
-        Task<bool> ProcessPhase(IPhaseRequest request);
+        Task<bool> CompleteAsync(IPhaseRequest request);
     }
 
     public interface IPhaseRequest

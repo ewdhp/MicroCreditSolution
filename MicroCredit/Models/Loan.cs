@@ -53,7 +53,6 @@ namespace MicroCredit.Models
                 EndDate = endDate;
                 Amount = amount;
                 Status = CreditStatus.Pending;
-
             }
         }
 
@@ -70,15 +69,41 @@ namespace MicroCredit.Models
                 return InterestRate * Amount * totalDays / totalDays;
             return 0;
         }
+
+        public CreditStatus GetNextPhase(CreditStatus currentStatus)
+        {
+            return currentStatus switch
+            {
+                CreditStatus.Initial => CreditStatus.Pending,
+                CreditStatus.Pending => CreditStatus.Approved,
+                CreditStatus.Approved => CreditStatus.Accepted,
+                CreditStatus.Accepted => CreditStatus.Disbursed,
+                CreditStatus.Disbursed => CreditStatus.Active,
+                CreditStatus.Active => CreditStatus.Paid,
+                CreditStatus.Paid => CreditStatus.Initial,
+                CreditStatus.Due => CreditStatus.Canceled,
+                CreditStatus.Canceled => CreditStatus.Initial,
+                _ => throw new ArgumentOutOfRangeException(
+                    nameof(currentStatus), currentStatus, null)
+            };
+        }
+
+        public void ProcessNextPhase()
+        {
+            Status = GetNextPhase(Status);
+        }
     }
 
     public enum CreditStatus
     {
-        Pending,   // Creadted but not yet approved
-        Approved, // Approved but not yet disbursed
+        Initial,   // Initial status
+        Pending,   // Created but not yet approved
+        Approved, // Approved but not yet Accepeted
+        Accepted, // Accepted but not yet disbursed
+        Disbursed, // Disbursed but not yet active
         Active,    // Disbursed and active
-        Due,       // Payment deadline passed
-        Paid,      // Successfully paid
+        Paid,      // Paid credit
+        Due,       // Payment deadline passed   
         Canceled,   // Canceled credit
     }
 
@@ -90,6 +115,4 @@ namespace MicroCredit.Models
         [Required]
         public CreditStatus Status { get; set; }
     }
-
-
 }

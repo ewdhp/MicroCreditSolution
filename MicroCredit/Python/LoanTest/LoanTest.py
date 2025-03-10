@@ -125,7 +125,7 @@ def delete_loan(token, loan_id):
         print("Loan deleted successfully.")
     else:
         print(f"Failed to delete loan: {response.status_code} - {response.text}")
-
+    print(f"Loan deleted")
 def delete_all_loans(token):
     loans = get_loans(token)
     if loans:
