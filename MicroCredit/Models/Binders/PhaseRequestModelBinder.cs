@@ -5,11 +5,19 @@ using System;
 using MicroCredit.Interfaces;
 using System.IO;
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
 
 namespace MicroCredit.ModelBinders
 {
     public class PhaseRequestModelBinder : IModelBinder
     {
+        private readonly ILogger<PhaseRequestModelBinder> _logger;
+
+        public PhaseRequestModelBinder(ILogger<PhaseRequestModelBinder> logger)
+        {
+            _logger = logger;
+        }
+
         public async Task BindModelAsync(ModelBindingContext bindingContext)
         {
             if (bindingContext == null)
@@ -18,9 +26,9 @@ namespace MicroCredit.ModelBinders
             }
 
             var request = bindingContext.HttpContext.Request;
-
-            if (!request.ContentType.Contains("application/json"))
+            if (!request.Body.CanRead)
             {
+                _logger.LogError("Request body is not readable.");
                 bindingContext.Result = ModelBindingResult.Failed();
                 return;
             }
@@ -28,48 +36,45 @@ namespace MicroCredit.ModelBinders
             using (var reader = new StreamReader(request.Body))
             {
                 var body = await reader.ReadToEndAsync();
-                var phaseRequest = JsonSerializer.Deserialize<PhaseRequest>(body, new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                });
+                _logger.LogInformation($"Request body: {body}");
 
-                // Add logging to verify the values
-                Console.WriteLine($"Model Binder: Type: {phaseRequest?.Type}, Action: {phaseRequest?.Action}");
-
-                if (phaseRequest == null || string.IsNullOrEmpty(phaseRequest.Type) || string.IsNullOrEmpty(phaseRequest.Action))
+                if (string.IsNullOrWhiteSpace(body))
                 {
+                    _logger.LogError("Request body is empty.");
                     bindingContext.Result = ModelBindingResult.Failed();
                     return;
                 }
 
-                IPhaseReq model = phaseRequest.Type switch
+                try
                 {
-                    "Initial" => JsonSerializer.Deserialize<InitialRequest>
-                    (body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }),
+                    var jsonDocument = JsonDocument.Parse(body);
+                    var rootElement = jsonDocument.RootElement;
 
-                    "Pending" => JsonSerializer.Deserialize<PendingRequest>
-                    (body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }),
+                    if (rootElement.TryGetProperty("Status", out var statusElement))
+                    {
+                        var status = statusElement.GetInt32();
+                        IPhaseReq model = status switch
+                        {
+                            (int)CStatus.Initial => JsonSerializer.Deserialize<InitialRequest>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }),
+                            (int)CStatus.Pending => JsonSerializer.Deserialize<PendingRequest>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }),
+                            (int)CStatus.Approved => JsonSerializer.Deserialize<ApprovalRequest>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }),
+                            _ => throw new InvalidOperationException("Unknown status type")
+                        };
 
-                    "Approved" => JsonSerializer.Deserialize<ApprovalRequest>
-                    (body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }),
-
-                    _ => null
-                };
-
-                if (model == null)
-                {
-                    bindingContext.Result = ModelBindingResult.Failed();
-                    return;
+                        bindingContext.Result = ModelBindingResult.Success(model);
+                    }
+                    else
+                    {
+                        _logger.LogError("Request body does not contain 'Status' property.");
+                        bindingContext.Result = ModelBindingResult.Failed();
+                    }
                 }
-
-                bindingContext.Result = ModelBindingResult.Success(model);
+                catch (JsonException ex)
+                {
+                    _logger.LogError($"JSON deserialization error: {ex.Message}");
+                    bindingContext.Result = ModelBindingResult.Failed();
+                }
             }
         }
-    }
-
-    public class PhaseRequest : IPhaseReq
-    {
-        public string Type { get; set; }
-        public string Action { get; set; }
     }
 }

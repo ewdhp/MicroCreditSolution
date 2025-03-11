@@ -6,6 +6,7 @@ namespace MicroCredit.Models
 {
     public class Loan
     {
+
         [Key]
         [Column(TypeName = "uuid")]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -43,16 +44,19 @@ namespace MicroCredit.Models
 
         public Loan() { }
 
-        public Loan(Guid userId, decimal amount, DateTime endDate)
+        public Loan(
+            Guid userId,
+            CStatus status,
+            decimal amount,
+            DateTime endDate)
         {
             if (!((endDate - DateTime.Now).Days > 30))
             {
-                Id = Guid.NewGuid();
-                StartDate = DateTime.Now;
                 UserId = userId;
-                EndDate = endDate;
                 Amount = amount;
-                Status = CStatus.Pending;
+                Status = status;
+                StartDate = DateTime.Now;
+                EndDate = endDate;
             }
         }
 
@@ -69,35 +73,17 @@ namespace MicroCredit.Models
                 return InterestRate * Amount * totalDays / totalDays;
             return 0;
         }
-
-        public CStatus Next(CStatus currentStatus)
-        {
-            return currentStatus switch
-            {
-                CStatus.Initial => CStatus.Pending,
-                CStatus.Pending => CStatus.Approved,
-                CStatus.Approved => CStatus.Active,
-                CStatus.Active => CStatus.Paid,
-                _ => throw new ArgumentOutOfRangeException(
-                    nameof(currentStatus), currentStatus, null)
-            };
-        }
-
-        public void ProcessNextPhase()
-        {
-            Status = Next(Status);
-        }
     }
 
     public enum CStatus
     {
-        Initial,  
-        Pending,  
-        Approved, 
-        Active, 
-        Paid,     
-        Due,       
-        Canceled,  
+        Initial,
+        Pending,
+        Approved,
+        Active,
+        Due,
+        Paid,
+        Canceled,
     }
 
     public class LoanStatusUpdate

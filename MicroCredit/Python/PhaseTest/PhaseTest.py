@@ -87,14 +87,18 @@ def call_next_phase(token):
         "Content-Type": "application/json",
         "Authorization": f"Bearer {token}"
     }
+    payload = {
+        "Status": 0,
+        "Amount": 100,
+        "EndDate": (datetime.utcnow() + timedelta(days=30)).isoformat() + "Z"
+    }
     print(f"Calling next phase using token {token}...")
-    response = requests.post(url, headers=headers, verify=False)
+    response = requests.post(url, headers=headers, data=json.dumps(payload), verify=False)
     print(f"call_next_phase status code: {response.status_code}")
     try:
         print(f"call_next_phase response: {response.json()}")
     except json.JSONDecodeError:
         print("Response is not in JSON format or is empty")
-
 
 def delete_all_loans(token):
     loans = get_loans(token)
@@ -117,6 +121,7 @@ def get_loans(token):
     else:
         print(f"Failed to retrieve loans: {response.status_code} - {response.text}")
         return None
+
 def delete_loan(token, loan_id):
     url = f"{loan_base_url}/{loan_id}"
     headers = {
@@ -130,18 +135,15 @@ def delete_loan(token, loan_id):
     print(f"Loan deleted")
 
 if __name__ == "__main__":
-
     send_sms("signup")
     token = verify_sms("signup")
     
     if token == "USER_EXISTS":
-
         send_sms("login")
         token = verify_sms("login")
     
-    if token and token != "USER_EXISTS":      
-        call_next_phase(token) 
-        reset_phase(token)
-
+    if token and token != "USER_EXISTS":
+        delete_all_loans(token)
+        call_next_phase(token)
     else:
         print("Failed to retrieve token")

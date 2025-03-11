@@ -31,7 +31,7 @@ namespace MicroCredit.Middleware
             var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
             if (token != null)
             {
-                _logger.LogInformation("Token found in request: {Token}", token);
+                _logger.LogInformation("Token found in request");
                 AttachUserToContext(context, token);
             }
             await _next(context);

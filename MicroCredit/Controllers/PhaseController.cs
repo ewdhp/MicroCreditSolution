@@ -15,31 +15,24 @@ namespace MicroCredit.Controllers
     [Route("api/phases")]
     public class PhaseController : ControllerBase
     {
-        private readonly PhaseService _phase;
+        private readonly IPhaseFactory _phaseFactory;
         private readonly ILogger<PhaseController> _logger;
 
         public PhaseController(
-            PhaseService phaseService,
+            IPhaseFactory phaseFactory,
             ILogger<PhaseController> logger)
         {
-            _phase = phaseService;
+            _phaseFactory = phaseFactory;
             _logger = logger;
         }
 
         [HttpPost("next-phase")]
         public async Task<IActionResult> NextPhase(IPhaseReq request)
         {
-            var (success, response) = await _phase.Next(request);
-            return success ? Ok(response) :
-            BadRequest(response);
-        }
-
-        [HttpPost("reset")]
-        public async Task<IActionResult> Reset()
-        {
-            var (success, msg) = await _phase.Reset();
-            return success ? Ok(new { msg }) :
-            BadRequest(new { msg });
+            _logger.LogInformation("Next phase request: {Request}", request);
+            var phase = _phaseFactory.GetPhaseService(request.Status);
+            var (success, response) = await phase.CompleteAsync(request);
+            return success ? Ok(new { response }) : BadRequest(new { success });
         }
     }
 }

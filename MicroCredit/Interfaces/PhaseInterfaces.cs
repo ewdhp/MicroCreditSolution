@@ -12,14 +12,13 @@ namespace MicroCredit.Interfaces
 
     public interface IPhaseReq
     {
-        public string Type { get; }
-        public string Action { get; set; }
+        public CStatus Status { get; set; }
 
     }
 
     public interface IPhaseRes
     {
-        public string Type { get; }
+        public CStatus Status { get; set; }
     }
 
     public interface IPhaseFactory

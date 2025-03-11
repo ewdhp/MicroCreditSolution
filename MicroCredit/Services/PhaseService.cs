@@ -40,91 +40,6 @@ namespace MicroCredit.Services
         }
     }
 
-    public class PhaseService
-    {
-        private readonly ILogger<PhaseService> _logger;
-        private readonly ApplicationDbContext _dbContext;
-        private readonly IUserContextService _userCS;
-        private readonly IPhaseFactory _pFactory;
-
-        public PhaseService(
-            ILogger<PhaseService> logger,
-            ApplicationDbContext dbContext,
-            IUserContextService userCS,
-            IPhaseFactory phaseFactory)
-        {
-            _logger = logger;
-            _dbContext = dbContext;
-            _userCS = userCS;
-            _pFactory = phaseFactory;
-        }
-
-        public async Task<Loan> GetLoanById()
-        {
-            Guid userId;
-
-            try { userId = _userCS.GetUserId(); }
-            catch (UnauthorizedAccessException ex)
-            {
-                _logger.LogError(ex.Message);
-                return null;
-            }
-
-            var loan = await _dbContext.Loans
-            .FirstOrDefaultAsync
-            (l => l.UserId == userId);
-            return loan;
-        }
-
-        public CStatus GetLoanStatus(CStatus currentStatus)
-        {
-            return currentStatus switch
-            {
-                CStatus.Initial => CStatus.Pending,
-                CStatus.Pending => CStatus.Approved,
-                CStatus.Approved => CStatus.Active,
-                CStatus.Active => CStatus.Paid,
-                CStatus.Paid => CStatus.Initial,
-                _ => throw new ArgumentOutOfRangeException
-                (nameof(currentStatus), currentStatus, null)
-            };
-        }
-
-        public async Task<(bool, IPhaseRes)> Next(IPhaseReq req)
-        {
-            try
-            {
-                IPhase phase = null;
-                CStatus current = CStatus.Initial;
-                var loan = await GetLoanById();
-                phase = (loan == null) ?
-                _pFactory.GetPhaseService(current) :
-                _pFactory.GetPhaseService(loan.Status);
-                return await phase.CompleteAsync(req);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex.Message);
-                return await Task.FromResult
-                ((false, (IPhaseRes)null));
-            }
-        }
-
-        public async Task<(bool, string)> Reset()
-        {
-            var loan = await GetLoanById();
-            if (loan == null) return (false, "From Reset() Loan not found");
-            if (loan.Status != CStatus.Paid)
-                return (false, "Loan is not in the Paid status.");
-
-            loan.Status = CStatus.Initial;
-            _dbContext.Loans.Update(loan);
-            await _dbContext.SaveChangesAsync();
-
-            return (true, "Loan status reset");
-        }
-    }
-
     public class InitialService : IPhase
     {
         private readonly ILogger<InitialService> _logger;
@@ -143,23 +58,36 @@ namespace MicroCredit.Services
 
         public async Task<(bool, IPhaseRes)> CompleteAsync(IPhaseReq request)
         {
-            var initialRequest = request as InitialRequest;
-
             try
             {
+                var req = request as InitialRequest;
+                Guid userId = _userCS.GetUserId();
+                if (userId == Guid.Empty)
+                    return await Task.FromResult
+                    ((false, (IPhaseRes)null));
+
                 var loan = new Loan
                 {
-                    UserId = initialRequest.UserId,
-                    Amount = initialRequest.Amount,
+                    UserId = userId,
+                    Status = req.Status,
+                    Amount = req.Amount,
                     EndDate = DateTime
                     .SpecifyKind(
-                        initialRequest.EndDate,
+                        req.EndDate,
                         DateTimeKind.Utc
                     ),
                 };
 
                 await _dbContext.Loans.AddAsync(loan);
                 await _dbContext.SaveChangesAsync();
+
+                //Construct the response:  
+                IPhaseRes reponse = null;
+
+                _logger.LogInformation(
+                "Loan Status updated to Pending");
+                return await Task.FromResult
+                ((true, reponse));
             }
             catch (Exception ex)
             {
@@ -168,15 +96,6 @@ namespace MicroCredit.Services
                 return await Task.FromResult
                 ((false, (IPhaseRes)null));
             }
-
-
-            //Construct the response:  
-            IPhaseRes reponse = null;
-
-            _logger.LogInformation(
-            "Loan Status updated to Pending");
-            return await Task.FromResult
-            ((true, reponse));
         }
     }
 
@@ -218,6 +137,14 @@ namespace MicroCredit.Services
                 existingLoan.Status = CStatus.Approved;
                 _dbContext.Loans.Update(existingLoan);
                 await _dbContext.SaveChangesAsync();
+
+                //Construct the response:  
+                IPhaseRes reponse = null;
+
+                _logger.LogInformation(
+                "Status updated to Approved");
+                return await Task.FromResult
+                ((true, reponse));
             }
             catch (UnauthorizedAccessException ex)
             {
@@ -225,39 +152,62 @@ namespace MicroCredit.Services
                 return await Task.FromResult
                 ((false, (IPhaseRes)null));
             }
-
-            //Construct the response:  
-            IPhaseRes reponse = null;
-
-
-            _logger.LogInformation(
-            "Status updated to Approved");
-            return await Task.FromResult
-            ((true, reponse));
         }
     }
 
     public class ApprovalService : IPhase
     {
-        private readonly ILogger<ApprovalService> _logger;
+        private readonly ILogger<PendingService> _logger;
         private readonly ApplicationDbContext _dbContext;
-        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IUserContextService _userCS;
 
         public ApprovalService(
-            ILogger<ApprovalService> logger,
+            ILogger<PendingService> logger,
             ApplicationDbContext dbContext,
-            IHttpContextAccessor httpContextAccessor)
+            IUserContextService userCS)
         {
             _logger = logger;
             _dbContext = dbContext;
-            _httpContextAccessor = httpContextAccessor;
+            _userCS = userCS;
         }
 
         public async Task<(bool, IPhaseRes)> CompleteAsync(IPhaseReq request)
         {
-            var userId = _httpContextAccessor.HttpContext.User.FindFirst("sub")?.Value;
-            var approvalRequest = request as ApprovalRequest;
-            return await Task.FromResult((false, (IPhaseRes)null));
+            try
+            {
+                var aprovalRequest = request as ApprovalRequest;
+
+                Guid userId = _userCS.GetUserId();
+                if (userId == Guid.Empty)
+                    return await Task.FromResult
+                    ((false, (IPhaseRes)null));
+
+                var existingLoan = await _dbContext
+                .Loans.FirstOrDefaultAsync
+                (l => l.UserId == userId &&
+                l.Status == CStatus.Approved);
+                if (existingLoan == null)
+                    return await Task.FromResult
+                    ((false, (IPhaseRes)null));
+
+                existingLoan.Status = CStatus.Active;
+                _dbContext.Loans.Update(existingLoan);
+                await _dbContext.SaveChangesAsync();
+
+                //Construct the response:  
+                IPhaseRes reponse = null;
+
+                _logger.LogInformation(
+                "Status updated to Approved");
+                return await Task.FromResult
+                ((true, reponse));
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                _logger.LogError(ex.Message);
+                return await Task.FromResult
+                ((false, (IPhaseRes)null));
+            }
         }
     }
 }

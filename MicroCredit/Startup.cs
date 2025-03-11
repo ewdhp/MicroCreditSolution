@@ -38,12 +38,11 @@ namespace MicroCredit
             services.AddScoped<FingerprintService>();
 
             // Register phase services
-            services.AddScoped<InitialService>();
-            services.AddScoped<PendingService>();
-            services.AddScoped<ApprovalService>();
+            services.AddSingleton<InitialService>();
+            services.AddSingleton<PendingService>();
+            services.AddSingleton<ApprovalService>();
             // Add other phase services as needed
             services.AddScoped<IPhaseFactory, PhaseFactory>();
-            services.AddScoped<PhaseService>();
             services.AddScoped<PhaseController>();
 
             // Register IJwtTokenService
