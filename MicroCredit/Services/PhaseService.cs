@@ -67,17 +67,25 @@ namespace MicroCredit.Services
                     UserId = userId,
                     Status = CStatus.Pending,
                     Amount = req.Amount,
-                    EndDate = DateTime.SpecifyKind(req.EndDate, DateTimeKind.Utc),
+                    EndDate = DateTime
+                    .SpecifyKind(
+                        req.EndDate,
+                        DateTimeKind.Utc
+                    ),
                 };
 
                 await _dbContext.Loans.AddAsync(loan);
                 await _dbContext.SaveChangesAsync();
 
                 // Construct the response:  
-                IPhaseRes response = null;
+                IPhaseRes response = new
+                InitialResponse
+                { Status = loan.Status };
 
                 _logger.LogInformation("Loan Status set to Pending");
-                return await Task.FromResult((true, response));
+
+                return await
+                Task.FromResult((true, response));
             }
             catch (Exception ex)
             {
@@ -123,8 +131,10 @@ namespace MicroCredit.Services
                 _dbContext.Loans.Update(existingLoan);
                 await _dbContext.SaveChangesAsync();
 
-                // Construct the response:  
-                IPhaseRes response = null;
+                IPhaseRes response = new InitialResponse
+                {
+                    Status = existingLoan.Status
+                };
 
                 _logger.LogInformation("Status updated to Approved");
                 return await Task.FromResult((true, response));
@@ -173,8 +183,10 @@ namespace MicroCredit.Services
                 _dbContext.Loans.Update(existingLoan);
                 await _dbContext.SaveChangesAsync();
 
-                // Construct the response:  
-                IPhaseRes response = null;
+                IPhaseRes response = new InitialResponse
+                {
+                    Status = existingLoan.Status
+                };
 
                 _logger.LogInformation("Status updated to Paid");
                 return await Task.FromResult((true, response));
