@@ -81,14 +81,14 @@ def reset_phase(token):
     print(f"reset_phase status code: {response.status_code}")
     print(f"reset_phase response: {response.text}")
 
-def call_next_phase(token):
+def call_next_phase(status, token):
     url = f"{phase_base_url}/next-phase"
     headers = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {token}"
     }
     payload = {
-        "Status": 0,
+        "Status": status,
         "Amount": 100,
         "EndDate": (datetime.utcnow() + timedelta(days=30)).isoformat() + "Z"
     }
@@ -144,6 +144,9 @@ if __name__ == "__main__":
     
     if token and token != "USER_EXISTS":
         delete_all_loans(token)
-        call_next_phase(token)
+        call_next_phase(0,token)
+        call_next_phase(1,token)
+        call_next_phase(2,token)
+        
     else:
         print("Failed to retrieve token")

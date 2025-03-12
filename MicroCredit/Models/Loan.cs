@@ -4,6 +4,17 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MicroCredit.Models
 {
+    public enum CStatus
+    {
+        Initial,
+        Pending,
+        Approved,
+        Active,
+        Due,
+        Paid,
+        Canceled,
+    }
+
     public class Loan
     {
 
@@ -75,16 +86,6 @@ namespace MicroCredit.Models
         }
     }
 
-    public enum CStatus
-    {
-        Initial,
-        Pending,
-        Approved,
-        Active,
-        Due,
-        Paid,
-        Canceled,
-    }
 
     public class LoanStatusUpdate
     {

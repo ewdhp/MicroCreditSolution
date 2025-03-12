@@ -39,8 +39,8 @@ namespace MicroCredit
 
             // Register phase services
             services.AddSingleton<InitialService>();
-            services.AddSingleton<PendingService>();
             services.AddSingleton<ApprovalService>();
+            services.AddSingleton<PayService>();
             // Add other phase services as needed
             services.AddScoped<IPhaseFactory, PhaseFactory>();
             services.AddScoped<PhaseController>();

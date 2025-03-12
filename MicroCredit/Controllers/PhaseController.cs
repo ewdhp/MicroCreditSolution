@@ -29,7 +29,7 @@ namespace MicroCredit.Controllers
         [HttpPost("next-phase")]
         public async Task<IActionResult> NextPhase(IPhaseReq request)
         {
-            _logger.LogInformation("Next phase request: {Request}", request);
+            _logger.LogInformation("PHASE REQUEST: {Request}", request);
             var phase = _phaseFactory.GetPhaseService(request.Status);
             var (success, response) = await phase.CompleteAsync(request);
             return success ? Ok(new { response }) : BadRequest(new { success });
