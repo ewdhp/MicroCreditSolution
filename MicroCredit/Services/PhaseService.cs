@@ -60,7 +60,8 @@ namespace MicroCredit.Services
                 var req = request as InitialRequest;
                 Guid userId = _userCS.GetUserId();
                 if (userId == Guid.Empty)
-                    return await Task.FromResult((false, (IPhaseRes)null));
+                    return await Task.FromResult
+                    ((false, (IPhaseRes)null));
 
                 var loan = new Loan
                 {
@@ -77,15 +78,15 @@ namespace MicroCredit.Services
                 await _dbContext.Loans.AddAsync(loan);
                 await _dbContext.SaveChangesAsync();
 
-                // Construct the response:  
                 IPhaseRes response = new
                 InitialResponse
                 { Status = loan.Status };
 
-                _logger.LogInformation("Loan Status set to Pending");
+                _logger.LogInformation("Status Pending");
 
                 return await
-                Task.FromResult((true, response));
+                Task.FromResult
+                ((true, response));
             }
             catch (Exception ex)
             {
@@ -119,13 +120,15 @@ namespace MicroCredit.Services
 
                 Guid userId = _userCS.GetUserId();
                 if (userId == Guid.Empty)
-                    return await Task.FromResult((false, (IPhaseRes)null));
+                    return await Task.FromResult
+                    ((false, (IPhaseRes)null));
 
                 var existingLoan = await _dbContext.Loans
                 .FirstOrDefaultAsync(l => l.UserId == userId &&
                 l.Status == CStatus.Pending);
                 if (existingLoan == null)
-                    return await Task.FromResult((false, (IPhaseRes)null));
+                    return await Task.FromResult
+                    ((false, (IPhaseRes)null));
 
                 existingLoan.Status = CStatus.Approved;
                 _dbContext.Loans.Update(existingLoan);
@@ -136,13 +139,15 @@ namespace MicroCredit.Services
                     Status = existingLoan.Status
                 };
 
-                _logger.LogInformation("Status updated to Approved");
-                return await Task.FromResult((true, response));
+                _logger.LogInformation("Status Approved");
+                return await Task.FromResult
+                ((true, response));
             }
             catch (UnauthorizedAccessException ex)
             {
                 _logger.LogError(ex.Message);
-                return await Task.FromResult((false, (IPhaseRes)null));
+                return await Task.FromResult
+                ((false, (IPhaseRes)null));
             }
         }
     }
@@ -167,17 +172,19 @@ namespace MicroCredit.Services
         {
             try
             {
-                var approvalRequest = request as ApprovalRequest;
+                var req = request as ApprovalRequest;
 
                 Guid userId = _userCS.GetUserId();
                 if (userId == Guid.Empty)
-                    return await Task.FromResult((false, (IPhaseRes)null));
+                    return await Task.FromResult
+                    ((false, (IPhaseRes)null));
 
                 var existingLoan = await _dbContext.Loans
                 .FirstOrDefaultAsync(l => l.UserId == userId &&
                 l.Status == CStatus.Approved);
                 if (existingLoan == null)
-                    return await Task.FromResult((false, (IPhaseRes)null));
+                    return await Task.FromResult
+                    ((false, (IPhaseRes)null));
 
                 existingLoan.Status = CStatus.Paid;
                 _dbContext.Loans.Update(existingLoan);
@@ -189,12 +196,14 @@ namespace MicroCredit.Services
                 };
 
                 _logger.LogInformation("Status updated to Paid");
-                return await Task.FromResult((true, response));
+                return await Task.FromResult
+                ((true, response));
             }
             catch (UnauthorizedAccessException ex)
             {
                 _logger.LogError(ex.Message);
-                return await Task.FromResult((false, (IPhaseRes)null));
+                return await Task.FromResult
+                ((false, (IPhaseRes)null));
             }
         }
     }
