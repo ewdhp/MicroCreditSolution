@@ -13,7 +13,7 @@ const DashboardLayout = () => {
       backgroundColor: '#f8f9fa',
       borderRadius: '8px',
       padding: '10px',
-      marginBottom: '20px',
+
     },
     ul: {
       listStyle: 'none',
@@ -31,7 +31,8 @@ const DashboardLayout = () => {
     content: {
       backgroundColor: 'white',
       borderRadius: '8px',
-      padding: '20px',
+      margin:'0',
+      padding: '0',
       width: '100%',
       maxWidth: '800px',
     },
@@ -41,7 +42,7 @@ const DashboardLayout = () => {
     <div style={styles.layout}>
       <nav style={styles.nav}>
         <ul style={styles.ul}>
-          <li style={styles.li}><Link to="/dashboard" style={styles.link}>Tomar un prestamo</Link></li>
+          <li style={styles.li}><Link to="/dashboard" style={styles.link}>Tomar prestamo</Link></li>
           <li style={styles.li}><Link to="/dashboard/history" style={styles.link}>Historial</Link></li>
           <li style={styles.li}><Link to="/dashboard/profile" style={styles.link}>Cambiar telefono</Link></li>
           <li style={styles.li}><Link to="/dashboard/refer" style={styles.link}>Gana $500 gratis</Link></li>

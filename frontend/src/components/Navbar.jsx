@@ -1,7 +1,17 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import logoImage from '../assets/logo.png'; // Ensure you have a logo image in the assets folder
 
 const Navbar = ({ style }) => {
+  const { isAuthenticated, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
   const defaultStyles = {
     navbar: {
       display: 'flex',
@@ -15,7 +25,6 @@ const Navbar = ({ style }) => {
       zIndex: 1000,
       padding: '0 20px', // Add padding to the left and right
       boxSizing: 'border-box', // Include padding and border in the element's total width and height
-
     },
     logoContainer: {
       display: 'flex',
@@ -35,10 +44,10 @@ const Navbar = ({ style }) => {
       alignItems: 'center',
     },
     link: {
-
-      color: '#gray',
+      color: 'gray',
       fontSize: '1em',
       marginLeft: '20px', // Space between the links
+      cursor: 'pointer', // Add pointer cursor for links
     },
   };
 
@@ -54,7 +63,11 @@ const Navbar = ({ style }) => {
         <div style={defaultStyles.logoText}>MicroCredit</div>
       </div>
       <div style={defaultStyles.navLinks}>
-        <a href="/login">Entrar</a>
+        {isAuthenticated ? (
+          <span style={defaultStyles.link} onClick={handleLogout}>Salir</span>
+        ) : (
+          <a href="/login" style={defaultStyles.link}>Entrar</a>
+        )}
       </div>
     </nav>
   );

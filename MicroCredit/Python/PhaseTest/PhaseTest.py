@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 auth_base_url = "https://localhost:5001/api/testauth"
 phase_base_url = "https://localhost:5001/api/phases"
 loan_base_url = "https://localhost:5001/api/loans"
+
 phone_number = "+523321890176"
 verification_code = "123456"  # Replace with the actual verification code
 

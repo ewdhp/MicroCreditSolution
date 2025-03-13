@@ -1,18 +1,62 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [smsCode, setSmsCode] = useState('');
+  const [currentStep, setCurrentStep] = useState(0);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
-  const handleChange = (e) => {
+  const handlePhoneNumberChange = (e) => {
     setPhoneNumber(e.target.value);
   };
 
-  const handleSubmit = (e) => {
+  const handleSmsCodeChange = (e) => {
+    setSmsCode(e.target.value);
+  };
+
+  const handleSendSms = async (e) => {
     e.preventDefault();
-    // Add your login logic here
-    navigate('/dashboard');
+    try {
+      const response = await axios.post('https://localhost:5001/api/testauth/send', {
+        Action: 'login',
+        Phone: `+52${phoneNumber}`, // Ensure the phone number includes the country code
+      });
+      if (response.status === 200) {
+        setCurrentStep(1);
+      } else {
+        alert('Failed to send SMS. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error sending SMS:', error);
+      alert('Failed to send SMS. Please try again.');
+    }
+  };
+
+  const handleVerifySms = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await axios.post('https://localhost:5001/api/testauth/verify', {
+        Action: 'login',
+        Phone: `+52${phoneNumber}`, // Ensure the phone number includes the country code
+        Code: smsCode,
+      });
+
+      if (response.status === 200) {
+        const token = response.data.token;
+        login(token); // Update the authentication state
+        console.log('Verification successful, navigating to dashboard...');
+        navigate('/dashboard');
+      } else {
+        alert('Invalid SMS code. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error verifying SMS:', error);
+      alert('Invalid SMS code. Please try again.');
+    }
   };
 
   const styles = {
@@ -27,10 +71,12 @@ const Login = () => {
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
+      backgroundColor: '#fff',
+      padding: '20px',
       borderRadius: '8px',
+      boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)',
       maxWidth: '400px',
-
-            maxWidth: '250px',
+      width: '100%',
     },
     input: {
       width: '100%',
@@ -51,25 +97,40 @@ const Login = () => {
       cursor: 'pointer',
       boxSizing: 'border-box', // Ensure padding is included in the width
     },
-       heading: {
+    heading: {
       margin: '0 0 20px 0', // Remove extra margin and add bottom margin
     },
   };
 
   return (
     <div style={styles.container}>
-       
-      <form style={styles.form} onSubmit={handleSubmit}>
-         <h2 style={styles.heading}>Acceso</h2>
-        <input
-          type="text"
-          placeholder="Telefono"
-          value={phoneNumber}
-          onChange={handleChange}
-          style={styles.input}
-        />
-        <button type="submit" style={styles.button}>Aceptar</button>
-      </form>
+      <h1>Acceso</h1>
+      {currentStep === 0 && (
+        <form style={styles.form} onSubmit={handleSendSms}>
+          <h2 style={styles.heading}>Ingresa tu télefono</h2>
+          <input
+            type="text"
+            placeholder="Teléfono"
+            value={phoneNumber}
+            onChange={handlePhoneNumberChange}
+            style={styles.input}
+          />
+          <button type="submit" style={styles.button}>Enviar Código</button>
+        </form>
+      )}
+      {currentStep === 1 && (
+        <form style={styles.form} onSubmit={handleVerifySms}>
+          <h2 style={styles.heading}>Verificar Código</h2>
+          <input
+            type="text"
+            placeholder="Código SMS"
+            value={smsCode}
+            onChange={handleSmsCodeChange}
+            style={styles.input}
+          />
+          <button type="submit" style={styles.button}>Verificar</button>
+        </form>
+      )}
     </div>
   );
 };

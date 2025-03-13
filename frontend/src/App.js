@@ -20,9 +20,7 @@ const ProtectedRoute = ({ element }) => {
 
 const App = () => {
   const styles = {
-    navbar: {
-
-    },
+    navbar: {},
     mainContent: {
       marginTop: '65px', // Adjust this value based on the height of your Navbar
     },
@@ -36,14 +34,14 @@ const App = () => {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />}/>
+            <Route path="/signup" element={<Signup />} />
             <Route path="/dashboard" element={<ProtectedRoute element={<DashboardLayout />} />}>
               <Route index element={<Dashboard />} />
               <Route path="history" element={<History />} />
               <Route path="profile" element={<Profile />} />
               <Route path="refer" element={<Refer />} />
             </Route>
-            <Route path="*" element={<Navigate to="/" />} /> {/* Redirect any unknown routes to home */}
+            <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </div>
       </Router>
