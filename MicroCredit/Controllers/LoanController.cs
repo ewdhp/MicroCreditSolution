@@ -32,62 +32,43 @@ namespace MicroCredit.Controllers
         }
 
         [HttpPost("create")]
-        public async Task<IActionResult> CreateLoan([FromBody] Loan loan)
+        private async Task<IActionResult> CreateLoan([FromBody] Loan loan)
         {
             if (!ModelState.IsValid)
-            {
                 return BadRequest(ModelState);
-            }
 
-            Guid userId;
-            try
-            {
-                userId = _userContextService.GetUserId();
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                _logger.LogWarning("Invalid user ID in token: {Message}", ex.Message);
-                return BadRequest(new { message = "Invalid user ID" });
-            }
+            Guid userId = _userContextService.GetUserId();
 
-            _logger.LogInformation("Authenticated User ID: {UserId}", userId);
-
-            // Check if the user exists in the database
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            var user = await _context.Users
+            .FirstOrDefaultAsync
+            (u => u.Id == userId);
             if (user == null)
-            {
-                _logger.LogWarning("User not found ID: {UserId}", userId);
-                return BadRequest(new { message = "User not found" });
-            }
+                return BadRequest
+                (new { message = "User not found" });
 
-            _logger.LogInformation("User found in database: {User}", user);
-
-            // Check if the user already has an active or due loan
             var existingLoan = await _context.Loans
-                .FirstOrDefaultAsync(l => l.UserId == userId &&
-                    (l.Status == CStatus.Active || l.Status == CStatus.Due));
+            .FirstOrDefaultAsync(l => l.UserId == userId &&
+            (l.Status == CStatus.Active || l.Status == CStatus.Due));
 
             if (existingLoan != null)
-            {
-                _logger.LogWarning("User already has an active or due loan. Loan ID: {LoanId}", existingLoan.Id);
-                return BadRequest(new { message = "User has an active or due loan" });
-            }
+                return BadRequest
+                (new { message = "User has an active or due loan" });
 
             loan.UserId = userId;
-            loan.StartDate = DateTime.UtcNow; // Ensure UTC
-            loan.EndDate = loan.EndDate.ToUniversalTime(); // Ensure UTC
-            loan.Status = CStatus.Pending;
+            loan.StartDate = DateTime.UtcNow;
+            loan.EndDate = loan.EndDate.ToUniversalTime();
+            loan.Status = CStatus.Initial;
 
             _context.Loans.Add(loan);
             await _context.SaveChangesAsync();
-
-            _logger.LogInformation("Loan created with ID: {LoanId} for User ID: {UserId}", loan.Id, userId);
-
+            _logger.LogInformation("Loan created with ID: " +
+            "{LoanId} for User ID: {UserId}", loan.Id, userId);
             return CreatedAtAction(nameof(GetLoan), new { id = loan.Id }, loan);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateLoan(Guid id, [FromBody] LoanStatusUpdate loanStatusUpdate)
+        private async Task<IActionResult>
+        UpdateLoan(Guid id, [FromBody] LoanStatusUpdate loanStatusUpdate)
         {
             if (id != loanStatusUpdate.Id)
                 return BadRequest(new { message = "Loan ID mismatch" });
@@ -133,73 +114,77 @@ namespace MicroCredit.Controllers
             try
             {
                 userId = _userContextService.GetUserId();
+                var loans = await _context.Loans
+                .Where(l => l.UserId == userId)
+                .ToListAsync();
+                return Ok(loans);
             }
             catch (UnauthorizedAccessException ex)
             {
-                _logger.LogWarning("Invalid user ID in token: {Message}", ex.Message);
-                return BadRequest(new { message = "Invalid user ID" });
+                _logger.LogWarning
+                ("Invalid user ID : {Message}", ex.Message);
+                return BadRequest
+                (new { message = "Invalid user ID" });
             }
-
-            _logger.LogInformation("Authenticated User ID: {UserId}", userId);
-
-            var loans = await _context.Loans
-                .Where(l => l.UserId == userId)
-                .ToListAsync();
-            return Ok(loans);
         }
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetLoan(Guid id)
+        [HttpGet("current-loan")]
+        public async Task<IActionResult> CurrentLoan()
         {
             Guid userId;
             try
             {
                 userId = _userContextService.GetUserId();
+                var existingLoan = await _context.Loans
+                .FirstOrDefaultAsync(l => l.UserId == userId &&
+                (l.Status == CStatus.Active || l.Status == CStatus.Due));
+
+                if (existingLoan == null)
+                    return NotFound
+                    (new { message = "No active or due loan found" });
+                return Ok(existingLoan);
             }
             catch (UnauthorizedAccessException ex)
             {
-                _logger.LogWarning("Invalid user ID in token: {Message}", ex.Message);
-                return BadRequest(new { message = "Invalid user ID" });
+                _logger.LogWarning
+                ("Invalid user ID : {Message}", ex.Message);
+                return BadRequest
+                (new { message = "Invalid user ID" });
             }
+        }
 
-            _logger.LogInformation("Authenticated User ID: {UserId}", userId);
-
-            var loan = await _context.Loans.FirstOrDefaultAsync(l => l.Id == id && l.UserId == userId);
+        [HttpGet("{id}")]
+        private async Task<IActionResult> GetLoan(Guid id)
+        {
+            var loan = await _context.Loans.FindAsync(id);
             if (loan == null)
-            {
-                _logger.LogWarning("Loan not found for User ID: {UserId}", userId);
                 return NotFound(new { message = "Loan not found" });
-            }
+
             return Ok(loan);
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteLoan(Guid id)
+        private async Task<IActionResult> DeleteLoan(Guid id)
         {
-            Guid userId;
             try
             {
-                userId = _userContextService.GetUserId();
+                Guid userId = _userContextService.GetUserId();
+                var loan = await _context.Loans
+                .FirstOrDefaultAsync
+                (l => l.Id == id && l.UserId == userId);
+                if (loan == null)
+                    return NotFound
+                    (new { message = "Loan not found" });
+
+                _context.Loans.Remove(loan);
+                await _context.SaveChangesAsync();
+                _logger.LogInformation("Loan deleted");
+                return Ok(new { message = "Loan deleted" });
             }
             catch (UnauthorizedAccessException ex)
             {
-                _logger.LogWarning("Invalid user ID in token: {Message}", ex.Message);
-                return BadRequest(new { message = "Invalid user ID" });
+                return BadRequest(ex.Message);
             }
-
-            var loan = await _context.Loans.FirstOrDefaultAsync(l => l.Id == id && l.UserId == userId);
-            if (loan == null)
-            {
-                _logger.LogWarning("Loan not found for User ID: {UserId}", userId);
-                return NotFound(new { message = "Loan not found" });
-            }
-
-            _context.Loans.Remove(loan);
-            await _context.SaveChangesAsync();
-
-            _logger.LogInformation("Loan deleted with ID: {LoanId} for User ID: {UserId}", loan.Id, userId);
-
-            return NoContent();
         }
     }
 }

@@ -13,7 +13,6 @@ namespace MicroCredit.Interfaces
     public interface IPhaseReq
     {
         public CStatus Status { get; set; }
-
     }
 
     public interface IPhaseRes
@@ -23,7 +22,7 @@ namespace MicroCredit.Interfaces
 
     public interface IPhaseFactory
     {
-        IPhase GetPhaseService(CStatus status);
+        IPhase GetPhase(CStatus status);
     }
 
 }

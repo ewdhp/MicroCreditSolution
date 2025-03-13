@@ -1,12 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using MicroCredit.Services;
-using System;
 using System.Threading.Tasks;
-using MicroCredit.Models;
 using MicroCredit.Interfaces;
-using MicroCredit.ModelBinders;
 
 namespace MicroCredit.Controllers
 {
@@ -27,12 +23,16 @@ namespace MicroCredit.Controllers
         }
 
         [HttpPost("next-phase")]
-        public async Task<IActionResult> NextPhase(IPhaseReq request)
+        public async Task<IActionResult>
+            NextPhase(IPhaseReq request)
         {
-            _logger.LogInformation("PHASE REQUEST: {Request}", request);
-            var phase = _phaseFactory.GetPhaseService(request.Status);
-            var (success, response) = await phase.CompleteAsync(request);
-            return success ? Ok(new { response }) : BadRequest(new { success });
+            _logger.LogInformation
+            ("PHASE REQUEST: {Request}", request);
+            var p = _phaseFactory.GetPhase(request.Status);
+            var (success, res) = await p.CompleteAsync(request);
+            _logger.LogInformation("{Success} {Response}", success, res);
+            return success ? Ok(new { res }) :
+            BadRequest(new { success });
         }
     }
 }

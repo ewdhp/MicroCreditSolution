@@ -3,7 +3,7 @@ import styled from "styled-components";
 
 const StepperContainer = styled.div`
   display: flex;
-  justify-content: space-around;
+  justify-content: center;
   margin-bottom: 20px;
 `;
 
@@ -34,12 +34,10 @@ const StepLabel = styled.div`
 const Stepper = ({ steps, currentStep }) => {
   return (
     <StepperContainer>
-      {steps.map((step, index) => (
-        <Step key={index}>
-          <StepNumber $active={index <= currentStep}>{index + 1}</StepNumber>
-          <StepLabel>{step}</StepLabel>
-        </Step>
-      ))}
+      <Step>
+        <StepNumber $active={true}>{currentStep + 1}</StepNumber>
+        <StepLabel>{steps[currentStep]}</StepLabel>
+      </Step>
     </StepperContainer>
   );
 };

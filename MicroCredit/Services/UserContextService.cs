@@ -10,21 +10,26 @@ namespace MicroCredit.Services
 
     public class UserContextService : IUserContextService
     {
-        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IHttpContextAccessor _httpca;
 
-        public UserContextService(IHttpContextAccessor httpContextAccessor)
+        public UserContextService(IHttpContextAccessor httpca)
         {
-            _httpContextAccessor = httpContextAccessor;
+            _httpca = httpca;
         }
 
         public Guid GetUserId()
         {
-            var user = _httpContextAccessor.HttpContext?.User;
-            var userIdClaim = user?.FindFirst("Id")?.Value;
+            var user = _httpca
+            .HttpContext?.User;
+            var userIdClaim = user?
+            .FindFirst("Id")?.Value;
 
-            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+            if (string.IsNullOrEmpty(userIdClaim) ||
+                !Guid.TryParse(userIdClaim,
+                out var userId))
             {
-                throw new UnauthorizedAccessException("Invalid or missing User ID claim.");
+                throw new UnauthorizedAccessException
+                ("Invalid or missing User ID claim.");
             }
 
             return userId;

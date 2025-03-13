@@ -1,14 +1,11 @@
 using System;
+using MicroCredit.Data;
+using MicroCredit.Models;
 using System.Threading.Tasks;
 using MicroCredit.Interfaces;
-using MicroCredit.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using MicroCredit.Data;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
-using MicroCredit.ModelBinders;
-using Microsoft.EntityFrameworkCore.Infrastructure.Internal;
 
 namespace MicroCredit.Services
 {
@@ -20,8 +17,7 @@ namespace MicroCredit.Services
         {
             _serviceProvider = serviceProvider;
         }
-
-        public IPhase GetPhaseService(CStatus status)
+        public IPhase GetPhase(CStatus status)
         {
             return status switch
             {
@@ -53,7 +49,9 @@ namespace MicroCredit.Services
             _userCS = userCS;
         }
 
-        public async Task<(bool, IPhaseRes)> CompleteAsync(IPhaseReq request)
+        public async
+        Task<(bool, IPhaseRes)>
+        CompleteAsync(IPhaseReq request)
         {
             try
             {
@@ -78,8 +76,7 @@ namespace MicroCredit.Services
                 await _dbContext.Loans.AddAsync(loan);
                 await _dbContext.SaveChangesAsync();
 
-                IPhaseRes response = new
-                InitialResponse
+                IPhaseRes response = new InitialResponse
                 { Status = loan.Status };
 
                 _logger.LogInformation("Status Pending");
@@ -112,7 +109,9 @@ namespace MicroCredit.Services
             _userCS = userCS;
         }
 
-        public async Task<(bool, IPhaseRes)> CompleteAsync(IPhaseReq request)
+        public async
+        Task<(bool, IPhaseRes)>
+        CompleteAsync(IPhaseReq request)
         {
             try
             {
@@ -135,11 +134,8 @@ namespace MicroCredit.Services
                 await _dbContext.SaveChangesAsync();
 
                 IPhaseRes response = new InitialResponse
-                {
-                    Status = existingLoan.Status
-                };
+                { Status = existingLoan.Status };
 
-                _logger.LogInformation("Status Approved");
                 return await Task.FromResult
                 ((true, response));
             }
@@ -168,7 +164,8 @@ namespace MicroCredit.Services
             _userCS = userCS;
         }
 
-        public async Task<(bool, IPhaseRes)> CompleteAsync(IPhaseReq request)
+        public async Task<(bool, IPhaseRes)>
+        CompleteAsync(IPhaseReq request)
         {
             try
             {
@@ -179,23 +176,23 @@ namespace MicroCredit.Services
                     return await Task.FromResult
                     ((false, (IPhaseRes)null));
 
-                var existingLoan = await _dbContext.Loans
-                .FirstOrDefaultAsync(l => l.UserId == userId &&
-                l.Status == CStatus.Approved);
-                if (existingLoan == null)
+                var loan = await _dbContext.Loans
+                    .FirstOrDefaultAsync
+                (
+                    l => l.UserId == userId &&
+                    l.Status == CStatus.Approved
+                );
+
+                if (loan == null)
                     return await Task.FromResult
                     ((false, (IPhaseRes)null));
 
-                existingLoan.Status = CStatus.Paid;
-                _dbContext.Loans.Update(existingLoan);
+                loan.Status = CStatus.Paid;
+                _dbContext.Loans.Update(loan);
                 await _dbContext.SaveChangesAsync();
 
                 IPhaseRes response = new InitialResponse
-                {
-                    Status = existingLoan.Status
-                };
-
-                _logger.LogInformation("Status updated to Paid");
+                { Status = loan.Status };
                 return await Task.FromResult
                 ((true, response));
             }

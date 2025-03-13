@@ -60,7 +60,7 @@ const Login = () => {
     <div style={styles.container}>
        
       <form style={styles.form} onSubmit={handleSubmit}>
-         <h2 style={styles.heading}>Acceso</h2>
+         <h2 style={styles.heading}>Ingresa tu numero</h2>
         <input
           type="text"
           placeholder="Telefono"

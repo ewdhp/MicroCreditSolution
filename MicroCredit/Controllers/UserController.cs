@@ -18,7 +18,9 @@ namespace MicroCredit.Controllers
         private readonly ApplicationDbContext _context;
         private readonly ILogger<UserController> _logger;
 
-        public UserController(ApplicationDbContext context, ILogger<UserController> logger)
+        public UserController(
+            ApplicationDbContext context,
+            ILogger<UserController> logger)
         {
             _context = context;
             _logger = logger;
@@ -27,23 +29,37 @@ namespace MicroCredit.Controllers
         [HttpGet("current")]
         public async Task<IActionResult> GetCurrentUser()
         {
-            var userId = User.Claims.FirstOrDefault(c => c.Type == "Id")?.Value; // Use "Id" instead of "UserId"
+            var userId = User.Claims
+            .FirstOrDefault(c => c.Type == "Id")?.Value; // Use "Id" instead of "UserId"
             if (userId == null)
             {
-                _logger.LogWarning("Id claim not found in token.");
-                return Unauthorized(new { message = "Id claim not found in token." });
+                _logger.LogWarning
+                ("Id claim not found in token.");
+                return Unauthorized
+                (new { message = "Id claim not found in token." });
             }
 
             _logger.LogInformation("Id claim found: {Id}", userId);
 
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id.ToString() == userId);
+            var user = await _context.Users
+            .FirstOrDefaultAsync
+            (u => u.Id.ToString() == userId);
+
             if (user == null)
             {
-                _logger.LogInformation("User with Id {Id} not found.", userId);
-                return NotFound(new { message = "User not found" });
+                _logger.LogInformation
+                ("User with Id {Id} not found.", userId);
+                return NotFound
+                (new { message = "User not found" });
             }
 
-            return Ok(new { user.Id, user.Phone, user.Name, user.Fingerprint });
+            return Ok(new
+            {
+                user.Id,
+                user.Phone,
+                user.Name,
+                user.Fingerprint
+            });
         }
 
         [HttpPost]
@@ -101,28 +117,6 @@ namespace MicroCredit.Controllers
             }
 
             _context.Users.Remove(user);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-
-        [HttpPut("reset-phase")]
-        public async Task<IActionResult> ResetPhase([FromBody] PhaseResetRequest request)
-        {
-            var userId = User.Claims.FirstOrDefault(c => c.Type == "Id")?.Value;
-            if (userId == null)
-            {
-                return Unauthorized(new { message = "Id claim not found in token." });
-            }
-
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id.ToString() == userId);
-            if (user == null)
-            {
-                return NotFound(new { message = "User not found" });
-            }
-
-            user.Phase = request.Phase;
-            _context.Users.Update(user);
             await _context.SaveChangesAsync();
 
             return NoContent();
