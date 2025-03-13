@@ -57,16 +57,15 @@ namespace MicroCredit
             // Register HttpClient
             services.AddHttpClient();
 
-            // Configure CORS
             services.AddCors(options =>
             {
-                options.AddPolicy("AllowFrontend", builder =>
-                {
-                    builder.WithOrigins("http://localhost:3000")
-                           .AllowAnyHeader()
-                           .AllowAnyMethod()
-                           .AllowCredentials();
-                });
+                options.AddPolicy("AllowFrontend",
+                    builder =>
+                    {
+                        builder.WithOrigins("http://localhost:3000")
+                            .AllowAnyHeader()
+                            .AllowAnyMethod();
+                    });
             });
 
             services.AddControllers(options =>
