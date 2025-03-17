@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import logoImage from '../assets/logo.png'; // Ensure you have a logo image in the assets folder
+import logoImage from '../assets/logo.jpg'; // Ensure you have a logo image in the assets folder
 
 const Navbar = ({ style }) => {
   const { isAuthenticated, logout } = useAuth();
@@ -20,13 +20,13 @@ const Navbar = ({ style }) => {
       justifyContent: 'space-between',
       position: 'fixed',
       width: '100%',
-      height: '78px', // Adjust the height of the navbar as needed
+      height: '66px', // Adjust the height of the navbar as needed
       marginBottom: '20px', // Add margin to the bottom
       top: 0,
       zIndex: 1000,
       padding: '0 20px', // Add padding to the left and right
       boxSizing: 'border-box', // Include padding and border in the element's total width and height
-      backgroundColor: 'rgb(240, 239, 239)', // Change the background color of the navbar 
+      backgroundColor: 'rgba(240, 238, 241, 0.9)', // Semi-transparent white background
     },
     logoContainer: {
       display: 'flex',
@@ -62,13 +62,16 @@ const Navbar = ({ style }) => {
     <nav style={combinedStyles}>
       <div style={defaultStyles.logoContainer}>
         <img src={logoImage} alt="Logo" style={defaultStyles.logo} />
-        <div style={defaultStyles.logoText}>MicroCredit</div>
+        <div style={defaultStyles.logoText}><h3>MicroCredit</h3></div>
       </div>
       <div style={defaultStyles.navLinks}>
         {isAuthenticated ? (
           <span style={defaultStyles.link} onClick={handleLogout}>Salir</span>
         ) : (
-          <a href="/login" style={defaultStyles.link}>Entrar</a>
+          <>
+
+            <a href="/login" style={defaultStyles.link}>Acceso</a>
+          </>
         )}
       </div>
     </nav>

@@ -15,15 +15,20 @@ const Home = () => {
   }, [isAuthenticated, navigate]);
 
   const styles = {
+    firstContainer: {
+      backgroundColor: 'rgb(245, 242, 242)',
+      color:'rgb(129, 94, 161)',
+      padding: '10px',
+    },
     container: {
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      padding: '30px',
-      margin: '50px',
-      marginTop: '100px',
+      padding: '25px',
+
+
       backgroundColor: 'rgba(20, 224, 54, 0.76)', // Semi-transparent white background
-      backdropFilter: 'blur(20px)', // Blur effect
+      backdropFilter: 'blur(40px)', // Blur effect
       color: 'white',
     },
     secondContainer: {
@@ -31,7 +36,7 @@ const Home = () => {
       flexDirection: 'column',
       alignItems: 'center',
 
-      padding: '5px',
+      padding: '25px',
       backgroundColor: 'rgba(141, 26, 218, 0.77)', // Semi-transparent white background
       backdropFilter: 'blur(5px)', // Blur effect
       color: 'white',
@@ -40,7 +45,7 @@ const Home = () => {
       container: {
         padding: '5px',
         margin: '5px',
-        marginTop: '50px',
+        marginTop: '10px',
       },
       secondContainer: {
         padding: '5px',
@@ -50,17 +55,22 @@ const Home = () => {
   };
 
   return (
-    <div>
+    <>
+    <div style={styles.firstContainer}>
+      <h1>Pagas solamente el interes diario acumulado</h1>
+       <button onClick={() => navigate('/signup')}>Tomar un credito</button>
+       </div>
       <div style={styles.container}>
-        <h2>Turn Interest Into Opportunity</h2>
-        <p>
-          With every loan repayment, you can allocate a portion of your paid interest to fund your account, empowering you to start offering loans to others in a safe way using a user trust score that you may accept or not. You may also fund your account by credit card or by other deposit methods like Crypto currencies and stores near to you.
-        </p>
+        
+        <h2>
+         Segmenta una parte del interes a pagar en tu credito y acumula dinero en tu cuenta para prestarle a otros usuarios.
+       </h2>
+       
       </div>
       <div style={styles.secondContainer}>
-        <h2>Earn always 7.5% over the interest paid when your referral's pays a loan.</h2>
+        <h3>Cada referido te da siempre el 7.5% de interes por cada credito otorgado.</h3>
       </div>
-    </div>
+   </>
   );
 };
 

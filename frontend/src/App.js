@@ -22,6 +22,7 @@ const App = () => {
     navbar: {},
     mainContent: {
       marginTop: '65px', // Adjust this value based on the height of your Navbar
+       backgroundColor: 'rgba(183, 176, 187, 0.9)',
     },
   };
 
