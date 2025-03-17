@@ -6,7 +6,7 @@ const TakeLoan = ({ onAccept }) => {
   const token = localStorage.getItem('token'); // Retrieve token from localStorage
 
   const handleSliderChange = (e) => {
-    setLoanAmount(e.target.value);
+    setLoanAmount(parseInt(e.target.value,10));
   };
 
   const handleAccept = async () => {
