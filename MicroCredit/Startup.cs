@@ -37,13 +37,16 @@ namespace MicroCredit
             services.AddScoped<JwtTokenService>();
             services.AddScoped<FingerprintService>();
 
+            //Loan service
+            services.AddScoped<LoanService>();
+
             // Register phase services
+            services.AddScoped<IPhaseFactory, PhaseFactory>();
+            services.AddScoped<PhaseController>();
             services.AddSingleton<InitialService>();
             services.AddSingleton<ApprovalService>();
             services.AddSingleton<PayService>();
-            // Add other phase services as needed
-            services.AddScoped<IPhaseFactory, PhaseFactory>();
-            services.AddScoped<PhaseController>();
+
 
             // Register IJwtTokenService
             services.AddScoped<IJwtTokenService, JwtTokenService>();
@@ -141,7 +144,6 @@ namespace MicroCredit
             app.UseAuthentication();
             app.UseAuthorization();
             app.UseMiddleware<JwtMiddleware>();
-
 
             app.UseEndpoints(endpoints =>
             {

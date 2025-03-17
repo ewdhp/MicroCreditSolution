@@ -6,6 +6,8 @@ using MicroCredit.Interfaces;
 using System.IO;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
+using MicroCredit.Services;
 
 namespace MicroCredit.ModelBinders
 {
@@ -50,24 +52,25 @@ namespace MicroCredit.ModelBinders
                     var jsonDocument = JsonDocument.Parse(body);
                     var rootElement = jsonDocument.RootElement;
 
-                    if (rootElement.TryGetProperty("Status", out var statusElement))
-                    {
-                        var status = statusElement.GetInt32();
-                        IPhaseReq model = status switch
-                        {
-                            (int)CStatus.Initial => JsonSerializer.Deserialize<InitialRequest>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }),
-                            (int)CStatus.Pending => JsonSerializer.Deserialize<PendingRequest>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }),
-                            (int)CStatus.Approved => JsonSerializer.Deserialize<ApprovalRequest>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }),
-                            _ => throw new InvalidOperationException("Unknown status type")
-                        };
+                    var loanService = bindingContext.HttpContext.RequestServices.GetRequiredService<LoanService>();
+                    var loan = await loanService.GetCurrentLoanAsync();
 
-                        bindingContext.Result = ModelBindingResult.Success(model);
-                    }
-                    else
+                    CStatus status = CStatus.Initial;
+                    if (loan != null)
                     {
-                        _logger.LogError("Request body does not contain 'Status' property.");
-                        bindingContext.Result = ModelBindingResult.Failed();
+                        status = loan.Status;
                     }
+
+                    _logger.LogInformation($"model binder status: {status}");
+                    IPhaseReq model = status switch
+                    {
+                        CStatus.Initial => JsonSerializer.Deserialize<InitialRequest>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }),
+                        CStatus.Pending => JsonSerializer.Deserialize<ApprovalRequest>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }),
+                        CStatus.Active => JsonSerializer.Deserialize<PayRequest>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }),
+                        _ => throw new InvalidOperationException("Unknown status type")
+                    };
+
+                    bindingContext.Result = ModelBindingResult.Success(model);
                 }
                 catch (JsonException ex)
                 {

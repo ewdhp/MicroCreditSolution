@@ -25,6 +25,7 @@ const Navbar = ({ style }) => {
       zIndex: 1000,
       padding: '0 20px', // Add padding to the left and right
       boxSizing: 'border-box', // Include padding and border in the element's total width and height
+      backgroundColor: '#fff', // Change the background color of the navbar 
     },
     logoContainer: {
       display: 'flex',

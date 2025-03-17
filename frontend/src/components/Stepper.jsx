@@ -11,6 +11,7 @@ const Step = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
+  margin: 0 10px;
 `;
 
 const StepNumber = styled.div`
@@ -34,10 +35,12 @@ const StepLabel = styled.div`
 const Stepper = ({ steps, currentStep }) => {
   return (
     <StepperContainer>
-      <Step>
-        <StepNumber $active={true}>{currentStep + 1}</StepNumber>
-        <StepLabel>{steps[currentStep]}</StepLabel>
-      </Step>
+      {steps.map((step, index) => (
+        <Step key={index}>
+          <StepNumber $active={index === currentStep}>{index + 1}</StepNumber>
+          <StepLabel>{step}</StepLabel>
+        </Step>
+      ))}
     </StepperContainer>
   );
 };

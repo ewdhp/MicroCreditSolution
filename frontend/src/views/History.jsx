@@ -1,6 +1,5 @@
 import React from 'react';
-import DataGrid from '../components/DataGrid';
-
+import HistoryPage from '../components/HistoryPage';
 const History = () => {
   const styles = {
     container: {
@@ -18,17 +17,10 @@ const History = () => {
     },
   };
 
-  const columns = ['Loan ID', 'Amount', 'Date', 'Status'];
-  const data = [
-    { 'Loan ID': '1', 'Amount': '$1000', 'Date': '2023-01-01', 'Status': 'Paid' },
-    { 'Loan ID': '2', 'Amount': '$2000', 'Date': '2023-02-01', 'Status': 'Pending' },
-    // Add more data as needed
-  ];
-
+  
   return (
     <div style={styles.container}>
-      <h1 style={styles.heading}>Historial de Prestamos</h1>
-      <DataGrid columns={columns} data={data} />
+       <HistoryPage />
     </div>
   );
 };

@@ -6,16 +6,21 @@ namespace MicroCredit.Models
 {
     public class InitialResponse : IPhaseRes
     {
-        public CStatus Status { get; set; }
-    }
-    public class PendingResponse : IPhaseRes
-    {
-        public CStatus Status { get; set; }
+        public bool Success { get; set; }
+        public string Msg { get; set; }
+        public Loan Loan { get; set; }
     }
     public class ApprovalResponse : IPhaseRes
     {
-        public CStatus Status { get; set; }
-
+        public bool Success { get; set; }
+        public string Msg { get; set; }
+        public Loan Loan { get; set; }
+    }
+    public class PayResponse : IPhaseRes
+    {
+        public bool Success { get; set; }
+        public string Msg { get; set; }
+        public Loan Loan { get; set; }
     }
 
 }

@@ -6,7 +6,6 @@ import Login from './components/Login';
 import Dashboard from './views/Dashboard';
 import DashboardLayout from './components/DashboardLayout';
 import History from './views/History';
-import Profile from './views/Profile';
 import Refer from './views/Refer';
 import Signup from './components/Signup';
 
@@ -38,7 +37,6 @@ const App = () => {
             <Route path="/dashboard" element={<ProtectedRoute element={<DashboardLayout />} />}>
               <Route index element={<Dashboard />} />
               <Route path="history" element={<History />} />
-              <Route path="profile" element={<Profile />} />
               <Route path="refer" element={<Refer />} />
             </Route>
             <Route path="*" element={<Navigate to="/" />} />

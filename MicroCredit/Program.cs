@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using MicroCredit.Logging;
 using System;
 using System.Threading;
 
@@ -40,5 +42,7 @@ namespace MicroCredit
                     });
                     webBuilder.UseUrls("http://localhost:5000", "https://localhost:5001");
                 });
+
+
     }
 }

@@ -1,6 +1,5 @@
 import requests
 import json
-from datetime import datetime, timedelta
 
 # Configuration
 auth_base_url = "https://localhost:5001/api/testauth"
@@ -49,90 +48,91 @@ def verify_sms(action):
         print(f"Failed to verify code: {response.status_code} - {response.text}")
         return None
 
-def create_loan(token):
+def create_loan(token, amount):
     url = f"{loan_base_url}/create"
     payload = {
-        "Amount": 100,
-        "EndDate": (datetime.utcnow() + timedelta(days=30)).isoformat() + "Z",  # Ensure UTC format
+        "Amount": amount  # Ensure the amount is a float
     }
     headers = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {token}"
     }
-    response = requests.post(url, headers=headers, data=json.dumps(payload), verify=False)
+    response = requests.post(url, headers=headers, json=payload, verify=False)
     if response.status_code == 201:
         loan_id = response.json().get("id")
         print("Loan created successfully.")
-        print(f"Loan ID: {loan_id}")
         return loan_id
     else:
         print(f"Failed to create loan: {response.status_code} - {response.text}")
         return None
 
-def get_loans(token):
-    url = loan_base_url
+def update_loan_status(token, status):
+    url = f"{loan_base_url}/update"
+    payload = {
+        "Status": status
+    }
     headers = {
+        "Content-Type": "application/json",
         "Authorization": f"Bearer {token}"
     }
-    response = requests.get(url, headers=headers, verify=False)
-    if response.status_code == 200:
-        loans = response.json()
-        print("Loans retrieved successfully.")
-        print(loans)
-        return loans
+    response = requests.put(url, headers=headers, json=payload, verify=False)
+    if response.status_code == 204:
+        print("Loan status updated successfully.")
     else:
-        print(f"Failed to retrieve loans: {response.status_code} - {response.text}")
-        return None
+        print(f"Failed to update loan status: {response.status_code} - {response.text}")
 
-def get_loan(token, loan_id):
-    url = f"{loan_base_url}/{loan_id}"
+def get_current_loan(token):
+    url = f"{loan_base_url}/current-loan"
     headers = {
         "Authorization": f"Bearer {token}"
     }
     response = requests.get(url, headers=headers, verify=False)
     if response.status_code == 200:
         loan = response.json()
-        print("Loan retrieved successfully.")
-        print(loan)
+        print("Current loan retrieved successfully.")
+        print(json.dumps(loan, indent=4))
         return loan
     else:
-        print(f"Failed to retrieve loan: {response.status_code} - {response.text}")
+        print(f"Failed to retrieve current loan: {response.status_code} - {response.text}")
         return None
 
-def update_loan_status(token, loan_id, status):
-    url = f"{loan_base_url}/{loan_id}"
-    payload = {
-        "id": loan_id,
-        "status": status
-    }
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {token}"
-    }
-    response = requests.put(url, headers=headers, data=json.dumps(payload), verify=False)
-    if response.status_code == 204:
-        print("Loan status updated successfully.")
-    else:
-        print(f"Failed to update loan status: {response.status_code} - {response.text}")
-
-def delete_loan(token, loan_id):
-    url = f"{loan_base_url}/{loan_id}"
+def delete_loan(token):
+    url = f"{loan_base_url}"
     headers = {
         "Authorization": f"Bearer {token}"
     }
     response = requests.delete(url, headers=headers, verify=False)
-    if response.status_code == 204:
+    if response.status_code == 200:
         print("Loan deleted successfully.")
     else:
         print(f"Failed to delete loan: {response.status_code} - {response.text}")
-    print(f"Loan deleted")
-def delete_all_loans(token):
-    loans = get_loans(token)
-    if loans:
-        for loan in loans:
-            delete_loan(token, loan['id'])
-    print("All loans deleted successfully.")
 
+def delete_all_loans(token):
+    url = f"{loan_base_url}/all"
+    headers = {
+        "Authorization": f"Bearer {token}"
+    }
+    response = requests.delete(url, headers=headers, verify=False)
+    if response.status_code == 200:
+        print("All loans deleted successfully.")
+    else:
+        print(f"Failed to delete all loans: {response.status_code} - {response.text}")
+
+def get_all_loans(token):
+    url = f"{loan_base_url}/all"
+    headers = {
+        "Authorization": f"Bearer {token}"
+    }
+    response = requests.get(url, headers=headers, verify=False)
+    if response.status_code == 200:
+        loans = response.json()
+        print("All loans retrieved successfully.")
+        print(json.dumps(loans, indent=4))
+        return loans
+    else:
+        print(f"Failed to retrieve all loans: {response.status_code} - {response.text}")
+        return None
+    
 if __name__ == "__main__":
     # First, try to signup to get the token
     send_sms("signup")
@@ -143,23 +143,23 @@ if __name__ == "__main__":
         send_sms("login")
         token = verify_sms("login")
     
-    if token and token != "USER_EXISTS":      
-       # Delete all loans for the user
-        delete_all_loans(token)
+    if token and token != "USER_EXISTS":
+        
+        # Retrieve all loans
+        all_loans = get_all_loans(token)
 
-        # Create a loan
-        loan_id = create_loan(token)
+       
+        amount = 150.0  # Example amount
+        loan_id = create_loan(token, amount)
         print(f"Loan id: {loan_id}")
         
         if loan_id:
-            # Get all loans
-            get_loans(token)
-            
-            # Get the created loan
-            get_loan(token, loan_id)
-            
             # Update the status of the created loan
-            update_loan_status(token, loan_id, 2)  # Use integer value for status
+            update_loan_status(token, 1)  # Use integer value for status
             
-            # Delete the created loan
-            delete_loan(token, loan_id)
+            # Retrieve the current loan
+            current_loan = get_current_loan(token)
+
+
+        delete_all_loans(token)    
+

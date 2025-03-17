@@ -1,14 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using MicroCredit.Data;
-using MicroCredit.Models;
 using MicroCredit.Services;
+using MicroCredit.Models;
 using System;
-using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
+using Microsoft.Extensions.Logging;
 
 namespace MicroCredit.Controllers
 {
@@ -17,174 +13,136 @@ namespace MicroCredit.Controllers
     [Route("api/loans")]
     public class LoanController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
+        private readonly LoanService _loanService;
         private readonly ILogger<LoanController> _logger;
-        private readonly IUserContextService _userContextService;
 
-        public LoanController(
-            ApplicationDbContext context,
-            ILogger<LoanController> logger,
-            IUserContextService userContextService)
+        public LoanController(LoanService loanService, ILogger<LoanController> logger)
         {
-            _context = context;
+            _loanService = loanService;
             _logger = logger;
-            _userContextService = userContextService;
-        }
-
-        [HttpPost("create")]
-        private async Task<IActionResult> CreateLoan([FromBody] Loan loan)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            Guid userId = _userContextService.GetUserId();
-
-            var user = await _context.Users
-            .FirstOrDefaultAsync
-            (u => u.Id == userId);
-            if (user == null)
-                return BadRequest
-                (new { message = "User not found" });
-
-            var existingLoan = await _context.Loans
-            .FirstOrDefaultAsync(l => l.UserId == userId &&
-            (l.Status == CStatus.Active || l.Status == CStatus.Due));
-
-            if (existingLoan != null)
-                return BadRequest
-                (new { message = "User has an active or due loan" });
-
-            loan.UserId = userId;
-            loan.StartDate = DateTime.UtcNow;
-            loan.EndDate = loan.EndDate.ToUniversalTime();
-            loan.Status = CStatus.Initial;
-
-            _context.Loans.Add(loan);
-            await _context.SaveChangesAsync();
-            _logger.LogInformation("Loan created with ID: " +
-            "{LoanId} for User ID: {UserId}", loan.Id, userId);
-            return CreatedAtAction(nameof(GetLoan), new { id = loan.Id }, loan);
-        }
-
-        [HttpPut("{id}")]
-        private async Task<IActionResult>
-        UpdateLoan(Guid id, [FromBody] LoanStatusUpdate loanStatusUpdate)
-        {
-            if (id != loanStatusUpdate.Id)
-                return BadRequest(new { message = "Loan ID mismatch" });
-
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            Guid userId;
-            try
-            {
-                userId = _userContextService.GetUserId();
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                _logger.LogWarning("Invalid user ID in token: {Message}", ex.Message);
-                return BadRequest(new { message = "Invalid user ID" });
-            }
-
-            _logger.LogInformation("Authenticated User ID: {UserId}", userId);
-
-            var existingLoan = await _context.Loans
-                .FirstOrDefaultAsync(l => l.Id == id && l.UserId == userId);
-            if (existingLoan == null)
-            {
-                _logger.LogWarning("Loan not found for User ID: {UserId}", userId);
-                return NotFound(new { message = "Loan not found" });
-            }
-
-            existingLoan.Status = loanStatusUpdate.Status;
-
-            _context.Loans.Update(existingLoan);
-            await _context.SaveChangesAsync();
-
-            _logger.LogInformation("Loan status updated with ID: {LoanId} for User ID: {UserId}", loanStatusUpdate.Id, userId);
-
-            return NoContent();
-        }
-
-        [HttpGet("user-loans")]
-        public async Task<IActionResult> GetUserLoans()
-        {
-            Guid userId;
-            try
-            {
-                userId = _userContextService.GetUserId();
-                var loans = await _context.Loans
-                .Where(l => l.UserId == userId)
-                .ToListAsync();
-                return Ok(loans);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                _logger.LogWarning
-                ("Invalid user ID : {Message}", ex.Message);
-                return BadRequest
-                (new { message = "Invalid user ID" });
-            }
         }
 
         [HttpGet("current-loan")]
-        public async Task<IActionResult> CurrentLoan()
+        public async Task<IActionResult> GetCurrentLoan()
         {
-            Guid userId;
+
+            var loan = await _loanService.GetCurrentLoanAsync();
+            if (loan == null)
+            {
+                _logger.LogDebug("No current loan found for user.");
+                return NotFound(new { loan = (Loan)null });
+            }
+            else
+            {
+                _logger.LogDebug("Current loan for user is {Loan}", loan);
+                return Ok(new { loan });
+
+            }
+
+
+
+        }
+
+        [HttpPost("create")]
+        public async Task<IActionResult> CreateLoan([FromBody] CreateLoanRequest request)
+        {
             try
             {
-                userId = _userContextService.GetUserId();
-                var existingLoan = await _context.Loans
-                .FirstOrDefaultAsync(l => l.UserId == userId &&
-                (l.Status == CStatus.Active || l.Status == CStatus.Due));
-
-                if (existingLoan == null)
-                    return NotFound
-                    (new { message = "No active or due loan found" });
-                return Ok(existingLoan);
+                _logger.LogInformation("CreateLoan called with amount: {Amount}", request.Amount);
+                var (success, loan) = await _loanService.CreateLoanAsync((decimal)request.Amount);
+                if (!success)
+                {
+                    return BadRequest("A loan already exists for this user.");
+                }
+                _logger.LogInformation("Loan created successfully with ID: {LoanId}", loan.Id);
+                return CreatedAtAction(nameof(GetLoan), new { id = loan.Id }, loan);
             }
-            catch (UnauthorizedAccessException ex)
+            catch (ArgumentOutOfRangeException ex)
             {
-                _logger.LogWarning
-                ("Invalid user ID : {Message}", ex.Message);
-                return BadRequest
-                (new { message = "Invalid user ID" });
+                _logger.LogError(ex, ex.Message);
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while creating the loan.");
+                return StatusCode(500, "Internal server error");
             }
         }
 
         [HttpGet("{id}")]
-        private async Task<IActionResult> GetLoan(Guid id)
-        {
-            var loan = await _context.Loans.FindAsync(id);
-            if (loan == null)
-                return NotFound(new { message = "Loan not found" });
-
-            return Ok(loan);
-        }
-
-        [HttpDelete("{id}")]
-        private async Task<IActionResult> DeleteLoan(Guid id)
+        public async Task<IActionResult> GetLoan(Guid id)
         {
             try
             {
-                Guid userId = _userContextService.GetUserId();
-                var loan = await _context.Loans
-                .FirstOrDefaultAsync
-                (l => l.Id == id && l.UserId == userId);
+                var loan = await _loanService.GetLoanByIdAsync(id);
                 if (loan == null)
-                    return NotFound
-                    (new { message = "Loan not found" });
-
-                _context.Loans.Remove(loan);
-                await _context.SaveChangesAsync();
-                _logger.LogInformation("Loan deleted");
-                return Ok(new { message = "Loan deleted" });
+                {
+                    return NotFound();
+                }
+                return Ok(loan);
             }
-            catch (UnauthorizedAccessException ex)
+            catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                _logger.LogError(ex, "An error occurred while retrieving the loan.");
+                return StatusCode(500, "Internal server error");
             }
         }
+
+        [HttpPut("update")]
+        public async Task<IActionResult> UpdateLoanStatus([FromBody] UpdateLoanStatusRequest request)
+        {
+            try
+            {
+                await _loanService.UpdateLoanStatusAsync(request.Status);
+                return NoContent();
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return NotFound(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while updating the loan status.");
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
+        [HttpGet("all")]
+        public async Task<IActionResult> GetAllLoans()
+        {
+            try
+            {
+                var loans = await _loanService.GetAllLoansAsync();
+                return Ok(loans);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while retrieving all loans.");
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
+
+        [HttpDelete("all")]
+        public async Task<IActionResult> DeleteAllLoans()
+        {
+            try
+            {
+                await _loanService.DeleteAllLoansAsync();
+                return Ok("All loans have been deleted.");
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while deleting all loans.");
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
     }
 }

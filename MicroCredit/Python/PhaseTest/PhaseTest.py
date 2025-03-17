@@ -82,17 +82,17 @@ def reset_phase(token):
     print(f"reset_phase status code: {response.status_code}")
     print(f"reset_phase response: {response.text}")
 
-def call_next_phase(status, token):
+def call_next_phase(token):
     url = f"{phase_base_url}/next-phase"
     headers = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {token}"
     }
+
     payload = {
-        "Status": status,
         "Amount": 100,
-        "EndDate": (datetime.utcnow() + timedelta(days=30)).isoformat() + "Z"
     }
+ 
     print(f"Calling next phase using token {token}...")
     response = requests.post(url, headers=headers, data=json.dumps(payload), verify=False)
     print(f"call_next_phase status code: {response.status_code}")
@@ -144,10 +144,9 @@ if __name__ == "__main__":
         token = verify_sms("login")
     
     if token and token != "USER_EXISTS":
-        delete_all_loans(token)
-        call_next_phase(0,token)
-        call_next_phase(1,token)
-        call_next_phase(2,token)
+        call_next_phase(token)
+
+
         
     else:
         print("Failed to retrieve token")

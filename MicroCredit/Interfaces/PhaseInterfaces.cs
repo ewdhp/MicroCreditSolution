@@ -7,17 +7,18 @@ namespace MicroCredit.Interfaces
 
     public interface IPhase
     {
-        Task<(bool, IPhaseRes)> CompleteAsync(IPhaseReq request);
+        Task<IPhaseRes> CompleteAsync(IPhaseReq request);
     }
 
     public interface IPhaseReq
     {
-        public CStatus Status { get; set; }
     }
 
     public interface IPhaseRes
     {
-        public CStatus Status { get; set; }
+        public bool Success { get; set; }
+        public string Msg { get; set; }
+        public Loan Loan { get; set; }
     }
 
     public interface IPhaseFactory

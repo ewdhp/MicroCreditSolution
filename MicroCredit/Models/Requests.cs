@@ -6,18 +6,15 @@ namespace MicroCredit.Models
 
     public class InitialRequest : IPhaseReq
     {
-        public CStatus Status { get; set; }
         public decimal Amount { get; set; }
-        public DateTime EndDate { get; set; }
-    }
-    public class PendingRequest : IPhaseReq
-    {
-        public CStatus Status { get; set; }
     }
     public class ApprovalRequest : IPhaseReq
     {
-        public CStatus Status { get; set; }
     }
+    public class PayRequest : IPhaseReq
+    {
+    }
+
     public class PhaseResetRequest
     {
         public int Phase { get; set; }
@@ -35,4 +32,16 @@ namespace MicroCredit.Models
         public string Id { get; set; }
         public string Code { get; set; }
     }
+
+
+    public class CreateLoanRequest
+    {
+        public double Amount { get; set; }
+    }
+
+    public class UpdateLoanStatusRequest
+    {
+        public int Status { get; set; }
+    }
+
 }

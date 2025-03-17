@@ -10,8 +10,8 @@ namespace MicroCredit.Models
         Pending,
         Approved,
         Active,
-        Due,
         Paid,
+        Due,
         Canceled,
     }
 
@@ -33,7 +33,7 @@ namespace MicroCredit.Models
         public DateTime EndDate { get; set; }
 
         [Required(ErrorMessage = "Amount is required")]
-        [Range(50, 350, ErrorMessage = "Amount must be greater than zero")]
+        [Range(100, 300, ErrorMessage = "Amount must be greater than zero")]
         [Column(TypeName = "decimal(18,2)")]
         public decimal Amount { get; set; }
 
@@ -51,24 +51,18 @@ namespace MicroCredit.Models
         [Required(ErrorMessage = "Loan description is required")]
         [StringLength(500, MinimumLength = 10,
         ErrorMessage = "Loan description must be between 10 and 500 characters")]
-        public string LoanDescription => "Credito por 30 dias con 3% de interes diario";
+        public string LoanDescription => "Credito por 7 dias con 5% de interes diario";
 
         public Loan() { }
 
-        public Loan(
-            Guid userId,
-            CStatus status,
-            decimal amount,
-            DateTime endDate)
+        public Loan(Guid userId, decimal amount)
         {
-            if (!((endDate - DateTime.Now).Days > 30))
-            {
-                UserId = userId;
-                Amount = amount;
-                Status = status;
-                StartDate = DateTime.Now;
-                EndDate = endDate;
-            }
+
+            UserId = userId;
+            Amount = amount;
+            Status = CStatus.Initial;
+            StartDate = DateTime.UtcNow;
+            EndDate = DateTime.UtcNow.AddDays(7);
         }
 
         public decimal DailyInterest()
