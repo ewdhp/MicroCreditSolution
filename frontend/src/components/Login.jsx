@@ -2,13 +2,20 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import { useEffect } from 'react';
 
 const Login = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [smsCode, setSmsCode] = useState('');
   const [currentStep, setCurrentStep] = useState(0);
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, isAuthenticated } = useAuth();
+
+   useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard');
+    }
+  }, [isAuthenticated, navigate]);
 
   const handlePhoneNumberChange = (e) => {
     setPhoneNumber(e.target.value);
@@ -66,6 +73,7 @@ const Login = () => {
       alignItems: 'center',
       height: 'calc(100vh - 100px)', // Adjust the height to account for the navbar
       padding: '30px',
+      backgroundColor: '#f9f9f9',
     },
     form: {
       display: 'flex',

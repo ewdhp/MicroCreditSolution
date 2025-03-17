@@ -7,12 +7,14 @@ const DashboardLayout = () => {
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      padding: '20px',
+      padding: '10px',
+
     },
     nav: {
       backgroundColor: '#f8f9fa',
       borderRadius: '8px',
       padding: '10px',
+      marginTop: '20px',
 
     },
     ul: {

@@ -6,7 +6,7 @@ const TakeLoan = ({ onAccept }) => {
   const token = localStorage.getItem('token'); // Retrieve token from localStorage
 
   const handleSliderChange = (e) => {
-    setLoanAmount(parseInt(e.target.value,10));
+    setLoanAmount(parseInt(e.target.value, 10));
   };
 
   const handleAccept = async () => {
@@ -48,6 +48,7 @@ const TakeLoan = ({ onAccept }) => {
 
   const interestRate = 0.05; // Example interest rate
   const totalInterest = (loanAmount * interestRate).toFixed(2);
+  const totalInterestForSevenDays = (loanAmount * interestRate * 7).toFixed(2);
 
   const styles = {
     container: {
@@ -55,10 +56,10 @@ const TakeLoan = ({ onAccept }) => {
       flexDirection: 'column',
       alignItems: 'center',
       backgroundColor: '#fff',
-      padding: '20px',
+      padding: '15px',
       borderRadius: '8px',
       boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)',
-      maxWidth: '300px',
+      maxWidth: '350px',
       width: '100%',
     },
     heading: {
@@ -73,6 +74,11 @@ const TakeLoan = ({ onAccept }) => {
       marginBottom: '10px',
     },
     interest: {
+      fontSize: '1em',
+      marginBottom: '10px',
+      color: 'green',
+    },
+    totalInterest: {
       fontSize: '1em',
       marginBottom: '20px',
       color: 'green',
@@ -91,18 +97,18 @@ const TakeLoan = ({ onAccept }) => {
 
   return (
     <div style={styles.container}>
-      <h2>Take a Loan</h2>
-      <p style={styles.heading}>Select the amount</p>
+      <h2 style={styles.heading}>Selecciona cantidad</h2>
       <input
         type="range"
-        min="100"
-        max="1000"
+        min="50"
+        max="350"
         value={loanAmount}
         onChange={handleSliderChange}
         style={styles.slider}
       />
-      <div style={styles.amount}>Amount: ${loanAmount}</div>
-      <div style={styles.interest}>Daily Interest: ${totalInterest}</div>
+      <div style={styles.amount}>Cantidad: ${loanAmount}</div>
+      <div style={styles.interest}>Interes diario: ${totalInterest}</div>
+      <div style={styles.totalInterest}>Total 7 dias: ${totalInterestForSevenDays}</div>
       <button style={styles.button} onClick={handleAccept}>Accept</button>
     </div>
   );

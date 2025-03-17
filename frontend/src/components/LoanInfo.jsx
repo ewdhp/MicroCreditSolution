@@ -42,12 +42,9 @@ const LoanInfo = ({ loanDetails, phases, onNext }) => {
   };
 
   const styles = {
-    loanDetailsBox: {
-      backgroundColor: '#f8f9fa',
-      borderRadius: '8px',
-      padding: '20px',
-      boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)',
-      marginTop: '20px',
+       container: {     
+      maxWidth: '100%',
+      margin: '0 auto',
     },
     button: {
       padding: '10px 20px',
@@ -61,15 +58,15 @@ const LoanInfo = ({ loanDetails, phases, onNext }) => {
   };
 
   return (
-    <div style={styles.loanDetailsBox}>
-      <h2>Loan Details</h2>
+    <div style={styles.container}>
+      <h2>Details</h2>
       <p>Amount: ${loanDetails.amount}</p>
       <p>Interest Rate: {loanDetails.interestRate}%</p>
       <p>Loan Description: {loanDetails.loanDescription}</p>
       <p>Status: {phases[loanDetails.status]}</p>
       <p>End Date: {loanDetails.endDate}</p>
       <button style={styles.button} onClick={handleNext}>Next</button>
-    </div>
+    </div> 
   );
 };
 

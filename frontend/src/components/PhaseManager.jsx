@@ -75,7 +75,7 @@ const PhaseManager = () => {
       case 'Paid':
         return (
           <div>
-            <p>Payment complete! Reset to start a new cycle.</p>
+            <p>Payment complete!</p>
             <button
               style={{
                 padding: '10px 20px',
@@ -87,7 +87,7 @@ const PhaseManager = () => {
               }}
               onClick={() => setCurrentPhase(0)}
             >
-              Reset
+              Take Loan
             </button>
           </div>
         );
@@ -96,9 +96,19 @@ const PhaseManager = () => {
     }
   };
 
+  const styles = {
+    container: {
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+
+
+    },
+  };
+
   return (
-    <div>
-      <h1>Phase Manager</h1>
+    <div style={styles.container}>
       {renderPhaseComponent()}
     </div>
   );

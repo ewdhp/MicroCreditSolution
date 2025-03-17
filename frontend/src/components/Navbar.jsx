@@ -19,13 +19,14 @@ const Navbar = ({ style }) => {
       alignItems: 'center',
       justifyContent: 'space-between',
       position: 'fixed',
-      width: '100%', // Ensure the navbar spans the full width
-      height: '60px', // Adjust the height of the navbar as needed
+      width: '100%',
+      height: '78px', // Adjust the height of the navbar as needed
+      marginBottom: '20px', // Add margin to the bottom
       top: 0,
       zIndex: 1000,
       padding: '0 20px', // Add padding to the left and right
       boxSizing: 'border-box', // Include padding and border in the element's total width and height
-      backgroundColor: '#fff', // Change the background color of the navbar 
+      backgroundColor: 'rgb(240, 239, 239)', // Change the background color of the navbar 
     },
     logoContainer: {
       display: 'flex',
@@ -38,7 +39,7 @@ const Navbar = ({ style }) => {
     logoText: {
       fontSize: '1.3em',
       fontWeight: 'bold',
-      color: 'gray',
+      color: 'rgb(20, 20, 20)',
     },
     navLinks: {
       display: 'flex',

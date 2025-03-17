@@ -31,11 +31,11 @@ const HistoryPage = () => {
   }, [token]);
 
   const styles = {
-    container: {
-      padding: '20px',
-      maxWidth: '100%',
+    container: {     
+      maxWidth: '450px',
       margin: '0 auto',
     },
+
     table: {
       width: '100%',
       borderCollapse: 'collapse',
@@ -67,7 +67,7 @@ const HistoryPage = () => {
 
   return (
     <div style={styles.container}>
-      <h1>Loan History</h1>
+
       {error && <div style={styles.error}>{error}</div>}
       <table style={styles.table}>
         <thead>
