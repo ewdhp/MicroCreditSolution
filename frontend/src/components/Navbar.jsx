@@ -39,7 +39,7 @@ const Navbar = ({ style }) => {
     logoText: {
       fontSize: '1.3em',
       fontWeight: 'bold',
-      color: 'rgb(20, 20, 20)',
+      color: 'rgb(30, 30, 31)',
     },
     navLinks: {
       display: 'flex',

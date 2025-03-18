@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MicroCredit.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250317012950_UpdateLoanModel")]
-    partial class UpdateLoanModel
+    [Migration("20250318201555_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -61,17 +61,10 @@ namespace MicroCredit.Migrations
                     b.Property<string>("FaceId")
                         .HasColumnType("text");
 
-                    b.Property<string>("Fingerprint")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)");
-
-                    b.Property<int>("Phase")
-                        .HasColumnType("integer");
 
                     b.Property<string>("Phone")
                         .IsRequired()

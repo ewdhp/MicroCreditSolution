@@ -58,17 +58,10 @@ namespace MicroCredit.Migrations
                     b.Property<string>("FaceId")
                         .HasColumnType("text");
 
-                    b.Property<string>("Fingerprint")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)");
-
-                    b.Property<int>("Phase")
-                        .HasColumnType("integer");
 
                     b.Property<string>("Phone")
                         .IsRequired()

@@ -24,10 +24,7 @@ namespace MicroCredit.Migrations
                     StartDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     EndDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     Amount = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
-                    InterestRate = table.Column<decimal>(type: "numeric(5,2)", nullable: false),
-                    Currency = table.Column<string>(type: "character varying(3)", maxLength: 3, nullable: false),
-                    Status = table.Column<int>(type: "integer", nullable: false),
-                    LoanDescription = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false)
+                    Status = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -41,12 +38,10 @@ namespace MicroCredit.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     FaceId = table.Column<string>(type: "text", nullable: true),
-                    Phase = table.Column<int>(type: "integer", nullable: false),
                     Phone = table.Column<string>(type: "text", nullable: false),
                     Name = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
                     RegDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    RowVersion = table.Column<byte[]>(type: "bytea", rowVersion: true, nullable: true),
-                    Fingerprint = table.Column<string>(type: "text", nullable: false)
+                    RowVersion = table.Column<byte[]>(type: "bytea", rowVersion: true, nullable: true)
                 },
                 constraints: table =>
                 {

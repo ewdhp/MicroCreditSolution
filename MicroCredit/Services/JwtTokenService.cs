@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using System;
+using System.Collections.Concurrent;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
@@ -16,6 +17,8 @@ namespace MicroCredit.Services
     public interface IJwtTokenService
     {
         string GenerateJwtToken(string phoneNumber, string fingerprint);
+        void InvalidateToken(string userId);
+        bool IsTokenInvalidated(string userId);
     }
 
     public class JwtTokenService : IJwtTokenService
@@ -23,11 +26,12 @@ namespace MicroCredit.Services
         private readonly IConfiguration _configuration;
         private readonly ILogger<JwtTokenService> _logger;
         private readonly ApplicationDbContext _context;
+        private readonly ConcurrentDictionary<string, string> _invalidatedTokens = new ConcurrentDictionary<string, string>();
 
         public JwtTokenService(
             IConfiguration configuration,
             ILogger<JwtTokenService> logger,
-             ApplicationDbContext context)
+            ApplicationDbContext context)
         {
             _configuration = configuration;
             _logger = logger;
@@ -37,16 +41,13 @@ namespace MicroCredit.Services
         public string GenerateJwtToken(string phoneNumber, string fingerprint)
         {
             _logger.LogInformation(
-                "Generating JWT token for phone number:" +
-                " {PhoneNumber}", phoneNumber
-                );
+                "Generating JWT token for phone number: {PhoneNumber}", phoneNumber);
 
             var user = _context.Users
-            .FirstOrDefault(u => u.Phone == phoneNumber);
+                .FirstOrDefault(u => u.Phone == phoneNumber);
 
             if (user == null)
-                throw new
-                Exception("User not found");
+                throw new Exception("User not found");
 
             var claims = new[]
             {
@@ -54,8 +55,7 @@ namespace MicroCredit.Services
                 new Claim("PhoneNumber", phoneNumber),
                 new Claim("Id", user.Id.ToString()),
                 new Claim("Fingerprint", fingerprint),
-                new Claim(JwtRegisteredClaimNames.Jti,
-                Guid.NewGuid().ToString())
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 
             var key = new SymmetricSecurityKey(
@@ -70,15 +70,21 @@ namespace MicroCredit.Services
                 expires: DateTime.Now.AddMinutes(30),
                 signingCredentials: creds);
 
-            var tokenString = new
-            JwtSecurityTokenHandler().WriteToken(token);
+            var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
 
-            _logger.LogInformation(
-                "Generated JWT token: {Token}",
-                tokenString
-                );
+            _logger.LogInformation("Generated JWT token: {Token}", tokenString);
 
             return tokenString;
+        }
+
+        public void InvalidateToken(string userId)
+        {
+            _invalidatedTokens[userId] = userId;
+        }
+
+        public bool IsTokenInvalidated(string userId)
+        {
+            return _invalidatedTokens.ContainsKey(userId);
         }
     }
 

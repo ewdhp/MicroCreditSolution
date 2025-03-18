@@ -70,6 +70,20 @@ namespace MicroCredit.Controllers
 
             if (request.Action == "signup")
             {
+                try
+                {
+                    var currentUser = _userContextService.GetUserId();
+                    if (currentUser != Guid.Empty)
+                    {
+                        _logger.LogInformation("UserContext with phone number {PhoneNumber} already exists", request.Phone);
+                        return BadRequest(new { message = "User already exists" });
+                    }
+                }
+                catch (UnauthorizedAccessException ex)
+                {
+                    _logger.LogWarning(ex, "User ID claim is missing or invalid.");
+                }
+
                 var existingUser = _context.Users.FirstOrDefault(u => u.Phone == request.Phone);
                 if (existingUser != null)
                 {
@@ -80,11 +94,12 @@ namespace MicroCredit.Controllers
                 var fingerprint = _fingerprintService.GenerateFingerprint(HttpContext);
                 _logger.LogInformation("User fingerprint generated successfully for {PhoneNumber}", request.Phone);
 
+                _logger.LogInformation("request info: {Action}, {Phone}, {Name}", request.Action, request.Phone, request.Name);
                 var newUser = new User
                 {
                     Phone = request.Phone,
-                    Fingerprint = fingerprint,
-                    Phase = 1,
+                    Name = "Usuario",
+                    RegDate = DateTime.UtcNow
                 };
                 _context.Users.Add(newUser);
                 _context.SaveChanges();
@@ -170,22 +185,18 @@ namespace MicroCredit.Controllers
     {
         [Required]
         [MaxLength(10)]
-        [RegularExpression(@"^(signup|login|verify)$",
-        ErrorMessage = "Action must be either 'signup', 'login', or 'verify'")]
+        [RegularExpression(@"^(signup|login|verify)$", ErrorMessage = "Action must be either 'signup', 'login', or 'verify'")]
         public string Action { get; set; }
 
-        [RegularExpression(@"^\+\d{10,15}$",
-        ErrorMessage = "Phone number must be in E.164 format")]
+        [RegularExpression(@"^\+\d{10,15}$", ErrorMessage = "Phone number must be in E.164 format")]
         public string Phone { get; set; }
 
-        [RegularExpression(@"^\d{6}$",
-        ErrorMessage = "Code must be exactly 6 digits")]
-        public string Code { get; set; }
-
         [MaxLength(50)]
-        [RegularExpression(@"^[a-zA-Z]+$",
-        ErrorMessage = "Name must contain only letters")]
+        [RegularExpression(@"^[a-zA-Z]+$", ErrorMessage = "Name must contain only letters")]
         public string Name { get; set; }
+
+        [RegularExpression(@"^\d{6}$", ErrorMessage = "Code must be exactly 6 digits")]
+        public string Code { get; set; }
 
         [MaxLength(500)]
         public string Token { get; set; }

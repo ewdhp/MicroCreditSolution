@@ -11,7 +11,8 @@ using System.IO;
 namespace MicroCredit.Data
 {
 
-    public class ApplicationDbContextFactory : IDesignTimeDbContextFactory<ApplicationDbContext>
+    public class ApplicationDbContextFactory :
+        IDesignTimeDbContextFactory<ApplicationDbContext>
     {
         public ApplicationDbContext CreateDbContext(string[] args)
         {
@@ -20,17 +21,21 @@ namespace MicroCredit.Data
                 .AddJsonFile("appsettings.json")
                 .Build();
 
-            var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
-            var connectionString = configuration.GetConnectionString("DefaultConnection");
+            var optionsBuilder = new DbContextOptionsBuilder
+            <ApplicationDbContext>();
+            var connectionString = configuration
+            .GetConnectionString("DefaultConnection");
             optionsBuilder.UseNpgsql(connectionString);
 
-            return new ApplicationDbContext(optionsBuilder.Options);
+            return new ApplicationDbContext
+            (optionsBuilder.Options);
         }
     }
 
     public class ApplicationDbContext : DbContext
     {
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+        public ApplicationDbContext
+        (DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {
         }
@@ -52,7 +57,8 @@ namespace MicroCredit.Data
             return base.SaveChanges();
         }
 
-        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        public override Task<int> SaveChangesAsync
+        (CancellationToken cancellationToken = default)
         {
             ConvertDatesToUtc();
             return base.SaveChangesAsync(cancellationToken);
@@ -61,18 +67,22 @@ namespace MicroCredit.Data
         private void ConvertDatesToUtc()
         {
             var entries = ChangeTracker.Entries()
-                .Where(e => e.State == EntityState.Added || e.State == EntityState.Modified);
+                .Where(e => e.State == EntityState.Added ||
+                e.State == EntityState.Modified);
 
             foreach (var entry in entries)
             {
-                var properties = entry.Properties
-                    .Where(p => p.Metadata.ClrType == typeof(DateTime) || p.Metadata.ClrType == typeof(DateTime?));
+                var properties = entry.Properties.Where
+                    (p => p.Metadata.ClrType == typeof(DateTime) ||
+                        p.Metadata.ClrType == typeof(DateTime?));
 
                 foreach (var property in properties)
                 {
-                    if (property.CurrentValue is DateTime dateTime && dateTime.Kind == DateTimeKind.Unspecified)
+                    if (property.CurrentValue is DateTime dateTime &&
+                    dateTime.Kind == DateTimeKind.Unspecified)
                     {
-                        property.CurrentValue = DateTime.SpecifyKind(dateTime, DateTimeKind.Utc);
+                        property.CurrentValue = DateTime
+                        .SpecifyKind(dateTime, DateTimeKind.Utc);
                     }
                 }
             }

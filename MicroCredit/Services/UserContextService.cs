@@ -1,5 +1,7 @@
-using System;
 using Microsoft.AspNetCore.Http;
+using System;
+using System.Linq;
+using System.Security.Claims;
 
 namespace MicroCredit.Services
 {
@@ -10,30 +12,21 @@ namespace MicroCredit.Services
 
     public class UserContextService : IUserContextService
     {
-        private readonly IHttpContextAccessor _httpca;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public UserContextService(IHttpContextAccessor httpca)
+        public UserContextService(IHttpContextAccessor httpContextAccessor)
         {
-            _httpca = httpca;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public Guid GetUserId()
         {
-            var user = _httpca
-            .HttpContext?.User;
-            var userIdClaim = user?
-            .FindFirst("Id")?.Value;
-
-            if (string.IsNullOrEmpty(userIdClaim) ||
-                !Guid.TryParse(userIdClaim,
-                out var userId))
+            var userIdClaim = _httpContextAccessor.HttpContext?.User?.Claims.FirstOrDefault(c => c.Type == "Id")?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
             {
-                throw new UnauthorizedAccessException
-                ("Invalid or missing User ID claim.");
+                throw new UnauthorizedAccessException("Invalid or missing User ID claim.");
             }
-
             return userId;
         }
     }
-
 }

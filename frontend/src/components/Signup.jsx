@@ -1,16 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import { useEffect } from 'react';
 
 const Signup = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [smsCode, setSmsCode] = useState('');
   const [currentStep, setCurrentStep] = useState(0);
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { login, isAuthenticated } = useAuth();
 
-  useEffect(() => {
+   useEffect(() => {
     if (isAuthenticated) {
       navigate('/dashboard');
     }
@@ -50,9 +51,11 @@ const Signup = () => {
         Phone: `+52${phoneNumber}`, // Ensure the phone number includes the country code
         Code: smsCode,
       });
+
       if (response.status === 200) {
         const token = response.data.token;
-        localStorage.setItem('token', token);
+        login(token); // Update the authentication state
+        console.log('Verification successful, navigating to dashboard...');
         navigate('/dashboard');
       } else {
         alert('Invalid SMS code. Please try again.');
@@ -70,6 +73,7 @@ const Signup = () => {
       alignItems: 'center',
       height: 'calc(100vh - 100px)', // Adjust the height to account for the navbar
       padding: '30px',
+      backgroundColor: '#f9f9f9',
     },
     form: {
       display: 'flex',
@@ -108,9 +112,10 @@ const Signup = () => {
 
   return (
     <div style={styles.container}>
+      <h1>Registro</h1>
       {currentStep === 0 && (
         <form style={styles.form} onSubmit={handleSendSms}>
-          <h2 style={styles.heading}>Ingresa tu número</h2>
+          <h2 style={styles.heading}>Ingresa tu télefono</h2>
           <input
             type="text"
             placeholder="Teléfono"

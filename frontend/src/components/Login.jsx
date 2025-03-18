@@ -56,7 +56,7 @@ const Login = () => {
         const token = response.data.token;
         login(token); // Update the authentication state
         console.log('Verification successful, navigating to dashboard...');
-        navigate('/dashboard');
+        navigate('/');
       } else {
         alert('Invalid SMS code. Please try again.');
       }
