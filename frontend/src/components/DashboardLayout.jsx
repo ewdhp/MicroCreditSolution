@@ -46,7 +46,7 @@ const DashboardLayout = () => {
         <ul style={styles.ul}>
           <li style={styles.li}><Link to="/dashboard" style={styles.link}>Prestamo</Link></li>
           <li style={styles.li}><Link to="/dashboard/history" style={styles.link}>Historial</Link></li>
-          <li style={styles.li}><Link to="/dashboard/refer" style={styles.link}>$500 gratis</Link></li>
+          <li style={styles.li}><Link to="/dashboard/refer" style={styles.link}>Referidos</Link></li>
         </ul>
       </nav>
       <div style={styles.content}>
