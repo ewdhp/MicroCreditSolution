@@ -35,11 +35,16 @@ const PhaseManager = () => {
         } else if (response.status === 404) {
           setCurrentPhase(0); // Set to Initial phase if no loan found
         } else {
+          setError('Failed to fetch initial phase.');
           setCurrentPhase(0); // Set to Initial phase if any other error occurs
         }
       } catch (error) {
-        console.error('Error fetching initial phase:', error);
-        setCurrentPhase(0); // Set to Initial phase if any error occurs
+        if (error.response && error.response.status === 404) {
+          setCurrentPhase(0); // Set to Initial phase if no loan found
+        } else {
+          setError('Failed to fetch initial phase.');
+          setCurrentPhase(0); // Set to Initial phase if any other error occurs
+        }
       }
     };
 
@@ -66,12 +71,33 @@ const PhaseManager = () => {
     }
 
     switch (phases[currentPhase]) {
+
       case 'Initial':
-        return <TakeLoan onAccept={handleLoanAccept} />;
+        return <TakeLoan 
+        onAccept={handleLoanAccept} 
+        />;
+
       case 'Pending':
+        return <LoanInfo 
+        loanDetails={loanDetails} 
+        phases={phases} 
+        onNext={handleNextPhase} 
+        />;
+
       case 'Approved':
+        return <LoanInfo 
+        loanDetails={loanDetails} 
+        phases={phases} 
+        onNext={handleNextPhase} 
+        />;
+
       case 'Active':
-        return <LoanInfo loanDetails={loanDetails} phases={phases} onNext={handleNextPhase} />;
+        return  <LoanInfo 
+        loanDetails={loanDetails} 
+        phases={phases} 
+        onNext={handleNextPhase} 
+        />;
+
       case 'Paid':
         return (
           <div>
@@ -102,8 +128,6 @@ const PhaseManager = () => {
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-
-
     },
   };
 

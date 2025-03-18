@@ -1,12 +1,23 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import ToggleSwitch from './ToggleSwitch';
 
 const TakeLoan = ({ onAccept }) => {
   const [loanAmount, setLoanAmount] = useState(100);
+  const [referido, setReferido] = useState('');
+  const [referidoEnabled, setReferidoEnabled] = useState(false);
   const token = localStorage.getItem('token'); // Retrieve token from localStorage
 
   const handleSliderChange = (e) => {
     setLoanAmount(parseInt(e.target.value, 10));
+  };
+
+  const handleReferidoChange = (e) => {
+    setReferido(e.target.value);
+  };
+
+  const handleReferidoToggle = () => {
+    setReferidoEnabled(!referidoEnabled);
   };
 
   const handleAccept = async () => {
@@ -18,7 +29,7 @@ const TakeLoan = ({ onAccept }) => {
       // Call the API endpoint to process the initial phase
       const response = await axios.post(
         'https://localhost:5001/api/phases/next-phase',
-        { Status: 0, Amount: loanAmount }, // Include loanAmount for the "Initial" phase
+        { Status: 0, Amount: loanAmount, Referido: referidoEnabled ? referido : null }, // Include loanAmount and referido for the "Initial" phase
         {
           headers: {
             'Content-Type': 'application/json',
@@ -83,6 +94,23 @@ const TakeLoan = ({ onAccept }) => {
       marginBottom: '20px',
       color: 'green',
     },
+    input: {
+      width: '100%',
+      padding: '10px',
+      marginBottom: '20px',
+      borderRadius: '4px',
+      border: '1px solid #ccc',
+      boxSizing: 'border-box',
+      textAlign: 'center',
+    },
+    checkboxContainer: {
+      display: 'flex',
+      alignItems: 'center',
+      marginBottom: '20px',
+    },
+    checkbox: {
+      marginRight: '10px',
+    },
     button: {
       width: '100%',
       padding: '10px',
@@ -109,6 +137,19 @@ const TakeLoan = ({ onAccept }) => {
       <div style={styles.amount}>Cantidad: ${loanAmount}</div>
       <div style={styles.interest}>Interes diario: ${totalInterest}</div>
       <div style={styles.totalInterest}>Total 7 dias: ${totalInterestForSevenDays}</div>
+      <div style={styles.checkboxContainer}>
+        <ToggleSwitch isChecked={referidoEnabled} onToggle={handleReferidoToggle} />
+        <label>Referido</label>
+      </div>
+      {referidoEnabled && (
+        <input
+          type="text"
+          placeholder="Nombre"
+          value={referido}
+          onChange={handleReferidoChange}
+          style={styles.input}
+        />
+      )}
       <button style={styles.button} onClick={handleAccept}>Accept</button>
     </div>
   );
