@@ -29,7 +29,7 @@ const Refer = () => {
   return (
     <div style={styles.container}>
       <h1 style={styles.heading}>Obtienes el 35%</h1>
-      <p style={styles.paragraph}>Tu cliente o referido solo necesita ingresar tu nombre por solo una vez al momento de solicitar un prestamo y cuando sea pagado te depositaremos el 35% del interes sobre el monto total. </p>
+      <p style={styles.paragraph}>Tu cliente o referido solo necesita ingresar tu nombre al momento de solicitar un prestamo y cada vez que tu referido pague un credito te depositaremos el 35% del interes sobre el monto total. </p>
       <p style={styles.paragraph}>Ejemplo: Tu referido paga un credito por $1000 y tu obtienes $350.  </p>
     </div>
   );

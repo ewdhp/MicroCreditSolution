@@ -3,13 +3,11 @@ import axios from 'axios';
 import ToggleSwitch from './ToggleSwitch';
 
 const TakeLoan = ({ onAccept }) => {
-  const [
-    referidoEnabled, 
-    setReferidoEnabled] = useState(false);
-  const [referido, setReferido] = useState(''); 
+  const [referidoEnabled, setReferidoEnabled] = useState(false);
+  const [referido, setReferido] = useState('');
   const token = localStorage.getItem('token');
   const [loanAmount, setLoanAmount] = useState(100);
- 
+
   const handleSliderChange = (e) => {
     setLoanAmount(parseInt(e.target.value, 10));
   };
@@ -29,12 +27,11 @@ const TakeLoan = ({ onAccept }) => {
       }
 
       const response = await axios.post(
-        'https://localhost:5001/api/phases/next-phase',{ 
-
-          Status: 0, 
-          Amount: loanAmount, 
-          Referido: referidoEnabled ? referido : null 
-
+        'https://localhost:5001/api/phases/next-phase',
+        {
+          Status: 0,
+          Amount: loanAmount,
+          Referido: referidoEnabled ? referido : null,
         },
         {
           headers: {
@@ -45,10 +42,7 @@ const TakeLoan = ({ onAccept }) => {
       );
 
       if (response.status === 200) {
-        console.log(
-          'Loan accepted and phase updated:', 
-          response.data
-        );
+        console.log('Loan accepted and phase updated:', response.data);
         if (onAccept) {
           const newPhase = response.data.result.loan.status;
           const loanDetails = response.data.result.loan;
@@ -86,6 +80,22 @@ const TakeLoan = ({ onAccept }) => {
     slider: {
       width: '100%',
       marginBottom: '20px',
+      WebkitAppearance: 'none',
+      appearance: 'none',
+      height: '10px',
+      background: '#ddd',
+      outline: 'none',
+      opacity: '0.7',
+      transition: 'opacity .2s',
+    },
+    sliderThumb: {
+      WebkitAppearance: 'none',
+      appearance: 'none',
+      width: '20px',
+      height: '20px',
+      background: 'rgb(0, 123, 255)',
+      cursor: 'pointer',
+      borderRadius: '50%',
     },
     amount: {
       fontSize: '1em',
@@ -123,7 +133,7 @@ const TakeLoan = ({ onAccept }) => {
       padding: '10px',
       borderRadius: '4px',
       border: 'none',
-      backgroundColor: '#007bff',
+      backgroundColor: 'rgb(0, 123, 255)',
       color: '#fff',
       fontSize: '1em',
       cursor: 'pointer',
@@ -132,9 +142,7 @@ const TakeLoan = ({ onAccept }) => {
 
   return (
     <div style={styles.container}>
-      <h2 style={styles.heading}>
-        Selecciona cantidad
-        </h2>
+      <h2 style={styles.heading}>Selecciona cantidad</h2>
       <input
         type="range"
         min="50"
@@ -143,28 +151,43 @@ const TakeLoan = ({ onAccept }) => {
         onChange={handleSliderChange}
         style={styles.slider}
       />
+      <style>
+        {`
+          input[type='range']::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: ${styles.sliderThumb.width};
+            height: ${styles.sliderThumb.height};
+            background: ${styles.sliderThumb.background};
+            cursor: ${styles.sliderThumb.cursor};
+            border-radius: ${styles.sliderThumb.borderRadius};
+          }
+          input[type='range']::-moz-range-thumb {
+            width: ${styles.sliderThumb.width};
+            height: ${styles.sliderThumb.height};
+            background: ${styles.sliderThumb.background};
+            cursor: ${styles.sliderThumb.cursor};
+            border-radius: ${styles.sliderThumb.borderRadius};
+          }
+        `}
+      </style>
       <div style={styles.amount}>Cantidad: ${loanAmount}</div>
       <div style={styles.interest}>Interes diario: ${totalInterest}</div>
       <div style={styles.totalInterest}>Total 7 dias: ${total}</div>
       <div style={styles.checkboxContainer}>
-        <ToggleSwitch 
-        isChecked={referidoEnabled} 
-        onToggle={handleReferidoToggle} 
-        />
+        <ToggleSwitch isChecked={referidoEnabled} onToggle={handleReferidoToggle} />
         <label>Referido</label>
       </div>
       {referidoEnabled && (
         <input
-          type="text" 
+          type="text"
           placeholder="Nombre"
           value={referido}
           onChange={handleReferidoChange}
           style={styles.input}
         />
       )}
-      <button 
-      style={styles.button} 
-      onClick={handleAccept}>
+      <button style={styles.button} onClick={handleAccept}>
         Accept
       </button>
     </div>

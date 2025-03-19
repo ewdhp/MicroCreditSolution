@@ -16,7 +16,7 @@ const ToggleSwitch = ({ isChecked, onToggle }) => {
       left: 0,
       right: 0,
       bottom: 0,
-      backgroundColor: isChecked ? '#2196F3' : '#ccc',
+      backgroundColor: isChecked ? 'rgb(0, 123, 255)' : '#ccc',
       transition: '.4s',
       borderRadius: '34px',
     },
