@@ -8,15 +8,16 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using MicroCredit.Interfaces;
 
 namespace MicroCredit.Tests.Controllers
 {
     [TestClass]
     public class LoanControllerTest
     {
-        private Mock<ILoanService> _loanServiceMock;
-        private Mock<ILogger<LoanController>> _loggerMock;
-        private LoanController _controller;
+        private Mock<ILoanService>? _loanServiceMock;
+        private Mock<ILogger<LoanController>>? _loggerMock;
+        private LoanController? _controller;
 
         [TestInitialize]
         public void Setup()
@@ -30,10 +31,10 @@ namespace MicroCredit.Tests.Controllers
         public async Task GetCurrentLoan_ReturnsNotFound_WhenLoanIsNull()
         {
             // Arrange
-            _loanServiceMock.Setup(service => service.GetCurrentLoanAsync()).ReturnsAsync((Loan)null);
+            _loanServiceMock!.Setup(service => service.GetCurrentLoanAsync()).ReturnsAsync((Loan?)null);
 
             // Act
-            var result = await _controller.GetCurrentLoan();
+            var result = await _controller!.GetCurrentLoan();
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(NotFoundObjectResult));
@@ -44,10 +45,10 @@ namespace MicroCredit.Tests.Controllers
         {
             // Arrange
             var loan = new Loan();
-            _loanServiceMock.Setup(service => service.GetCurrentLoanAsync()).ReturnsAsync(loan);
+            _loanServiceMock!.Setup(service => service.GetCurrentLoanAsync()).ReturnsAsync(loan);
 
             // Act
-            var result = await _controller.GetCurrentLoan();
+            var result = await _controller!.GetCurrentLoan();
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(OkObjectResult));
@@ -58,10 +59,10 @@ namespace MicroCredit.Tests.Controllers
         {
             // Arrange
             var request = new CreateLoanRequest { Amount = 1000 };
-            _loanServiceMock.Setup(service => service.CreateLoanAsync(It.IsAny<decimal>())).ReturnsAsync((false, null));
+            _loanServiceMock!.Setup(service => service.CreateLoanAsync(It.IsAny<decimal>())).ReturnsAsync((false, null));
 
             // Act
-            var result = await _controller.CreateLoan(request);
+            var result = await _controller!.CreateLoan(request);
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(BadRequestObjectResult));
@@ -73,10 +74,10 @@ namespace MicroCredit.Tests.Controllers
             // Arrange
             var request = new CreateLoanRequest { Amount = 1000 };
             var loan = new Loan { Id = Guid.NewGuid() };
-            _loanServiceMock.Setup(service => service.CreateLoanAsync(It.IsAny<decimal>())).ReturnsAsync((true, loan));
+            _loanServiceMock!.Setup(service => service.CreateLoanAsync(It.IsAny<decimal>())).ReturnsAsync((true, loan));
 
             // Act
-            var result = await _controller.CreateLoan(request);
+            var result = await _controller!.CreateLoan(request);
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(CreatedAtActionResult));
@@ -87,10 +88,10 @@ namespace MicroCredit.Tests.Controllers
         {
             // Arrange
             var loanId = Guid.NewGuid();
-            _loanServiceMock.Setup(service => service.GetLoanByIdAsync(loanId)).ReturnsAsync((Loan)null);
+            _loanServiceMock!.Setup(service => service.GetLoanByIdAsync(loanId)).ReturnsAsync((Loan?)null);
 
             // Act
-            var result = await _controller.GetLoan(loanId);
+            var result = await _controller!.GetLoan(loanId);
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(NotFoundResult));
@@ -102,10 +103,10 @@ namespace MicroCredit.Tests.Controllers
             // Arrange
             var loanId = Guid.NewGuid();
             var loan = new Loan();
-            _loanServiceMock.Setup(service => service.GetLoanByIdAsync(loanId)).ReturnsAsync(loan);
+            _loanServiceMock!.Setup(service => service.GetLoanByIdAsync(loanId)).ReturnsAsync(loan);
 
             // Act
-            var result = await _controller.GetLoan(loanId);
+            var result = await _controller!.GetLoan(loanId);
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(OkObjectResult));
@@ -116,10 +117,10 @@ namespace MicroCredit.Tests.Controllers
         {
             // Arrange
             var request = new UpdateLoanStatusRequest { Status = 1 }; // Assuming 1 represents "Approved"
-            _loanServiceMock.Setup(service => service.UpdateLoanStatusAsync(request.Status)).Returns(Task.CompletedTask);
+            _loanServiceMock!.Setup(service => service.UpdateLoanStatusAsync(request.Status)).Returns(Task.CompletedTask);
 
             // Act
-            var result = await _controller.UpdateLoanStatus(request);
+            var result = await _controller!.UpdateLoanStatus(request);
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(NoContentResult));
@@ -130,10 +131,10 @@ namespace MicroCredit.Tests.Controllers
         {
             // Arrange
             var loans = new List<Loan> { new Loan() };
-            _loanServiceMock.Setup(service => service.GetAllLoansAsync()).ReturnsAsync(loans);
+            _loanServiceMock!.Setup(service => service.GetAllLoansAsync()).ReturnsAsync(loans);
 
             // Act
-            var result = await _controller.GetAllLoans();
+            var result = await _controller!.GetAllLoans();
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(OkObjectResult));
@@ -143,10 +144,10 @@ namespace MicroCredit.Tests.Controllers
         public async Task DeleteAllLoans_ReturnsOk_WhenDeletionIsSuccessful()
         {
             // Arrange
-            _loanServiceMock.Setup(service => service.DeleteAllLoansAsync()).Returns(Task.CompletedTask);
+            _loanServiceMock!.Setup(service => service.DeleteAllLoansAsync()).Returns(Task.FromResult(true));
 
             // Act
-            var result = await _controller.DeleteAllLoans();
+            var result = await _controller!.DeleteAllLoans();
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(OkObjectResult));

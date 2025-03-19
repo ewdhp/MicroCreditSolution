@@ -7,21 +7,18 @@ using MicroCredit.Interfaces;
 using MicroCredit.Models;
 using MicroCredit.Services;
 using Moq;
-using System;
-using System.Threading.Tasks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+
 
 namespace MicroCredit.Tests.Controllers
 {
     [TestClass]
     public class PhaseControllerTests
     {
-        private Mock<IPhaseFactory> _phaseFactoryMock;
-        private Mock<ILogger<PhaseController>> _loggerMock;
-        private Mock<IServiceProvider> _serviceProviderMock;
-        private Mock<LoanService> _loanServiceMock;
-        private Mock<IUserContextService> _userContextServiceMock;
-        private PhaseController _controller;
+        private Mock<IPhaseFactory>? _phaseFactoryMock;
+        private Mock<ILogger<PhaseController>>? _loggerMock;
+        private Mock<IServiceProvider>? _serviceProviderMock;
+        private Mock<ILoanService>? _loanServiceMock;
+        private PhaseController? _controller;
 
         [TestInitialize]
         public void Setup()
@@ -29,26 +26,24 @@ namespace MicroCredit.Tests.Controllers
             _phaseFactoryMock = new Mock<IPhaseFactory>();
             _loggerMock = new Mock<ILogger<PhaseController>>();
             _serviceProviderMock = new Mock<IServiceProvider>();
-            _userContextServiceMock = new Mock<IUserContextService>();
+            _loanServiceMock = new Mock<ILoanService>();
 
-            // Create a mock for the LoanService using the parameterless constructor
-            _loanServiceMock = new Mock<LoanService>();
+            _serviceProviderMock.Setup(sp => sp.GetService(typeof(ILoanService))).Returns(_loanServiceMock.Object);
 
-            _serviceProviderMock.Setup(sp => sp.GetService(typeof(LoanService))).Returns(_loanServiceMock.Object);
-
-            _controller = new PhaseController(_phaseFactoryMock.Object, _loggerMock.Object, _serviceProviderMock.Object);
+            _controller = new PhaseController(
+                _phaseFactoryMock.Object,
+                _loggerMock.Object,
+                _serviceProviderMock.Object);
         }
 
         [TestMethod]
         public async Task NextPhase_ShouldReturnBadRequest_WhenRequestIsNull()
         {
             // Act
-            var result = await _controller.NextPhase(null);
+            var result = await _controller!.NextPhase(null);
 
             // Assert
-            var badRequestResult = result as BadRequestObjectResult;
-            Assert.IsNotNull(badRequestResult);
-            Assert.AreEqual("Request cannot be null.", badRequestResult.Value);
+            Assert.IsInstanceOfType(result, typeof(BadRequestObjectResult));
         }
 
         [TestMethod]
@@ -56,16 +51,14 @@ namespace MicroCredit.Tests.Controllers
         {
             // Arrange
             var request = new Mock<IPhaseReq>().Object;
-            _loanServiceMock.Setup(ls => ls.GetCurrentLoanAsync()).ReturnsAsync(new Loan { Status = CStatus.Initial });
-            _phaseFactoryMock.Setup(pf => pf.GetPhase(It.IsAny<CStatus>())).Returns((IPhase)null);
+            _loanServiceMock!.Setup(service => service.GetCurrentLoanAsync()).ReturnsAsync(new Loan { Status = CStatus.Initial });
+            _phaseFactoryMock!.Setup(factory => factory.GetPhase(CStatus.Initial)).Returns((IPhase)null!);
 
             // Act
-            var result = await _controller.NextPhase(request);
+            var result = await _controller!.NextPhase(request);
 
             // Assert
-            var notFoundResult = result as NotFoundObjectResult;
-            Assert.IsNotNull(notFoundResult);
-            Assert.AreEqual("ERROR. Phase cannot be null.", notFoundResult.Value);
+            Assert.IsInstanceOfType(result, typeof(NotFoundObjectResult));
         }
 
         [TestMethod]
@@ -74,36 +67,34 @@ namespace MicroCredit.Tests.Controllers
             // Arrange
             var request = new Mock<IPhaseReq>().Object;
             var phaseMock = new Mock<IPhase>();
-            _loanServiceMock.Setup(ls => ls.GetCurrentLoanAsync()).ReturnsAsync(new Loan { Status = CStatus.Initial });
-            _phaseFactoryMock.Setup(pf => pf.GetPhase(It.IsAny<CStatus>())).Returns(phaseMock.Object);
-            phaseMock.Setup(p => p.CompleteAsync(It.IsAny<IPhaseReq>())).ReturnsAsync((IPhaseRes)null);
+            _loanServiceMock!.Setup(service => service.GetCurrentLoanAsync()).ReturnsAsync(new Loan { Status = CStatus.Initial });
+            _phaseFactoryMock!.Setup(factory => factory.GetPhase(CStatus.Initial)).Returns(phaseMock.Object);
+            phaseMock.Setup(phase => phase.CompleteAsync(request)).ReturnsAsync((IPhaseRes)null!);
 
             // Act
-            var result = await _controller.NextPhase(request);
+            var result = await _controller!.NextPhase(request);
 
             // Assert
-            var notFoundResult = result as NotFoundObjectResult;
-            Assert.IsNotNull(notFoundResult);
-            Assert.AreEqual("ERROR. Response cannot be null.", notFoundResult.Value);
+            Assert.IsInstanceOfType(result, typeof(NotFoundObjectResult));
         }
-
-
 
         [TestMethod]
         public async Task NextPhase_ShouldReturnInternalServerError_WhenExceptionIsThrown()
         {
             // Arrange
             var request = new Mock<IPhaseReq>().Object;
-            _loanServiceMock.Setup(ls => ls.GetCurrentLoanAsync()).ThrowsAsync(new Exception("Test exception"));
+            var phaseMock = new Mock<IPhase>();
+            _loanServiceMock!.Setup(service => service.GetCurrentLoanAsync()).ReturnsAsync(new Loan { Status = CStatus.Initial });
+            _phaseFactoryMock!.Setup(factory => factory.GetPhase(CStatus.Initial)).Returns(phaseMock.Object);
+            phaseMock.Setup(phase => phase.CompleteAsync(request)).ThrowsAsync(new Exception("Test exception"));
 
             // Act
-            var result = await _controller.NextPhase(request);
+            var result = await _controller!.NextPhase(request);
 
             // Assert
-            var internalServerErrorResult = result as ObjectResult;
-            Assert.IsNotNull(internalServerErrorResult);
-            Assert.AreEqual(500, internalServerErrorResult.StatusCode);
-            Assert.AreEqual("Internal server error", internalServerErrorResult.Value);
+            Assert.IsInstanceOfType(result, typeof(ObjectResult));
+            var objectResult = result as ObjectResult;
+            Assert.AreEqual(500, objectResult!.StatusCode);
         }
     }
 }

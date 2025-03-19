@@ -15,16 +15,16 @@ namespace MicroCredit.Controllers
 {
     [ApiController]
     [Route("api/testauth")]
-    public class TestAuthController : ControllerBase
+    public class AuthController : ControllerBase
     {
-        private readonly ILogger<TestAuthController> _logger;
+        private readonly ILogger<AuthController> _logger;
         private readonly IJwtTokenService _jwtTokenService;
         private readonly ApplicationDbContext _context;
         private readonly FingerprintService _fingerprintService;
         private readonly IUserContextService _userContextService;
 
-        public TestAuthController(
-            ILogger<TestAuthController> logger,
+        public AuthController(
+            ILogger<AuthController> logger,
             IJwtTokenService jwtTokenService,
             ApplicationDbContext context,
             FingerprintService fingerprintService,
