@@ -16,7 +16,6 @@ const Dashboard = () => {
 
   return (
     <div style={styles.container}>
-      {/* PhaseManager is integrated here */}
       <PhaseManager />
     </div>
   );

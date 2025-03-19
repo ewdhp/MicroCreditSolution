@@ -3,11 +3,13 @@ import axios from 'axios';
 import ToggleSwitch from './ToggleSwitch';
 
 const TakeLoan = ({ onAccept }) => {
+  const [
+    referidoEnabled, 
+    setReferidoEnabled] = useState(false);
+  const [referido, setReferido] = useState(''); 
+  const token = localStorage.getItem('token');
   const [loanAmount, setLoanAmount] = useState(100);
-  const [referido, setReferido] = useState('');
-  const [referidoEnabled, setReferidoEnabled] = useState(false);
-  const token = localStorage.getItem('token'); // Retrieve token from localStorage
-
+ 
   const handleSliderChange = (e) => {
     setLoanAmount(parseInt(e.target.value, 10));
   };
@@ -23,13 +25,17 @@ const TakeLoan = ({ onAccept }) => {
   const handleAccept = async () => {
     try {
       if (!token) {
-        throw new Error('Token not found. Please log in again.');
+        throw new Error('Token not found.');
       }
 
-      // Call the API endpoint to process the initial phase
       const response = await axios.post(
-        'https://localhost:5001/api/phases/next-phase',
-        { Status: 0, Amount: loanAmount, Referido: referidoEnabled ? referido : null }, // Include loanAmount and referido for the "Initial" phase
+        'https://localhost:5001/api/phases/next-phase',{ 
+
+          Status: 0, 
+          Amount: loanAmount, 
+          Referido: referidoEnabled ? referido : null 
+
+        },
         {
           headers: {
             'Content-Type': 'application/json',
@@ -39,9 +45,10 @@ const TakeLoan = ({ onAccept }) => {
       );
 
       if (response.status === 200) {
-        console.log('Loan accepted and phase updated successfully:', response.data);
-
-        // Notify parent component with the new phase status and loan details
+        console.log(
+          'Loan accepted and phase updated:', 
+          response.data
+        );
         if (onAccept) {
           const newPhase = response.data.result.loan.status;
           const loanDetails = response.data.result.loan;
@@ -57,9 +64,9 @@ const TakeLoan = ({ onAccept }) => {
     }
   };
 
-  const interestRate = 0.05; // Example interest rate
+  const interestRate = 0.05;
   const totalInterest = (loanAmount * interestRate).toFixed(2);
-  const totalInterestForSevenDays = (loanAmount * interestRate * 7).toFixed(2);
+  const total = (loanAmount * interestRate * 7).toFixed(2);
 
   const styles = {
     container: {
@@ -125,7 +132,9 @@ const TakeLoan = ({ onAccept }) => {
 
   return (
     <div style={styles.container}>
-      <h2 style={styles.heading}>Selecciona cantidad</h2>
+      <h2 style={styles.heading}>
+        Selecciona cantidad
+        </h2>
       <input
         type="range"
         min="50"
@@ -136,21 +145,28 @@ const TakeLoan = ({ onAccept }) => {
       />
       <div style={styles.amount}>Cantidad: ${loanAmount}</div>
       <div style={styles.interest}>Interes diario: ${totalInterest}</div>
-      <div style={styles.totalInterest}>Total 7 dias: ${totalInterestForSevenDays}</div>
+      <div style={styles.totalInterest}>Total 7 dias: ${total}</div>
       <div style={styles.checkboxContainer}>
-        <ToggleSwitch isChecked={referidoEnabled} onToggle={handleReferidoToggle} />
+        <ToggleSwitch 
+        isChecked={referidoEnabled} 
+        onToggle={handleReferidoToggle} 
+        />
         <label>Referido</label>
       </div>
       {referidoEnabled && (
         <input
-          type="text"
+          type="text" 
           placeholder="Nombre"
           value={referido}
           onChange={handleReferidoChange}
           style={styles.input}
         />
       )}
-      <button style={styles.button} onClick={handleAccept}>Accept</button>
+      <button 
+      style={styles.button} 
+      onClick={handleAccept}>
+        Accept
+      </button>
     </div>
   );
 };

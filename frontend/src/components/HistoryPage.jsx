@@ -9,13 +9,14 @@ const HistoryPage = () => {
   useEffect(() => {
     const fetchLoans = async () => {
       try {
-        const response = await axios.get('https://localhost:5001/api/loans/all', {
+        const response = await axios
+        .get('https://localhost:5001/api/loans/all', {
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
         });
-
+        
         if (response.status === 200) {
           setLoans(response.data);
         } else {
@@ -26,7 +27,6 @@ const HistoryPage = () => {
         setError('Failed to fetch loans. Please try again later.');
       }
     };
-
     fetchLoans();
   }, [token]);
 
@@ -67,8 +67,8 @@ const HistoryPage = () => {
 
   return (
     <div style={styles.container}>
-
-      {error && <div style={styles.error}>{error}</div>}
+      {error && <div style={styles.error}>
+        {error}</div>}
       <table style={styles.table}>
         <thead>
           <tr>

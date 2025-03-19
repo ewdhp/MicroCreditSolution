@@ -14,7 +14,11 @@ const Button = ({ children, onClick, disabled }) => {
   };
 
   return (
-    <button onClick={onClick} disabled={disabled} style={styles.button}>
+    <button 
+      onClick={onClick} 
+      disabled={disabled} 
+      style={styles.button}
+    >
       {children}
     </button>
   );

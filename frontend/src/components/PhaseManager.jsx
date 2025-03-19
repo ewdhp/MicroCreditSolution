@@ -6,10 +6,10 @@ import LoanInfo from './LoanInfo';
 const phases = ['Initial', 'Pending', 'Approved', 'Active', 'Paid', 'Due'];
 
 const PhaseManager = () => {
-  const [currentPhase, setCurrentPhase] = useState(null); // Initial phase index
-  const [token] = useState(localStorage.getItem('token')); // Get token from localStorage
+  const [currentPhase, setCurrentPhase] = useState(null);
+  const [token] = useState(localStorage.getItem('token'));
   const [loanDetails, setLoanDetails] = useState(null);
-  const [error, setError] = useState(null); // Error state
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchInitialPhase = async () => {
@@ -30,20 +30,21 @@ const PhaseManager = () => {
             setLoanDetails(loan);
             setCurrentPhase(loan.status);
           } else {
-            setCurrentPhase(0); // Default to Initial phase if no current loan
+            setCurrentPhase(0); 
           }
         } else if (response.status === 404) {
-          setCurrentPhase(0); // Set to Initial phase if no loan found
+          setCurrentPhase(0); 
         } else {
           setError('Failed to fetch initial phase.');
-          setCurrentPhase(0); // Set to Initial phase if any other error occurs
+          setCurrentPhase(0);
         }
       } catch (error) {
-        if (error.response && error.response.status === 404) {
-          setCurrentPhase(0); // Set to Initial phase if no loan found
+        if (error.response && 
+            error.response.status === 404) {
+            setCurrentPhase(0);
         } else {
           setError('Failed to fetch initial phase.');
-          setCurrentPhase(0); // Set to Initial phase if any other error occurs
+          setCurrentPhase(0); 
         }
       }
     };

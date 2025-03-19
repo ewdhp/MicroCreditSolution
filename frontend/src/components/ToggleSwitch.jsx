@@ -36,7 +36,11 @@ const ToggleSwitch = ({ isChecked, onToggle }) => {
 
   return (
     <label style={styles.switch}>
-      <input type="checkbox" checked={isChecked} onChange={onToggle} style={{ display: 'none' }} />
+        <input 
+        type="checkbox" 
+        checked={isChecked} 
+        onChange={onToggle} 
+        style={{ display: 'none' }} />
       <span style={styles.slider}>
         <span style={styles.sliderBefore}></span>
       </span>

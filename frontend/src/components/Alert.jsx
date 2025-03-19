@@ -20,10 +20,10 @@ const modalStyles = {
     maxWidth: "300px",
     textAlign: "center",
     transition: "opacity 1s ease-out",
-    opacity: 1, // Set initial opacity to 1
+    opacity: 1,
   },
   content: {
-    opacity: 1, // Content opacity remains constant
+    opacity: 1,
   },
   buttonContainer: {
     marginTop: "20px",
@@ -41,7 +41,7 @@ const Alert = ({ type, message, onEvent, useTransparency }) => {
 
   useEffect(() => {
     if (useTransparency && modalOpacity === 0) {
-      const timer = setTimeout(onEvent, 2000); // Adjust the timeout to 2000 ms for the transparency effect
+      const timer = setTimeout(onEvent, 2000);
       return () => clearTimeout(timer);
     }
   }, [useTransparency, modalOpacity, onEvent]);
@@ -60,7 +60,10 @@ const Alert = ({ type, message, onEvent, useTransparency }) => {
         </div>
         {!useTransparency && (
           <div style={modalStyles.buttonContainer}>
-            <button onClick={onEvent}>{type === "error" ? "Back" : "Close"}</button>
+            <button 
+            onClick={onEvent}>
+            {type === "error" ? "Back" : "Close"}
+            </button>
           </div>
         )}
       </div>
