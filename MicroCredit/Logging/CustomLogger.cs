@@ -37,7 +37,9 @@ namespace MicroCredit.Logging
                 return logLevel >= _minLogLevel;
             }
 
-            public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
+            public void Log<TState>(LogLevel logLevel, EventId eventId,
+                TState state, Exception exception, Func<TState,
+                Exception, string> formatter)
             {
                 if (!IsEnabled(logLevel))
                 {
@@ -52,7 +54,7 @@ namespace MicroCredit.Logging
                         Console.ForegroundColor = ConsoleColor.Gray;
                         break;
                     case LogLevel.Information:
-                        Console.ForegroundColor = ConsoleColor.White;
+                        Console.ForegroundColor = ConsoleColor.DarkMagenta;
                         break;
                     case LogLevel.Warning:
                         Console.ForegroundColor = ConsoleColor.Yellow;
