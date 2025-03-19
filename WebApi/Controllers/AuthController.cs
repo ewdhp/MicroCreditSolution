@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication.Twitter;
 using Microsoft.AspNetCore.Authentication.Facebook;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
+using System.Security.Claims;
 
 namespace WebApi.Controllers
 {
@@ -16,33 +17,44 @@ namespace WebApi.Controllers
         [HttpGet("{provider}")]
         public IActionResult ExternalLogin(string provider)
         {
-            var redirectUrl = Url.Action(nameof(ExternalLoginCallback), "Auth", new { provider });
-            var properties = new AuthenticationProperties { RedirectUri = redirectUrl };
+            var redirectUrl = Url.Action
+            (
+                nameof(ExternalLoginCallback),
+                "Auth", new { provider }
+            );
+            var properties = new AuthenticationProperties
+            { RedirectUri = redirectUrl };
             return Challenge(properties, provider);
         }
 
         [HttpGet("{provider}/callback")]
         public async Task<IActionResult> ExternalLoginCallback(string provider)
         {
-            var result = await HttpContext.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            var result = await HttpContext.AuthenticateAsync
+            (CookieAuthenticationDefaults.AuthenticationScheme);
             if (!result.Succeeded)
             {
                 return BadRequest("External authentication error");
             }
 
-            // Assuming you have a method to generate a token or session
             var token = GenerateToken(result.Principal);
-            return Ok(new { success = true, message = "Authentication successful", token });
+            return Ok(new
+            {
+                success = true,
+                message = "Authentication successful",
+                token
+            });
         }
 
         [HttpPost("logout")]
         public async Task<IActionResult> Logout()
         {
-            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            await HttpContext.SignOutAsync
+            (CookieAuthenticationDefaults.AuthenticationScheme);
             return Ok(new { success = true, message = "Logged out" });
         }
 
-        private string GenerateToken(System.Security.Claims.ClaimsPrincipal principal)
+        private string GenerateToken(ClaimsPrincipal principal)
         {
             // Implement your token generation logic here
             return "generated_token";

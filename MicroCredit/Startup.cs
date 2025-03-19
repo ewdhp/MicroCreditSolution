@@ -114,18 +114,17 @@ namespace MicroCredit
                 options.AddPolicy("UserPolicy", policy => policy.RequireClaim("UserId"));
             });
 
-            // Register the custom logger provider
-            services.AddSingleton<ILoggerProvider, LoggerCustomProvider>(provider => new LoggerCustomProvider(LogLevel.Information));
-
-            // Configure logging levels
+            // Clear default logging providers and register the custom logger provider
             services.AddLogging(loggingBuilder =>
             {
+                loggingBuilder.ClearProviders();
+                loggingBuilder.AddProvider(new LoggerCustomProvider(LogLevel.Information));
                 loggingBuilder.AddFilter("Microsoft", LogLevel.Warning);
                 loggingBuilder.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.Warning);
             });
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
             {

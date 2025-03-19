@@ -52,7 +52,7 @@ namespace MicroCredit.Logging
                         Console.ForegroundColor = ConsoleColor.Gray;
                         break;
                     case LogLevel.Information:
-                        Console.ForegroundColor = ConsoleColor.Blue;
+                        Console.ForegroundColor = ConsoleColor.White;
                         break;
                     case LogLevel.Warning:
                         Console.ForegroundColor = ConsoleColor.Yellow;

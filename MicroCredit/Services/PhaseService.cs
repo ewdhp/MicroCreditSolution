@@ -12,9 +12,9 @@ namespace MicroCredit.Services
     public class PhaseFactory : IPhaseFactory
     {
         private readonly IServiceProvider _serviceProvider;
-        private readonly ILogger<InitialService> _logger;
+        private readonly ILogger<PhaseFactory> _logger;
 
-        public PhaseFactory(ILogger<InitialService> logger, IServiceProvider serviceProvider)
+        public PhaseFactory(ILogger<PhaseFactory> logger, IServiceProvider serviceProvider)
         {
             _logger = logger;
             _serviceProvider = serviceProvider;
