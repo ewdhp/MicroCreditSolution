@@ -4,6 +4,12 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MicroCredit.Models
 {
+    public class PhaseResult
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; }
+    }
+
     public enum CStatus
     {
         Initial,

@@ -14,13 +14,13 @@ namespace MicroCredit.Controllers
     [Authorize]
     [ApiController]
     [Route("api/users")]
-    public class UserController : ControllerBase
+    public class UserControllerWorking : ControllerBase
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<UserController> _logger;
         private readonly IJwtTokenService _jwtTokenService;
 
-        public UserController(
+        public UserControllerWorking(
             ApplicationDbContext context,
             ILogger<UserController> logger,
             IJwtTokenService jwtTokenService)
@@ -37,7 +37,7 @@ namespace MicroCredit.Controllers
             if (userId == null)
             {
                 _logger.LogWarning("Id claim not found in token.");
-                return Unauthorized(new ErrorResponse { Message = "Id claim not found in token." });
+                return Unauthorized(new { message = "Id claim not found in token." });
             }
 
             _logger.LogInformation("Id claim found: {Id}", userId);
@@ -47,14 +47,14 @@ namespace MicroCredit.Controllers
             if (user == null)
             {
                 _logger.LogInformation("User with Id {Id} not found.", userId);
-                return NotFound(new ErrorResponse { Message = "User not found" });
+                return NotFound(new { message = "User not found" });
             }
 
-            return Ok(new UserResponse
+            return Ok(new
             {
-                Id = user.Id,
-                Phone = user.Phone,
-                Name = user.Name,
+                user.Id,
+                user.Phone,
+                user.Name,
             });
         }
 
@@ -63,7 +63,7 @@ namespace MicroCredit.Controllers
         {
             if (_context.Users.Any(u => u.Phone == user.Phone || u.Name == user.Name))
             {
-                return BadRequest(new ErrorResponse { Message = "User with the same phone or name already exists" });
+                return BadRequest(new { message = "User with the same phone or name already exists" });
             }
 
             _context.Users.Add(user);
@@ -78,13 +78,13 @@ namespace MicroCredit.Controllers
             var userId = User.Claims.FirstOrDefault(c => c.Type == "Id")?.Value;
             if (userId == null)
             {
-                return Unauthorized(new ErrorResponse { Message = "Id claim not found in token." });
+                return Unauthorized(new { message = "Id claim not found in token." });
             }
 
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Id.ToString() == userId);
             if (user == null)
             {
-                return NotFound(new ErrorResponse { Message = "User not found" });
+                return NotFound(new { message = "User not found" });
             }
 
             user.Name = updatedUser.Name;
@@ -102,13 +102,13 @@ namespace MicroCredit.Controllers
             var userId = User.Claims.FirstOrDefault(c => c.Type == "Id")?.Value;
             if (userId == null)
             {
-                return Unauthorized(new ErrorResponse { Message = "Id claim not found in token." });
+                return Unauthorized(new { message = "Id claim not found in token." });
             }
 
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Id.ToString() == userId);
             if (user == null)
             {
-                return NotFound(new ErrorResponse { Message = "User not found" });
+                return NotFound(new { message = "User not found" });
             }
 
             _context.Users.Remove(user);
@@ -133,17 +133,5 @@ namespace MicroCredit.Controllers
             _logger.LogInformation("All users deleted successfully.");
             return NoContent();
         }
-    }
-
-    public class ErrorResponse
-    {
-        public string Message { get; set; }
-    }
-
-    public class UserResponse
-    {
-        public Guid Id { get; set; }
-        public string Phone { get; set; }
-        public string Name { get; set; }
     }
 }

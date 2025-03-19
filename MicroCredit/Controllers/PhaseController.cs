@@ -64,7 +64,7 @@ namespace MicroCredit.Controllers
                 }
 
                 _logger.LogInformation("Response: {Response}", result);
-                return result.Success ? Ok(new { result }) : BadRequest(new { result.Success });
+                return result.Success ? Ok(new { result }) : BadRequest(new { result });
             }
             catch (Exception ex)
             {

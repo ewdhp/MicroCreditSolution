@@ -6,7 +6,6 @@ using MicroCredit.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Build.Framework;
 
 namespace MicroCredit.Services
 {
@@ -20,6 +19,7 @@ namespace MicroCredit.Services
             _logger = logger;
             _serviceProvider = serviceProvider;
         }
+
         public IPhase GetPhase(CStatus status)
         {
             return status switch
@@ -60,7 +60,6 @@ namespace MicroCredit.Services
                 InitialRequest req = request as InitialRequest;
                 IPhaseRes response = null;
 
-
                 var paid = await _loanService.AreAllLoansPaidAsync();
                 if (!paid)
                 {
@@ -68,14 +67,12 @@ namespace MicroCredit.Services
                     {
                         Success = false,
                         Msg = "A loan already exists for the user."
-
                     };
                     _logger.LogError("A loan already exists for the user.");
                     return response;
                 }
 
-                var (success, loan) = await _loanService
-                .CreateLoanAsync(req.Amount);
+                var (success, loan) = await _loanService.CreateLoanAsync(req.Amount);
 
                 if (!success)
                 {
@@ -84,7 +81,6 @@ namespace MicroCredit.Services
                     {
                         Success = false,
                         Msg = "DB error. Loan not created."
-
                     };
                     return response;
                 }
@@ -97,7 +93,6 @@ namespace MicroCredit.Services
                     Success = true,
                     Msg = "Loan Created Successfully",
                     Loan = loan
-
                 };
 
                 _logger.LogInformation("Status {Status}", response.Msg);
@@ -107,7 +102,11 @@ namespace MicroCredit.Services
             catch (Exception ex)
             {
                 _logger.LogError($"InitialPhase Error: {ex.Message}");
-                return null;
+                return new InitialResponse
+                {
+                    Success = false,
+                    Msg = $"InitialPhase Error: {ex.Message}"
+                };
             }
         }
     }
@@ -142,14 +141,13 @@ namespace MicroCredit.Services
 
                 var current = await _loanService.GetCurrentLoanAsync();
 
-                if (current.Status != (CStatus)1)
+                if (current.Status != CStatus.Pending)
                 {
                     _logger.LogError("Invalid status for approval request.");
                     response = new InitialResponse
                     {
                         Success = false,
                         Msg = "Invalid status for approval request."
-
                     };
                     return response;
                 }
@@ -162,7 +160,6 @@ namespace MicroCredit.Services
                     Success = true,
                     Msg = "Loan Approved Successfully",
                     Loan = current
-
                 };
 
                 _logger.LogInformation("Msg {Status}", response.Msg);
@@ -172,7 +169,11 @@ namespace MicroCredit.Services
             catch (Exception ex)
             {
                 _logger.LogError($"ApprovalPhase Error: {ex.Message}");
-                return null;
+                return new InitialResponse
+                {
+                    Success = false,
+                    Msg = $"ApprovalPhase Error: {ex.Message}"
+                };
             }
         }
     }
@@ -200,21 +201,20 @@ namespace MicroCredit.Services
         {
             try
             {
-                _logger.LogInformation("Request received for Approval phase.");
+                _logger.LogInformation("Request received for Pay phase.");
 
                 PayRequest req = request as PayRequest;
                 IPhaseRes response = null;
 
                 var current = await _loanService.GetCurrentLoanAsync();
 
-                if (current.Status != (CStatus)3)
+                if (current.Status != CStatus.Active)
                 {
                     _logger.LogError("Invalid status for paid request.");
                     response = new PayResponse
                     {
                         Success = false,
                         Msg = "Invalid status for paid request."
-
                     };
                     return response;
                 }
@@ -222,12 +222,11 @@ namespace MicroCredit.Services
                 current.Status = CStatus.Paid;
                 _dbContext.Loans.Update(current);
                 await _dbContext.SaveChangesAsync();
-                response = new InitialResponse
+                response = new PayResponse
                 {
                     Success = true,
                     Msg = "Loan Paid Successfully",
                     Loan = current
-
                 };
 
                 _logger.LogInformation("Msg {Status}", response.Msg);
@@ -237,10 +236,12 @@ namespace MicroCredit.Services
             catch (Exception ex)
             {
                 _logger.LogError($"PayPhase Error: {ex.Message}");
-                return null;
+                return new PayResponse
+                {
+                    Success = false,
+                    Msg = $"PayPhase Error: {ex.Message}"
+                };
             }
         }
-
-
     }
 }

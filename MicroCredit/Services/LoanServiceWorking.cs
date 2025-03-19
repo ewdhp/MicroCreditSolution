@@ -8,31 +8,32 @@ using System.Collections.Generic;
 
 namespace MicroCredit.Services
 {
-    public class LoanService
+    public class LoanServiceWorking
     {
         private readonly ApplicationDbContext _context;
         private readonly IUserContextService _userContextService;
 
-        public LoanService() { }
 
-        public LoanService(ApplicationDbContext context, IUserContextService userContextService)
+        public LoanServiceWorking() { }
+
+        public LoanServiceWorking(ApplicationDbContext context, IUserContextService userContextService)
         {
             _context = context;
             _userContextService = userContextService;
         }
 
-        public virtual async Task<Loan> GetCurrentLoanAsync()
+        public async Task<Loan> GetCurrentLoanAsync()
         {
             var userId = _userContextService.GetUserId();
             return await _context.Loans
-                .FirstOrDefaultAsync(l => l.UserId == userId && l.Status != CStatus.Paid);
+            .FirstOrDefaultAsync(l => l.UserId == userId &&
+            l.Status != CStatus.Paid);
         }
-
         public async Task<bool> AreAllLoansPaidAsync()
         {
             var userId = _userContextService.GetUserId();
             return !await _context.Loans
-                .AnyAsync(l => l.UserId == userId && l.Status != CStatus.Paid);
+            .AnyAsync(l => l.UserId == userId && l.Status != CStatus.Paid);
         }
 
         public async Task<(bool Success, Loan Loan)> CreateLoanAsync(decimal amount)
