@@ -37,13 +37,13 @@ namespace MicroCredit.Services
         private readonly ILogger<InitialService> _logger;
         private readonly ApplicationDbContext _dbContext;
         private readonly IUserContextService _userCS;
-        private readonly LoanService _loanService;
+        private readonly ILoanService _loanService;
 
         public InitialService(
             ILogger<InitialService> logger,
             ApplicationDbContext dbContext,
             IUserContextService userCS,
-            LoanService loanService)
+            ILoanService loanService)
         {
             _logger = logger;
             _dbContext = dbContext;
@@ -116,13 +116,13 @@ namespace MicroCredit.Services
         private readonly ILogger<ApprovalService> _logger;
         private readonly ApplicationDbContext _dbContext;
         private readonly IUserContextService _userCS;
-        private readonly LoanService _loanService;
+        private readonly ILoanService _loanService;
 
         public ApprovalService(
             ILogger<ApprovalService> logger,
             ApplicationDbContext dbContext,
             IUserContextService userCS,
-            LoanService loanService)
+            ILoanService loanService)
         {
             _logger = logger;
             _dbContext = dbContext;
@@ -183,13 +183,13 @@ namespace MicroCredit.Services
         private readonly ILogger<PayService> _logger;
         private readonly ApplicationDbContext _dbContext;
         private readonly IUserContextService _userCS;
-        private readonly LoanService _loanService;
+        private readonly ILoanService _loanService;
 
         public PayService(
             ILogger<PayService> logger,
             ApplicationDbContext dbContext,
             IUserContextService userCS,
-            LoanService loanService)
+            ILoanService loanService)
         {
             _logger = logger;
             _dbContext = dbContext;

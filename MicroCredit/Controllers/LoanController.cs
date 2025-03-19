@@ -1,10 +1,11 @@
+using MicroCredit.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using MicroCredit.Services;
 using MicroCredit.Models;
 using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using MicroCredit.Interfaces;
 
 namespace MicroCredit.Controllers
 {
@@ -25,7 +26,6 @@ namespace MicroCredit.Controllers
         [HttpGet("current-loan")]
         public async Task<IActionResult> GetCurrentLoan()
         {
-
             var loan = await _loanService.GetCurrentLoanAsync();
             if (loan == null)
             {
@@ -36,11 +36,7 @@ namespace MicroCredit.Controllers
             {
                 _logger.LogDebug("Current loan for user is {Loan}", loan);
                 return Ok(new { loan });
-
             }
-
-
-
         }
 
         [HttpPost("create")]
@@ -49,7 +45,7 @@ namespace MicroCredit.Controllers
             try
             {
                 _logger.LogInformation("CreateLoan called with amount: {Amount}", request.Amount);
-                var (success, loan) = await _loanService.CreateLoanAsync((decimal)request.Amount);
+                (bool success, Loan loan) = await _loanService.CreateLoanAsync((decimal)request.Amount);
                 if (!success)
                 {
                     return BadRequest("A loan already exists for this user.");
@@ -123,7 +119,6 @@ namespace MicroCredit.Controllers
             }
         }
 
-
         [HttpDelete("all")]
         public async Task<IActionResult> DeleteAllLoans()
         {
@@ -143,6 +138,5 @@ namespace MicroCredit.Controllers
                 return StatusCode(500, "Internal server error");
             }
         }
-
     }
 }

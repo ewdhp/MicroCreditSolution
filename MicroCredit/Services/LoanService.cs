@@ -5,44 +5,26 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using MicroCredit.Interfaces;
 
 namespace MicroCredit.Services
 {
-    public interface ILoanService
-    {
-        Task<Loan> GetCurrentLoanAsync();
-        Task<(bool Success, Loan Loan)> CreateLoanAsync(decimal amount);
-        Task<Loan> GetLoanByIdAsync(Guid id);
-        Task UpdateLoanStatusAsync(int status);
-        Task<List<Loan>> GetAllLoansAsync();
-        Task DeleteAllLoansAsync();
-    }
-
     public class LoanService : ILoanService
     {
         private readonly ApplicationDbContext _context;
         private readonly IUserContextService _userContextService;
 
-        public LoanService() { }
-
         public LoanService(ApplicationDbContext context, IUserContextService userContextService)
         {
-            _context = context;
-            _userContextService = userContextService;
+            _context = context ?? throw new ArgumentNullException(nameof(context));
+            _userContextService = userContextService ?? throw new ArgumentNullException(nameof(userContextService));
         }
 
-        public virtual async Task<Loan> GetCurrentLoanAsync()
+        public async Task<Loan> GetCurrentLoanAsync()
         {
             var userId = _userContextService.GetUserId();
             return await _context.Loans
                 .FirstOrDefaultAsync(l => l.UserId == userId && l.Status != CStatus.Paid);
-        }
-
-        public async Task<bool> AreAllLoansPaidAsync()
-        {
-            var userId = _userContextService.GetUserId();
-            return !await _context.Loans
-                .AnyAsync(l => l.UserId == userId && l.Status != CStatus.Paid);
         }
 
         public async Task<(bool Success, Loan Loan)> CreateLoanAsync(decimal amount)
@@ -72,14 +54,9 @@ namespace MicroCredit.Services
             return (true, loan);
         }
 
-        private async Task<Loan> GetLoanAsync(Guid id)
-        {
-            return await _context.Loans.FindAsync(id);
-        }
-
         public async Task<Loan> GetLoanByIdAsync(Guid id)
         {
-            return await GetLoanAsync(id);
+            return await _context.Loans.FindAsync(id);
         }
 
         public async Task UpdateLoanStatusAsync(int status)
@@ -117,6 +94,13 @@ namespace MicroCredit.Services
 
             _context.Loans.RemoveRange(userLoans);
             await _context.SaveChangesAsync();
+        }
+
+        public async Task<bool> AreAllLoansPaidAsync()
+        {
+            var userId = _userContextService.GetUserId();
+            return !await _context.Loans
+                .AnyAsync(l => l.UserId == userId && l.Status != CStatus.Paid);
         }
     }
 }

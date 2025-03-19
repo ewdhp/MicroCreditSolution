@@ -38,7 +38,7 @@ namespace MicroCredit
             services.AddScoped<FingerprintService>();
 
             //Loan service
-            services.AddScoped<LoanService>();
+            services.AddScoped<ILoanService, LoanService>();
 
             // Register phase services
             services.AddScoped<IPhaseFactory, PhaseFactory>();
@@ -117,7 +117,7 @@ namespace MicroCredit
             // Clear default logging providers and register the custom logger provider
             services.AddLogging(loggingBuilder =>
             {
-                loggingBuilder.ClearProviders();
+
                 loggingBuilder.AddProvider(new LoggerCustomProvider(LogLevel.Information));
                 loggingBuilder.AddFilter("Microsoft", LogLevel.Warning);
                 loggingBuilder.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.Warning);
