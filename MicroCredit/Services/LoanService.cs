@@ -8,7 +8,17 @@ using System.Collections.Generic;
 
 namespace MicroCredit.Services
 {
-    public class LoanService
+    public interface ILoanService
+    {
+        Task<Loan> GetCurrentLoanAsync();
+        Task<(bool Success, Loan Loan)> CreateLoanAsync(decimal amount);
+        Task<Loan> GetLoanByIdAsync(Guid id);
+        Task UpdateLoanStatusAsync(int status);
+        Task<List<Loan>> GetAllLoansAsync();
+        Task DeleteAllLoansAsync();
+    }
+
+    public class LoanService : ILoanService
     {
         private readonly ApplicationDbContext _context;
         private readonly IUserContextService _userContextService;
