@@ -9,7 +9,7 @@ using MicroCredit.Interfaces;
 
 namespace MicroCredit.Services
 {
-    public class LoanService : ILoanService
+    public class LoanService
     {
         private readonly ApplicationDbContext _context;
         private readonly IUserContextService _userContextService;

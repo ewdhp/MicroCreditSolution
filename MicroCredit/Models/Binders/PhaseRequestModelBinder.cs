@@ -52,7 +52,7 @@ namespace MicroCredit.ModelBinders
                     var jsonDocument = JsonDocument.Parse(body);
                     var rootElement = jsonDocument.RootElement;
 
-                    var loanService = bindingContext.HttpContext.RequestServices.GetRequiredService<ILoanService>(); // Use ILoanService
+                    var loanService = bindingContext.HttpContext.RequestServices.GetRequiredService<LoanService>(); // Use ILoanService
                     var loan = await loanService.GetCurrentLoanAsync();
 
                     CStatus status = CStatus.Initial;

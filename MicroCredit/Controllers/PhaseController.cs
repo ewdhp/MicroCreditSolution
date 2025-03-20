@@ -40,7 +40,7 @@ namespace MicroCredit.Controllers
 
             try
             {
-                var loanService = _serviceProvider.GetRequiredService<ILoanService>(); // Use ILoanService
+                var loanService = _serviceProvider.GetRequiredService<LoanService>(); // Use ILoanService
                 var loan = await loanService.GetCurrentLoanAsync();
                 CStatus status = CStatus.Initial;
                 if (loan != null) status = loan.Status;

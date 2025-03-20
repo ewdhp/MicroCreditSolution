@@ -14,10 +14,10 @@ namespace MicroCredit.Controllers
     [Route("api/loans")]
     public class LoanController : ControllerBase
     {
-        private readonly ILoanService _loanService;
+        private readonly LoanService _loanService;
         private readonly ILogger<LoanController> _logger;
 
-        public LoanController(ILoanService loanService, ILogger<LoanController> logger)
+        public LoanController(LoanService loanService, ILogger<LoanController> logger)
         {
             _loanService = loanService;
             _logger = logger;
