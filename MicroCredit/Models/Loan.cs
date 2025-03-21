@@ -19,6 +19,7 @@ namespace MicroCredit.Models
         Paid,
         Due,
         Canceled,
+        Rejected,
     }
 
     public class Loan

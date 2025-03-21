@@ -26,6 +26,7 @@ namespace MicroCredit.Services
             {
                 CStatus.Initial => _serviceProvider.GetRequiredService<InitialService>(),
                 CStatus.Pending => _serviceProvider.GetRequiredService<ApprovalService>(),
+                CStatus.Rejected => _serviceProvider.GetRequiredService<ApprovalService>(),
                 CStatus.Active => _serviceProvider.GetRequiredService<PayService>(),
                 _ => throw new ArgumentOutOfRangeException(nameof(status), status, null)
             };
@@ -132,43 +133,45 @@ namespace MicroCredit.Services
 
         public async Task<IPhaseRes> CompleteAsync(IPhaseReq request)
         {
+
+            // define first the response object
+
+
             try
             {
-                _logger.LogInformation("Request received for Approval phase.");
-
+                _logger.LogInformation("Approval phase CompleteAsync");
                 ApprovalRequest req = request as ApprovalRequest;
-                IPhaseRes response = null;
+                IPhaseRes response = new ApprovalResponse
+                { Success = true, Msg = "Loan Approved Successfully" };
 
                 var current = await _loanService.GetCurrentLoanAsync();
-
-                if (current.Status != CStatus.Pending)
+                if (current.Status != (CStatus)req.Status)
                 {
-                    _logger.LogError("Invalid status for approval request.");
-                    response = new InitialResponse
-                    {
-                        Success = false,
-                        Msg = "Invalid status for approval request."
-                    };
+                    response.Success = false;
+                    response.Msg = "Invalid status.";
+                    return response;
+                }
+
+                var status = await _loanService.ApproveAsync();
+                _logger.LogInformation("Status {Status}", status);
+                if (status != CStatus.Approved)
+                {
+                    current.Status = CStatus.Rejected;
+                    _dbContext.Loans.Update(current);
+                    await _dbContext.SaveChangesAsync();
                     return response;
                 }
 
                 current.Status = CStatus.Active;
                 _dbContext.Loans.Update(current);
                 await _dbContext.SaveChangesAsync();
-                response = new InitialResponse
-                {
-                    Success = true,
-                    Msg = "Loan Approved Successfully",
-                    Loan = current
-                };
-
-                _logger.LogInformation("Msg {Status}", response.Msg);
 
                 return response;
             }
             catch (Exception ex)
             {
-                _logger.LogError($"ApprovalPhase Error: {ex.Message}");
+                _logger.LogError
+                ($"ApprovalPhase Error: {ex.Message}");
                 return new InitialResponse
                 {
                     Success = false,

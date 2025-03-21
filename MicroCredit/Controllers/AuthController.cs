@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
 using System.Security.Cryptography;
+using Microsoft.IdentityModel.Tokens;
 
 namespace MicroCredit.Controllers
 {
@@ -121,8 +122,9 @@ namespace MicroCredit.Controllers
                         var jwtToken = tokenHandler.ReadJwtToken(request.Token);
                         var phoneNumber = jwtToken.Claims.FirstOrDefault(c => c.Type == "PhoneNumber")?.Value;
                         var tokenFingerprint = jwtToken.Claims.FirstOrDefault(c => c.Type == "Fingerprint")?.Value;
+                        var expClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == "exp")?.Value;
 
-                        _logger.LogInformation("Token Claims - PhoneNumber: {PhoneNumber}, Fingerprint: {Fingerprint}", phoneNumber, tokenFingerprint);
+                        _logger.LogInformation("Token Claims - PhoneNumber: {PhoneNumber}, Fingerprint: {Fingerprint}, Exp: {Exp}", phoneNumber, tokenFingerprint, expClaim);
 
                         if (phoneNumber != request.Phone)
                         {
@@ -130,22 +132,37 @@ namespace MicroCredit.Controllers
                             return BadRequest(new { message = "Invalid token" });
                         }
 
-                        var user = _context.Users.FirstOrDefault(u => u.Phone == phoneNumber);
-                        if (user == null)
+                        if (expClaim != null && long.TryParse(expClaim, out var exp))
+                        {
+                            var expirationDate = DateTimeOffset.FromUnixTimeSeconds(exp).UtcDateTime;
+                            if (expirationDate < DateTime.UtcNow)
+                            {
+                                _logger.LogWarning("Token has expired");
+                                throw new SecurityTokenExpiredException("Token has expired");
+                            }
+                        }
+
+                        var existingUser = _context.Users.FirstOrDefault(u => u.Phone == phoneNumber);
+                        if (existingUser == null)
                         {
                             _logger.LogInformation("User with phone number {PhoneNumber} not found", request.Phone);
                             return NotFound(new { message = "User not found" });
                         }
 
-                        var fingerprint = _fingerprintService.GenerateFingerprint(HttpContext);
-                        if (fingerprint != tokenFingerprint)
+                        var fp = _fingerprintService.GenerateFingerprint(HttpContext);
+                        if (fp != tokenFingerprint)
                         {
-                            _logger.LogWarning("Invalid fingerprint. Expected: {Expected}, Actual: {Actual}", fingerprint, tokenFingerprint);
+                            _logger.LogWarning("Invalid fingerprint. Expected: {Expected}, Actual: {Actual}", fp, tokenFingerprint);
                             return BadRequest(new { message = "Invalid fingerprint" });
                         }
 
                         _logger.LogInformation("Token validated successfully for {PhoneNumber}", request.Phone);
                         return Ok(new { message = "Login successful", token = request.Token });
+                    }
+                    catch (SecurityTokenExpiredException ex)
+                    {
+                        _logger.LogWarning(ex, "Token has expired");
+                        // Skip to else block to generate a new token
                     }
                     catch (Exception ex)
                     {
@@ -153,25 +170,23 @@ namespace MicroCredit.Controllers
                         return BadRequest(new { message = "Invalid token" });
                     }
                 }
-                else
+
+                // This else block will be executed if the token is expired or not provided
+                var user = _context.Users.FirstOrDefault(u => u.Phone == request.Phone);
+                if (user == null)
                 {
-                    var user = _context.Users.FirstOrDefault(u => u.Phone == request.Phone);
-                    if (user == null)
-                    {
-                        _logger.LogInformation("User with phone number {PhoneNumber} not found", request.Phone);
-                        return NotFound(new { message = "User not found" });
-                    }
-
-                    var fingerprint = _fingerprintService.GenerateFingerprint(HttpContext);
-                    _logger.LogInformation("User fingerprint generated successfully for {PhoneNumber}", request.Phone);
-
-                    var token = GenerateToken(request.Phone, fingerprint);
-                    _logger.LogInformation("Token generated successfully for {PhoneNumber}", request.Phone);
-
-                    return Ok(new { message = "Login successful", token });
+                    _logger.LogInformation("User with phone number {PhoneNumber} not found", request.Phone);
+                    return NotFound(new { message = "User not found" });
                 }
-            }
 
+                var fingerprint = _fingerprintService.GenerateFingerprint(HttpContext);
+                _logger.LogInformation("User fingerprint generated successfully for {PhoneNumber}", request.Phone);
+
+                var token = GenerateToken(request.Phone, fingerprint);
+                _logger.LogInformation("Token generated successfully for {PhoneNumber}", request.Phone);
+
+                return Ok(new { message = "Login successful", token });
+            }
             return BadRequest(new { message = "Unexpected error occurred" });
         }
 

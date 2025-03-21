@@ -102,5 +102,10 @@ namespace MicroCredit.Services
             return !await _context.Loans
                 .AnyAsync(l => l.UserId == userId && l.Status != CStatus.Paid);
         }
+
+        public Task<CStatus> ApproveAsync()
+        {
+            return Task.FromResult<CStatus>(CStatus.Approved);
+        }
     }
 }

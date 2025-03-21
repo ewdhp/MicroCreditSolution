@@ -62,6 +62,32 @@ const PhaseManager = () => {
     setLoanDetails(loanDetails);
   };
 
+  const phaseComponents = {
+    Initial: <TakeLoan onAccept={handleLoanAccept} />,
+    Pending: <LoanInfo loanDetails={loanDetails} phases={phases} onNext={handleNextPhase} />,
+    Approved: <LoanInfo loanDetails={loanDetails} phases={phases} onNext={handleNextPhase} />,
+    Active: <LoanInfo loanDetails={loanDetails} phases={phases} onNext={handleNextPhase} />,
+    Due: <LoanInfo loanDetails={loanDetails} phases={phases} onNext={handleNextPhase} />,
+    Paid: (
+      <div>
+        <p>Payment complete!</p>
+        <button
+          style={{
+            padding: '10px 20px',
+            backgroundColor: '#f44336',
+            color: 'white',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer',
+          }}
+          onClick={() => setCurrentPhase(0)}
+        >
+          Take Loan
+        </button>
+      </div>
+    ),
+  };
+
   const renderPhaseComponent = () => {
     if (error) {
       return <div style={{ color: 'red' }}>{error}</div>;
@@ -71,64 +97,7 @@ const PhaseManager = () => {
       return <div>Loading...</div>;
     }
 
-    switch (phases[currentPhase]) {
-
-      case 'Initial':
-        return <TakeLoan 
-        onAccept={handleLoanAccept} 
-        />;
-
-      case 'Pending':
-        return <LoanInfo 
-        loanDetails={loanDetails} 
-        phases={phases} 
-        onNext={handleNextPhase} 
-        />;
-
-      case 'Approved':
-        return <LoanInfo 
-        loanDetails={loanDetails} 
-        phases={phases} 
-        onNext={handleNextPhase} 
-        />;
-
-      case 'Active':
-        return  <LoanInfo 
-        loanDetails={loanDetails} 
-        phases={phases} 
-        onNext={handleNextPhase} 
-        />;
-      
-      case 'Due':
-      return  <LoanInfo 
-        loanDetails={loanDetails} 
-        phases={phases} 
-        onNext={handleNextPhase} 
-        />;
-
-      case 'Paid':
-        return (
-          <div>
-            <p>Payment complete!</p>
-            <button
-              style={{
-                padding: '10px 20px',
-                backgroundColor: '#f44336',
-                color: 'white',
-                border: 'none',
-                borderRadius: '5px',
-                cursor: 'pointer',
-              }}
-              onClick={() => setCurrentPhase(0)}
-            >
-              Take Loan
-            </button>
-          </div>
-        );
-      
-      default:
-        return <div>Phase: {phases[currentPhase]}</div>;
-    }
+    return phaseComponents[phases[currentPhase]] || <div>Phase: {phases[currentPhase]}</div>;
   };
 
   const styles = {

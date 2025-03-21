@@ -10,6 +10,7 @@ namespace MicroCredit.Models
     }
     public class ApprovalRequest : IPhaseReq
     {
+        public CStatus Status { get; set; }
     }
     public class PayRequest : IPhaseReq
     {
