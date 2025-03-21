@@ -5,7 +5,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading;
-using Microsoft.Extensions.Logging.Console;
 
 namespace MicroCredit
 {
@@ -39,29 +38,17 @@ namespace MicroCredit
                 .ConfigureLogging(logging =>
                 {
                     logging.ClearProviders();
-                    logging.AddConsole(options =>
-                    {
-                        options.FormatterName = ConsoleFormatterNames.Simple;
-                        logging.AddSimpleConsole(options =>
-                        {
-                            options.IncludeScopes = true;
-                            options.UseUtcTimestamp = true;
-                            options.TimestampFormat = "yyyy-MM-dd HH:mm:ss.fff zzz ";
-                        });
-
-                    });
+                    logging.AddConsole();
+                    logging.SetMinimumLevel(LogLevel.Information);
                 })
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();
-                    webBuilder.ConfigureKestrel
-                    ((context, serverOptions) =>
+                    webBuilder.ConfigureKestrel((context, serverOptions) =>
                     {
-                        serverOptions.Configure
-                        (context.Configuration.GetSection("Kestrel"));
+                        serverOptions.Configure(context.Configuration.GetSection("Kestrel"));
                     });
-                    webBuilder.UseUrls
-                    ("http://localhost:5000", "https://localhost:5001");
+                    webBuilder.UseUrls("http://localhost:5000", "https://localhost:5001");
                 });
     }
 }

@@ -12,7 +12,7 @@ const LoanInfo = ({ loanDetails, phases, onNext }) => {
 
       const status = loanDetails.status;
       const response = await axios.post(
-        'https://localhost:5001/api/phases/next-phase',
+        'https://localhost:5001/api/phases/next',
         { Status: status },
         {
           headers: {

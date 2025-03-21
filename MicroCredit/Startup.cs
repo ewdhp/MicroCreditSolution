@@ -38,7 +38,7 @@ namespace MicroCredit
             services.AddScoped<FingerprintService>();
 
             //Loan service
-            services.AddScoped<LoanService>();
+            services.AddScoped<ILoanService, LoanService>();
 
             // Register phase services
             services.AddScoped<IPhaseFactory, PhaseFactory>();

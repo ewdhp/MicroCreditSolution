@@ -7,17 +7,18 @@ using System.IO;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
-using MicroCredit.Services;
 
 namespace MicroCredit.ModelBinders
 {
     public class PhaseRequestModelBinder : IModelBinder
     {
         private readonly ILogger<PhaseRequestModelBinder> _logger;
+        private readonly ILoanService _loanService;
 
-        public PhaseRequestModelBinder(ILogger<PhaseRequestModelBinder> logger)
+        public PhaseRequestModelBinder(ILogger<PhaseRequestModelBinder> logger, ILoanService loanService)
         {
             _logger = logger;
+            _loanService = loanService;
         }
 
         public async Task BindModelAsync(ModelBindingContext bindingContext)
@@ -52,8 +53,7 @@ namespace MicroCredit.ModelBinders
                     var jsonDocument = JsonDocument.Parse(body);
                     var rootElement = jsonDocument.RootElement;
 
-                    var loanService = bindingContext.HttpContext.RequestServices.GetRequiredService<LoanService>(); // Use ILoanService
-                    var loan = await loanService.GetCurrentLoanAsync();
+                    var loan = await _loanService.GetCurrentLoanAsync();
 
                     CStatus status = CStatus.Initial;
                     if (loan != null)

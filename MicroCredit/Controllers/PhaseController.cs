@@ -1,12 +1,16 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using MicroCredit.Interfaces;
-using MicroCredit.Models;
-using System;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using System.Threading.Tasks;
+using MicroCredit.Interfaces;
+using System;
+using MicroCredit.Services;
+using MicroCredit.Models;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace MicroCredit.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/phases")]
     public class PhaseController : ControllerBase
@@ -15,7 +19,10 @@ namespace MicroCredit.Controllers
         private readonly ILogger<PhaseController> _logger;
         private readonly IServiceProvider _serviceProvider;
 
-        public PhaseController(IPhaseFactory phaseFactory, ILogger<PhaseController> logger, IServiceProvider serviceProvider)
+        public PhaseController(
+            IPhaseFactory phaseFactory,
+            ILogger<PhaseController> logger,
+            IServiceProvider serviceProvider)
         {
             _phaseFactory = phaseFactory;
             _logger = logger;
@@ -27,35 +34,37 @@ namespace MicroCredit.Controllers
         {
             if (request == null)
             {
-                _logger.LogDebug("Request is null.");
-                return BadRequest(new { message = "Request cannot be null" });
+                _logger.LogError("Request is null.");
+                return BadRequest("Request cannot be null.");
             }
 
             try
             {
-                var loanService = (ILoanService)_serviceProvider.GetService(typeof(ILoanService));
-                var currentLoan = await loanService.GetCurrentLoanAsync();
-                if (currentLoan == null)
-                {
-                    _logger.LogDebug("No current loan found for user.");
-                    return NotFound(new { message = "Current loan not found" });
-                }
+                var loanService = _serviceProvider.GetRequiredService<ILoanService>();
+                var loan = await loanService.GetCurrentLoanAsync();
+                CStatus status = CStatus.Initial;
+                if (loan != null) status = loan.Status;
 
-                var phase = _phaseFactory.GetPhase(currentLoan.Status);
+                _logger.LogInformation("Current loan status: {Status}", status);
+
+                var phase = _phaseFactory.GetPhase(status);
                 if (phase == null)
                 {
-                    _logger.LogDebug("No phase found for status {Status}", currentLoan.Status);
-                    return NotFound(new { message = "Phase not found" });
+                    _logger.LogError("ERROR. Phase is null for status: {Status}", status);
+                    return NotFound("ERROR. Phase cannot be null.");
                 }
 
+                _logger.LogInformation("Sending request to phase: {Request}", request);
                 var result = await phase.CompleteAsync(request);
+
                 if (result == null)
                 {
-                    _logger.LogDebug("No result returned for phase {Phase}", phase.GetType().Name);
-                    return NotFound(new { message = "Result not found" });
+                    _logger.LogError("Response is null.");
+                    return NotFound("ERROR. Response cannot be null.");
                 }
 
-                return Ok(result);
+                _logger.LogInformation("Response: {Response}", result);
+                return result.Success ? Ok(new { result }) : BadRequest(new { result });
             }
             catch (Exception ex)
             {

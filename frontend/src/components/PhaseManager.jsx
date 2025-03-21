@@ -98,6 +98,13 @@ const PhaseManager = () => {
         phases={phases} 
         onNext={handleNextPhase} 
         />;
+      
+      case 'Due':
+      return  <LoanInfo 
+        loanDetails={loanDetails} 
+        phases={phases} 
+        onNext={handleNextPhase} 
+        />;
 
       case 'Paid':
         return (
@@ -118,6 +125,7 @@ const PhaseManager = () => {
             </button>
           </div>
         );
+      
       default:
         return <div>Phase: {phases[currentPhase]}</div>;
     }

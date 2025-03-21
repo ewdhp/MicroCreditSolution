@@ -27,7 +27,7 @@ const TakeLoan = ({ onAccept }) => {
       }
 
       const response = await axios.post(
-        'https://localhost:5001/api/phases/next-phase',
+        'https://localhost:5001/api/phases/next',
         {
           Status: 0,
           Amount: loanAmount,
