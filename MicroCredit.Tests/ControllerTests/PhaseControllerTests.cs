@@ -8,7 +8,6 @@ using MicroCredit.Models;
 using MicroCredit.Services;
 using Moq;
 
-
 namespace MicroCredit.Tests.Controllers
 {
     [TestClass]

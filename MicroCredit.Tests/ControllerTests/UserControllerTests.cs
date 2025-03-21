@@ -18,10 +18,10 @@ namespace MicroCredit.Tests.Controllers
     [TestClass]
     public class UserControllerTests
     {
-        private ApplicationDbContext _context;
-        private Mock<ILogger<UserController>> _loggerMock;
-        private Mock<IJwtTokenService> _jwtTokenServiceMock;
-        private UserController _controller;
+        private ApplicationDbContext? _context;
+        private Mock<ILogger<UserController>>? _loggerMock;
+        private Mock<IJwtTokenService>? _jwtTokenServiceMock;
+        private UserController? _controller;
 
         [TestInitialize]
         public void Setup()
@@ -40,7 +40,7 @@ namespace MicroCredit.Tests.Controllers
         {
             // Arrange
             var user = new ClaimsPrincipal(new ClaimsIdentity());
-            _controller.ControllerContext = new ControllerContext
+            _controller!.ControllerContext = new ControllerContext
             {
                 HttpContext = new DefaultHttpContext { User = user }
             };
@@ -69,7 +69,7 @@ namespace MicroCredit.Tests.Controllers
             var userId = Guid.NewGuid().ToString();
             var claims = new[] { new Claim("Id", userId) };
             var user = new ClaimsPrincipal(new ClaimsIdentity(claims));
-            _controller.ControllerContext = new ControllerContext
+            _controller!.ControllerContext = new ControllerContext
             {
                 HttpContext = new DefaultHttpContext { User = user }
             };
@@ -98,13 +98,13 @@ namespace MicroCredit.Tests.Controllers
             var userId = Guid.NewGuid();
             var claims = new[] { new Claim("Id", userId.ToString()) };
             var user = new ClaimsPrincipal(new ClaimsIdentity(claims));
-            _controller.ControllerContext = new ControllerContext
+            _controller!.ControllerContext = new ControllerContext
             {
                 HttpContext = new DefaultHttpContext { User = user }
             };
 
             var foundUser = new User { Id = userId, Phone = "1234567890", Name = "Test User" };
-            _context.Users.Add(foundUser);
+            _context!.Users.Add(foundUser);
             await _context.SaveChangesAsync();
 
             // Act
