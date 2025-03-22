@@ -49,9 +49,9 @@ namespace MicroCredit.Tests.Controllers
         public async Task NextPhase_ShouldReturnNotFound_WhenPhaseIsNull()
         {
             // Arrange
-            var request = new Mock<IPhaseReq>().Object;
+            var request = new Mock<IPhaseRequest>().Object;
             _loanServiceMock!.Setup(service => service.GetCurrentLoanAsync()).ReturnsAsync(new Loan { Status = CStatus.Initial });
-            _phaseFactoryMock!.Setup(factory => factory.GetPhase(CStatus.Initial)).Returns((IPhase)null!);
+            _phaseFactoryMock!.Setup(factory => factory.GetPhase(CStatus.Initial)).Returns((IPhaseService)null!);
 
             // Act
             var result = await _controller!.NextPhase(request);
@@ -64,11 +64,11 @@ namespace MicroCredit.Tests.Controllers
         public async Task NextPhase_ShouldReturnNotFound_WhenResultIsNull()
         {
             // Arrange
-            var request = new Mock<IPhaseReq>().Object;
-            var phaseMock = new Mock<IPhase>();
+            var request = new Mock<IPhaseRequest>().Object;
+            var phaseMock = new Mock<IPhaseService>();
             _loanServiceMock!.Setup(service => service.GetCurrentLoanAsync()).ReturnsAsync(new Loan { Status = CStatus.Initial });
             _phaseFactoryMock!.Setup(factory => factory.GetPhase(CStatus.Initial)).Returns(phaseMock.Object);
-            phaseMock.Setup(phase => phase.CompleteAsync(request)).ReturnsAsync((IPhaseRes)null!);
+            phaseMock.Setup(phase => phase.CompleteAsync(request)).ReturnsAsync((IPhaseResponse)null!);
 
             // Act
             var result = await _controller!.NextPhase(request);
@@ -81,8 +81,8 @@ namespace MicroCredit.Tests.Controllers
         public async Task NextPhase_ShouldReturnInternalServerError_WhenExceptionIsThrown()
         {
             // Arrange
-            var request = new Mock<IPhaseReq>().Object;
-            var phaseMock = new Mock<IPhase>();
+            var request = new Mock<IPhaseRequest>().Object;
+            var phaseMock = new Mock<IPhaseService>();
             _loanServiceMock!.Setup(service => service.GetCurrentLoanAsync()).ReturnsAsync(new Loan { Status = CStatus.Initial });
             _phaseFactoryMock!.Setup(factory => factory.GetPhase(CStatus.Initial)).Returns(phaseMock.Object);
             phaseMock.Setup(phase => phase.CompleteAsync(request)).ThrowsAsync(new Exception("Test exception"));

@@ -105,7 +105,7 @@ namespace MicroCredit.Services
 
         public Task<CStatus> ApproveAsync()
         {
-            return Task.FromResult<CStatus>(CStatus.Approved);
+            return Task.FromResult<CStatus>(CStatus.Rejected);
         }
     }
 }

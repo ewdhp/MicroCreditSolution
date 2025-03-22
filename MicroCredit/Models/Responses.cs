@@ -4,23 +4,21 @@ using System;
 
 namespace MicroCredit.Models
 {
-    public class InitialResponse : IPhaseRes
+    public class InitialResponse : IPhaseResponse
     {
-        public bool Success { get; set; }
-        public string Msg { get; set; }
-        public Loan Loan { get; set; }
+        public Loan LoanDetails { get; set; }
     }
-    public class ApprovalResponse : IPhaseRes
+    public class CreateResponse : IPhaseResponse
     {
-        public bool Success { get; set; }
-        public string Msg { get; set; }
-        public Loan Loan { get; set; }
+        public Loan LoanDetails { get; set; }
     }
-    public class PayResponse : IPhaseRes
+    public class ApprovalResponse : IPhaseResponse
     {
-        public bool Success { get; set; }
-        public string Msg { get; set; }
-        public Loan Loan { get; set; }
+        public Loan LoanDetails { get; set; }
+    }
+    public class PayResponse : IPhaseResponse
+    {
+        public Loan LoanDetails { get; set; }
     }
 
 }

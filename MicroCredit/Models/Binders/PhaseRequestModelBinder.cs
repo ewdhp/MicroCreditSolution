@@ -62,10 +62,11 @@ namespace MicroCredit.ModelBinders
                     }
 
                     _logger.LogInformation($"model binder status: {status}");
-                    IPhaseReq model = status switch
+                    IPhaseRequest model = status switch
                     {
                         CStatus.Initial => JsonSerializer.Deserialize<InitialRequest>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }),
                         CStatus.Pending => JsonSerializer.Deserialize<ApprovalRequest>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }),
+                        CStatus.Rejected => JsonSerializer.Deserialize<ApprovalRequest>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }),
                         CStatus.Active => JsonSerializer.Deserialize<PayRequest>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }),
                         _ => throw new InvalidOperationException("Unknown status type")
                     };

@@ -5,25 +5,28 @@ using MicroCredit.Models;
 
 namespace MicroCredit.Interfaces
 {
-    public interface IPhase
+    public interface IPhaseService
     {
-        Task<IPhaseRes> CompleteAsync(IPhaseReq request);
+        Task<IPhaseResponse> Init(IPhaseRequest request);
+        Task<IPhaseResponse> Create(IPhaseRequest request);
+        Task<IPhaseResponse> Approval(IPhaseRequest request);
+        Task<IPhaseResponse> Pay(IPhaseRequest request);
     }
 
-    public interface IPhaseReq
+    public interface IPhaseRequest
     {
+        public Loan LoanDetails { get; set; }
     }
 
-    public interface IPhaseRes
+    public interface IPhaseResponse
     {
-        public bool Success { get; set; }
-        public string Msg { get; set; }
-        public Loan Loan { get; set; }
+        public Loan LoanDetails { get; set; }
     }
 
     public interface IPhaseFactory
     {
-        IPhase GetPhase(CStatus status);
+        Task<IPhaseResponse>
+        GetPhaseAsync(IPhaseRequest request);
     }
 
 }

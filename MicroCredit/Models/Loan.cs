@@ -13,13 +13,15 @@ namespace MicroCredit.Models
     public enum CStatus
     {
         Initial,
+        Create,
         Pending,
         Approved,
+        Disbursed,
         Active,
         Paid,
         Due,
         Canceled,
-        Rejected,
+        Rejected
     }
 
     public class Loan

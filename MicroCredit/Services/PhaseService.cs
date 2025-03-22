@@ -14,34 +14,46 @@ namespace MicroCredit.Services
         private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<PhaseFactory> _logger;
 
-        public PhaseFactory(ILogger<PhaseFactory> logger, IServiceProvider serviceProvider)
+        public PhaseFactory
+            (ILogger<PhaseFactory> logger,
+            IServiceProvider serviceProvider)
         {
             _logger = logger;
             _serviceProvider = serviceProvider;
         }
 
-        public IPhase GetPhase(CStatus status)
+
+        public async Task<IPhaseResponse>
+            GetPhaseAsync(IPhaseRequest request)
         {
+            var phaseService = _serviceProvider
+            .GetRequiredService<PhaseService>();
+            CStatus status = request
+            .LoanDetails.Status;
+
             return status switch
             {
-                CStatus.Initial => _serviceProvider.GetRequiredService<InitialService>(),
-                CStatus.Pending => _serviceProvider.GetRequiredService<ApprovalService>(),
-                CStatus.Rejected => _serviceProvider.GetRequiredService<ApprovalService>(),
-                CStatus.Active => _serviceProvider.GetRequiredService<PayService>(),
-                _ => throw new ArgumentOutOfRangeException(nameof(status), status, null)
+                CStatus.Initial => await phaseService.Init(request),
+                CStatus.Create => await phaseService.Create(request),
+                CStatus.Pending => await phaseService.Approval(request),
+                CStatus.Rejected => await phaseService.Approval(request),
+                CStatus.Active => await phaseService.Pay(request),
+                CStatus.Due => await phaseService.Pay(request),
+                _ => throw new ArgumentOutOfRangeException
+                (nameof(status), status, null)
             };
         }
     }
 
-    public class InitialService : IPhase
+    public class PhaseService : IPhaseService
     {
-        private readonly ILogger<InitialService> _logger;
+        private readonly ILogger<PhaseService> _logger;
         private readonly ApplicationDbContext _dbContext;
         private readonly IUserContextService _userCS;
         private readonly ILoanService _loanService;
 
-        public InitialService(
-            ILogger<InitialService> logger,
+        public PhaseService(
+            ILogger<PhaseService> logger,
             ApplicationDbContext dbContext,
             IUserContextService userCS,
             ILoanService loanService)
@@ -52,199 +64,26 @@ namespace MicroCredit.Services
             _loanService = loanService;
         }
 
-        public async Task<IPhaseRes> CompleteAsync(IPhaseReq request)
+
+        public Task<IPhaseResponse> Init(IPhaseRequest request)
         {
-            try
-            {
-                _logger.LogInformation("Request received for initial phase.");
+            throw new NotImplementedException();
+        }
 
-                InitialRequest req = request as InitialRequest;
-                IPhaseRes response = null;
+        public Task<IPhaseResponse> Create(IPhaseRequest request)
+        {
+            throw new NotImplementedException();
+        }
 
-                var paid = await _loanService.AreAllLoansPaidAsync();
-                if (!paid)
-                {
-                    response = new InitialResponse
-                    {
-                        Success = false,
-                        Msg = "A loan already exists for the user."
-                    };
-                    _logger.LogError("A loan already exists for the user.");
-                    return response;
-                }
+        public Task<IPhaseResponse> Approval(IPhaseRequest request)
+        {
+            throw new NotImplementedException();
+        }
 
-                var (success, loan) = await _loanService.CreateLoanAsync(req.Amount);
-
-                if (!success)
-                {
-                    _logger.LogError("DB error. Loan not created.");
-                    response = new InitialResponse
-                    {
-                        Success = false,
-                        Msg = "DB error. Loan not created."
-                    };
-                    return response;
-                }
-
-                loan.Status = CStatus.Pending;
-                _dbContext.Loans.Update(loan);
-                await _dbContext.SaveChangesAsync();
-                response = new InitialResponse
-                {
-                    Success = true,
-                    Msg = "Loan Created Successfully",
-                    Loan = loan
-                };
-
-                _logger.LogInformation("Status {Status}", response.Msg);
-
-                return response;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"InitialPhase Error: {ex.Message}");
-                return new InitialResponse
-                {
-                    Success = false,
-                    Msg = $"InitialPhase Error: {ex.Message}"
-                };
-            }
+        public Task<IPhaseResponse> Pay(IPhaseRequest request)
+        {
+            throw new NotImplementedException();
         }
     }
 
-    public class ApprovalService : IPhase
-    {
-        private readonly ILogger<ApprovalService> _logger;
-        private readonly ApplicationDbContext _dbContext;
-        private readonly IUserContextService _userCS;
-        private readonly ILoanService _loanService;
-
-        public ApprovalService(
-            ILogger<ApprovalService> logger,
-            ApplicationDbContext dbContext,
-            IUserContextService userCS,
-            ILoanService loanService)
-        {
-            _logger = logger;
-            _dbContext = dbContext;
-            _userCS = userCS;
-            _loanService = loanService;
-        }
-
-        public async Task<IPhaseRes> CompleteAsync(IPhaseReq request)
-        {
-
-            // define first the response object
-
-
-            try
-            {
-                _logger.LogInformation("Approval phase CompleteAsync");
-                ApprovalRequest req = request as ApprovalRequest;
-                IPhaseRes response = new ApprovalResponse
-                { Success = true, Msg = "Loan Approved Successfully" };
-
-                var current = await _loanService.GetCurrentLoanAsync();
-                if (current.Status != (CStatus)req.Status)
-                {
-                    response.Success = false;
-                    response.Msg = "Invalid status.";
-                    return response;
-                }
-
-                var status = await _loanService.ApproveAsync();
-                _logger.LogInformation("Status {Status}", status);
-                if (status != CStatus.Approved)
-                {
-                    current.Status = CStatus.Rejected;
-                    _dbContext.Loans.Update(current);
-                    await _dbContext.SaveChangesAsync();
-                    return response;
-                }
-
-                current.Status = CStatus.Active;
-                _dbContext.Loans.Update(current);
-                await _dbContext.SaveChangesAsync();
-
-                return response;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError
-                ($"ApprovalPhase Error: {ex.Message}");
-                return new InitialResponse
-                {
-                    Success = false,
-                    Msg = $"ApprovalPhase Error: {ex.Message}"
-                };
-            }
-        }
-    }
-
-    public class PayService : IPhase
-    {
-        private readonly ILogger<PayService> _logger;
-        private readonly ApplicationDbContext _dbContext;
-        private readonly IUserContextService _userCS;
-        private readonly ILoanService _loanService;
-
-        public PayService(
-            ILogger<PayService> logger,
-            ApplicationDbContext dbContext,
-            IUserContextService userCS,
-            ILoanService loanService)
-        {
-            _logger = logger;
-            _dbContext = dbContext;
-            _userCS = userCS;
-            _loanService = loanService;
-        }
-
-        public async Task<IPhaseRes> CompleteAsync(IPhaseReq request)
-        {
-            try
-            {
-                _logger.LogInformation("Request received for Pay phase.");
-
-                PayRequest req = request as PayRequest;
-                IPhaseRes response = null;
-
-                var current = await _loanService.GetCurrentLoanAsync();
-
-                if (current.Status != CStatus.Active)
-                {
-                    _logger.LogError("Invalid status for paid request.");
-                    response = new PayResponse
-                    {
-                        Success = false,
-                        Msg = "Invalid status for paid request."
-                    };
-                    return response;
-                }
-
-                current.Status = CStatus.Paid;
-                _dbContext.Loans.Update(current);
-                await _dbContext.SaveChangesAsync();
-                response = new PayResponse
-                {
-                    Success = true,
-                    Msg = "Loan Paid Successfully",
-                    Loan = current
-                };
-
-                _logger.LogInformation("Msg {Status}", response.Msg);
-
-                return response;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"PayPhase Error: {ex.Message}");
-                return new PayResponse
-                {
-                    Success = false,
-                    Msg = $"PayPhase Error: {ex.Message}"
-                };
-            }
-        }
-    }
 }

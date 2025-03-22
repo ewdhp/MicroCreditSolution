@@ -30,7 +30,7 @@ namespace MicroCredit.Controllers
         }
 
         [HttpPost("next")]
-        public async Task<IActionResult> NextPhase([FromBody] IPhaseReq request)
+        public async Task<IActionResult> NextPhase([FromBody] IPhaseRequest request)
         {
             if (request == null)
             {
