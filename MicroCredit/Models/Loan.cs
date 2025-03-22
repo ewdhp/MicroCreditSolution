@@ -4,12 +4,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MicroCredit.Models
 {
-    public class PhaseResult
-    {
-        public bool Success { get; set; }
-        public string Message { get; set; }
-    }
-
     public enum CStatus
     {
         Initial,
@@ -21,7 +15,8 @@ namespace MicroCredit.Models
         Paid,
         Due,
         Canceled,
-        Rejected
+        Rejected,
+        Unknown
     }
 
     public class Loan
@@ -89,6 +84,20 @@ namespace MicroCredit.Models
         }
     }
 
+    public class PhaseResult
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; }
+    }
+
+    public class CreateLoanRequest
+    {
+        public double Amount { get; set; }
+    }
+    public class UpdateLoanStatusRequest
+    {
+        public int Status { get; set; }
+    }
 
     public class LoanStatusUpdate
     {

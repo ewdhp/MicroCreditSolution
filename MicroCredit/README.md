@@ -14,7 +14,7 @@ This project is a micro credit backend application built using .NET. It provides
   - `LoanService.cs`: Contains business logic related to credit operations.
 
 - **Data**
-  - `ApplicationDbContext.cs`: Manages the database connection and entities.
+  - `UDbContext.cs`: Manages the database connection and entities.
 
 - **MicroCredit.csproj**: Project file containing dependencies and build settings.
 

@@ -18,7 +18,7 @@ namespace MicroCredit.Tests.Controllers
     [TestClass]
     public class UserControllerTests
     {
-        private ApplicationDbContext? _context;
+        private UDbContext? _context;
         private Mock<ILogger<UserController>>? _loggerMock;
         private Mock<IJwtTokenService>? _jwtTokenServiceMock;
         private UserController? _controller;
@@ -26,10 +26,10 @@ namespace MicroCredit.Tests.Controllers
         [TestInitialize]
         public void Setup()
         {
-            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            var options = new DbContextOptionsBuilder<UDbContext>()
                 .UseInMemoryDatabase(databaseName: "TestDatabase")
                 .Options;
-            _context = new ApplicationDbContext(options);
+            _context = new UDbContext(options);
             _loggerMock = new Mock<ILogger<UserController>>();
             _jwtTokenServiceMock = new Mock<IJwtTokenService>();
             _controller = new UserController(_context, _loggerMock.Object, _jwtTokenServiceMock.Object);

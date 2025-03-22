@@ -16,12 +16,12 @@ namespace MicroCredit.Controllers
     [Route("api/users")]
     public class UserController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
+        private readonly UDbContext _context;
         private readonly ILogger<UserController> _logger;
         private readonly IJwtTokenService _jwtTokenService;
 
         public UserController(
-            ApplicationDbContext context,
+            UDbContext context,
             ILogger<UserController> logger,
             IJwtTokenService jwtTokenService)
         {

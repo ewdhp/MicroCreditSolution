@@ -20,16 +20,16 @@ namespace MicroCredit.Controllers
     {
         private readonly ILogger<AuthController> _logger;
         private readonly IJwtTokenService _jwtTokenService;
-        private readonly ApplicationDbContext _context;
+        private readonly UDbContext _context;
         private readonly FingerprintService _fingerprintService;
-        private readonly IUserContextService _userContextService;
+        private readonly IUCService _userContextService;
 
         public AuthController(
             ILogger<AuthController> logger,
             IJwtTokenService jwtTokenService,
-            ApplicationDbContext context,
+            UDbContext context,
             FingerprintService fingerprintService,
-            IUserContextService userContextService)
+            IUCService userContextService)
         {
             _logger = logger;
             _jwtTokenService = jwtTokenService;

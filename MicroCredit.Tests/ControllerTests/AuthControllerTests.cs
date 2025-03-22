@@ -20,8 +20,8 @@ namespace MicroCredit.Tests.Controllers
         private Mock<ILogger<AuthController>> _loggerMock = null!;
         private Mock<IJwtTokenService> _jwtTokenServiceMock = null!;
         private Mock<FingerprintService> _fingerprintServiceMock = null!;
-        private Mock<IUserContextService> _userContextServiceMock = null!;
-        private ApplicationDbContext _context = null!;
+        private Mock<IUCService> _userContextServiceMock = null!;
+        private UDbContext _context = null!;
         private DefaultHttpContext _httpContext = null!;
 
         [TestInitialize]
@@ -30,12 +30,12 @@ namespace MicroCredit.Tests.Controllers
             _loggerMock = new Mock<ILogger<AuthController>>();
             _jwtTokenServiceMock = new Mock<IJwtTokenService>();
             _fingerprintServiceMock = new Mock<FingerprintService>();
-            _userContextServiceMock = new Mock<IUserContextService>();
+            _userContextServiceMock = new Mock<IUCService>();
 
-            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            var options = new DbContextOptionsBuilder<UDbContext>()
                 .UseInMemoryDatabase(databaseName: "TestDatabase")
                 .Options;
-            _context = new ApplicationDbContext(options);
+            _context = new UDbContext(options);
 
             _httpContext = new DefaultHttpContext();
         }

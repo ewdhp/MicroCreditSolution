@@ -12,9 +12,9 @@ namespace MicroCredit.Data
 {
 
     public class ApplicationDbContextFactory :
-        IDesignTimeDbContextFactory<ApplicationDbContext>
+        IDesignTimeDbContextFactory<UDbContext>
     {
-        public ApplicationDbContext CreateDbContext(string[] args)
+        public UDbContext CreateDbContext(string[] args)
         {
             var configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
@@ -22,20 +22,20 @@ namespace MicroCredit.Data
                 .Build();
 
             var optionsBuilder = new DbContextOptionsBuilder
-            <ApplicationDbContext>();
+            <UDbContext>();
             var connectionString = configuration
             .GetConnectionString("DefaultConnection");
             optionsBuilder.UseNpgsql(connectionString);
 
-            return new ApplicationDbContext
+            return new UDbContext
             (optionsBuilder.Options);
         }
     }
 
-    public class ApplicationDbContext : DbContext
+    public class UDbContext : DbContext
     {
-        public ApplicationDbContext
-        (DbContextOptions<ApplicationDbContext> options)
+        public UDbContext
+        (DbContextOptions<UDbContext> options)
             : base(options)
         {
         }
@@ -43,7 +43,8 @@ namespace MicroCredit.Data
         public DbSet<User> Users { get; set; }
         public DbSet<Loan> Loans { get; set; }
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        protected override void
+        OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
             modelBuilder.HasDefaultSchema("Account");

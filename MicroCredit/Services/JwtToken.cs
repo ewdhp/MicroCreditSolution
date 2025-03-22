@@ -25,13 +25,14 @@ namespace MicroCredit.Services
     {
         private readonly IConfiguration _configuration;
         private readonly ILogger<JwtTokenService> _logger;
-        private readonly ApplicationDbContext _context;
-        private readonly ConcurrentDictionary<string, string> _invalidatedTokens = new ConcurrentDictionary<string, string>();
+        private readonly UDbContext _context;
+        private readonly ConcurrentDictionary<string, string>
+        _invalidatedTokens = new ConcurrentDictionary<string, string>();
 
         public JwtTokenService(
             IConfiguration configuration,
             ILogger<JwtTokenService> logger,
-            ApplicationDbContext context)
+            UDbContext context)
         {
             _configuration = configuration;
             _logger = logger;

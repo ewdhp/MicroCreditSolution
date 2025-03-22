@@ -7,8 +7,9 @@ namespace MicroCredit.Interfaces
 {
     public interface ILoanService
     {
+        Task<(bool Success, Loan Loan)>
+        CreateLoanAsync(decimal amount);
         Task<Loan> GetCurrentLoanAsync();
-        Task<(bool Success, Loan Loan)> CreateLoanAsync(decimal amount);
         Task<Loan> GetLoanByIdAsync(Guid id);
         Task UpdateLoanStatusAsync(int status);
         Task<List<Loan>> GetAllLoansAsync();

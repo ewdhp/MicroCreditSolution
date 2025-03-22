@@ -11,36 +11,40 @@ namespace MicroCredit.Services
 {
     public class LoanService : ILoanService
     {
-        private readonly ApplicationDbContext _context;
-        private readonly IUserContextService _userContextService;
+        private readonly UDbContext _context;
+        private readonly IUCService _userContextService;
 
-        public LoanService(ApplicationDbContext context, IUserContextService userContextService)
+        public LoanService(
+            UDbContext context,
+            IUCService userContextService)
         {
-            _context = context ?? throw new ArgumentNullException(nameof(context));
-            _userContextService = userContextService ?? throw new ArgumentNullException(nameof(userContextService));
+            _context = context ?? throw new
+            ArgumentNullException(nameof(context));
+            _userContextService = userContextService ?? throw new
+            ArgumentNullException(nameof(userContextService));
         }
 
         public async Task<Loan> GetCurrentLoanAsync()
         {
             var userId = _userContextService.GetUserId();
             return await _context.Loans
-                .FirstOrDefaultAsync(l => l.UserId == userId && l.Status != CStatus.Paid);
+                .FirstOrDefaultAsync
+                (l => l.UserId == userId &&
+                l.Status != CStatus.Paid);
         }
 
-        public async Task<(bool Success, Loan Loan)> CreateLoanAsync(decimal amount)
+        public async
+        Task<(bool Success, Loan Loan)>
+        CreateLoanAsync(decimal amount)
         {
             var userId = _userContextService.GetUserId();
-            var existingLoan = await _context.Loans.FirstOrDefaultAsync(l => l.UserId == userId);
-
-            if (existingLoan != null && existingLoan.Status != CStatus.Paid)
-            {
+            var existingLoan = await _context.Loans
+            .FirstOrDefaultAsync(l => l.UserId == userId);
+            if (existingLoan != null &&
+            existingLoan.Status != CStatus.Paid)
                 return (false, null);
-            }
-
             if (amount < 100.0m || amount > 300.0m)
-            {
                 return (false, null);
-            }
 
             var loan = new Loan
             {
@@ -50,7 +54,6 @@ namespace MicroCredit.Services
 
             await _context.Loans.AddAsync(loan);
             await _context.SaveChangesAsync();
-
             return (true, loan);
         }
 
@@ -62,13 +65,10 @@ namespace MicroCredit.Services
         public async Task UpdateLoanStatusAsync(int status)
         {
             var userId = _userContextService.GetUserId();
-            var existingLoan = await _context.Loans.FirstOrDefaultAsync(l => l.UserId == userId);
-
-            if (existingLoan == null)
-            {
-                throw new InvalidOperationException("No loan found for this user.");
-            }
-
+            var existingLoan = await _context.Loans
+            .FirstOrDefaultAsync(l => l.UserId == userId);
+            if (existingLoan == null) throw new
+            InvalidOperationException("No loan found.");
             existingLoan.Status = (CStatus)status;
             _context.Loans.Update(existingLoan);
             await _context.SaveChangesAsync();
@@ -85,13 +85,11 @@ namespace MicroCredit.Services
         public async Task DeleteAllLoansAsync()
         {
             var userId = _userContextService.GetUserId();
-            var userLoans = await _context.Loans.Where(l => l.UserId == userId).ToListAsync();
-
+            var userLoans = await _context.Loans
+            .Where(l => l.UserId == userId).ToListAsync();
             if (!userLoans.Any())
-            {
-                throw new InvalidOperationException("No loans found for this user.");
-            }
-
+                throw new InvalidOperationException
+                ("No loans found for this user.");
             _context.Loans.RemoveRange(userLoans);
             await _context.SaveChangesAsync();
         }
@@ -100,7 +98,8 @@ namespace MicroCredit.Services
         {
             var userId = _userContextService.GetUserId();
             return !await _context.Loans
-                .AnyAsync(l => l.UserId == userId && l.Status != CStatus.Paid);
+                .AnyAsync(l => l.UserId == userId &&
+                l.Status != CStatus.Paid);
         }
 
         public Task<CStatus> ApproveAsync()

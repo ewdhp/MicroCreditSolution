@@ -18,11 +18,14 @@ namespace MicroCredit.Models
         public string FaceId { get; set; }
 
         [Required(ErrorMessage = "Phone is required.")]
-        [RegularExpression(@"^\d{10}$", ErrorMessage = "Invalid phone number format. It should be a 10-digit number.")]
+        [RegularExpression(@"^\d{10}$",
+        ErrorMessage = "Invalid phone number format." +
+        "It should be a 10-digit number.")]
         public string Phone { get; set; }
 
         [Required(ErrorMessage = "Name is required.")]
-        [StringLength(30, MinimumLength = 5, ErrorMessage = "Name must be between 5 and 30 characters.")]
+        [StringLength(30, MinimumLength = 5,
+        ErrorMessage = "Name must be between 5 and 30 characters.")]
         public string Name { get; set; }
 
         [Required(ErrorMessage = "Reg date is required.")]

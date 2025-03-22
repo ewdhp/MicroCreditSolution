@@ -32,21 +32,22 @@ namespace MicroCredit
         public void ConfigureServices(IServiceCollection services)
         {
             // Register services
-            services.AddDbContext<ApplicationDbContext>(options =>
+            services.AddDbContext<UDbContext>(options =>
                 options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection")));
             services.AddScoped<JwtTokenService>();
             services.AddScoped<FingerprintService>();
+
+            // Register factory service
+            services.AddScoped<FactoryService>();
 
             //Loan service
             services.AddScoped<ILoanService, LoanService>();
 
             // Register phase services
-            services.AddScoped<IPhaseFactory, PhaseFactory>();
             services.AddScoped<PhaseController>();
-            services.AddSingleton<InitialService>();
-            services.AddSingleton<ApprovalService>();
-            services.AddSingleton<PayService>();
 
+            // Register payment service
+            services.AddScoped<IPaymentService, PaymentService>();
 
             // Register IJwtTokenService
             services.AddScoped<IJwtTokenService, JwtTokenService>();
@@ -54,8 +55,8 @@ namespace MicroCredit
             // Http context accessor
             services.AddHttpContextAccessor();
 
-            // Register IUserContextService
-            services.AddScoped<IUserContextService, UserContextService>();
+            // Register IUCService
+            services.AddScoped<IUCService, UserContextService>();
 
             // Register HttpClient
             services.AddHttpClient();
