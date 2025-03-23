@@ -5,27 +5,23 @@ namespace MicroCredit.Models
     public class InitialRequest : IPhaseRequest
     {
         public Loan Data { get; set; }
-
-        public string Discriminator { get; set; }
     }
 
     public class CreateRequest : IPhaseRequest
     {
         public Loan Data { get; set; }
-        public string Discriminator { get; set; }
     }
 
     public class ApprovalRequest : IPhaseRequest
     {
         public Loan Data { get; set; }
-        public string Discriminator { get; set; }
     }
-
 
     public class PayRequest : IPhaseResponse
     {
         public Loan Data { get; set; }
     }
+
     public class InitialResponse : IPhaseResponse
     {
         public Loan Data { get; set; }

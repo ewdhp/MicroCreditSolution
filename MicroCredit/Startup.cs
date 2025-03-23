@@ -13,6 +13,7 @@ using MicroCredit.Data;
 using System.Net.Http;
 using System;
 using MicroCredit.Interfaces;
+using MicroCredit.Models.Binders;
 
 namespace MicroCredit
 {
@@ -24,6 +25,7 @@ namespace MicroCredit
         }
 
         public IConfiguration Configuration { get; }
+
         public void ConfigureServices(IServiceCollection services)
         {
             // Register services
@@ -67,11 +69,10 @@ namespace MicroCredit
                     });
             });
 
-            services.AddControllers()
-                .AddNewtonsoftJson(options =>
-                {
-                    options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
-                });
+            services.AddControllers(options =>
+            {
+                options.ModelBinderProviders.Insert(0, new PhaseRequestModelBinderProvider());
+            });
 
             var jwtKey = Configuration["Jwt:Key"];
             if (string.IsNullOrEmpty(jwtKey))
@@ -111,6 +112,7 @@ namespace MicroCredit
                 options.AddPolicy("UserPolicy", policy => policy.RequireClaim("UserId"));
             });
         }
+
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())

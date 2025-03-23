@@ -4,7 +4,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading;
-using MicroCredit.Logging;
 
 namespace MicroCredit
 {
@@ -35,15 +34,6 @@ namespace MicroCredit
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
-                .ConfigureLogging(logging =>
-                {
-                    logging.ClearProviders();
-                    logging.AddProvider(new CustomLoggerProvider
-                    (new CustomLoggerConfiguration
-                    {
-                        LogLevel = LogLevel.Information
-                    }));
-                })
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();

@@ -11,7 +11,6 @@ namespace MicroCredit.Interfaces
     public interface IPhaseRequest
     {
         public Loan Data { get; set; }
-        string Discriminator { get; }
     }
     public interface IPhaseResponse
     {

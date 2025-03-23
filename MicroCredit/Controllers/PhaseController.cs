@@ -1,69 +1,45 @@
-using MicroCredit.Interfaces;
-using MicroCredit.Models;
-using MicroCredit.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json.Linq;
-using System;
 using System.Threading.Tasks;
+using MicroCredit.Interfaces;
+using System;
+using MicroCredit.Services;
+using MicroCredit.Models;
+using Microsoft.Extensions.DependencyInjection;
+using MicroCredit.Models.Binders;
+
 namespace MicroCredit.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/phases")]
     public class PhaseController : ControllerBase
     {
         private readonly ILogger<PhaseController> _logger;
+        private readonly IServiceProvider _sc;
 
-        public PhaseController(ILogger<PhaseController> logger)
+        public PhaseController(ILogger<PhaseController> logger, IServiceProvider serviceProvider)
         {
             _logger = logger;
+            _sc = serviceProvider;
         }
 
-        [Authorize]
         [HttpPost("next")]
-        public async Task<IActionResult> ProcessNextPhase([FromBody] JObject requestData)
+        public async Task<IActionResult> ProcessNextPhase([MyBinder] IPhaseRequest request)
         {
-            _logger.LogInformation("Processing next phase request.");
-            if (requestData == null || !requestData.ContainsKey("discriminator"))
+            _logger.LogInformation("Phase request received.");
+
+            if (request == null)
             {
-                return BadRequest("Invalid request format.");
+                _logger.LogWarning("Request cannot be null.");
+                return BadRequest("Request cannot be null.");
             }
 
-            string discriminator = requestData["discriminator"].ToString();
+            // Simulate an asynchronous operation
+            await Task.Delay(100);
 
-            try
-            {
-                switch (discriminator)
-                {
-                    case "InitialRequest":
-                        return await HandleInitialRequest(requestData["data"] as JObject);
-
-                    default:
-                        return BadRequest("Unknown request type.");
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error processing the request.");
-                return StatusCode(500, "Internal server error");
-            }
-        }
-
-        private async Task<IActionResult> HandleInitialRequest(JObject data)
-        {
-            if (data == null || !data.ContainsKey("status"))
-            {
-                return BadRequest("Missing status field.");
-            }
-
-            string status = data["status"].ToString();
-
-            // Simulate processing the request
-            await Task.Delay(100); // Simulating async work
-
-            return Ok(new { message = "Request processed", receivedStatus = status });
+            return Ok(new { request });
         }
     }
 }

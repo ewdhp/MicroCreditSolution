@@ -28,53 +28,49 @@ const PhaseManager = () => {
     setCurrentPhase(1); // Move to the next phase
   };
 
+
   const handleChangeStatus = async () => {
-    if (!token) {
-      setError("No token found.");
-      return;
-    }
-
-    try {
-      const requestData = {
-        discriminator: "InitialRequest", // Specify the request type
-        data: {
-          status: 0, // Only include the necessary field
-        }
-      };
-
-      const response = await axios.post(
-        'https://localhost:5001/api/phases/next',
-        requestData,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          }
-        }
-      );
-
-      if (response.status === 200) {
-        console.log(response.data);
-        const loan = response.data.loan;
-        if (loan) {
-          setLoanDetails(loan);
-          setCurrentPhase(loan.status);
-        } else {
-          setCurrentPhase(0);
-        }
-      } else if (response.status === 404) {
-        setCurrentPhase(0);
-      } else {
-        setError('Failed to update phase.');
+  try {
+    const requestData = {
+      discriminator: "InitialRequest", // Specify the request type
+      data: {
+        status: 0, // Only include the necessary field
       }
-    } catch (error) {
-      if (error.response && error.response.status === 404) {
-        setCurrentPhase(0);
-      } else {
-        setError('Failed to update phase.');
+    };
+
+    const response = await axios.post(
+      'https://localhost:5001/api/phases/next',
+      requestData,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        }
       }
+    );
+
+    if (response.status === 200) {
+      console.log(response.data);
+      const loan = response.data.loan;
+      if (loan) {
+        setLoanDetails(loan);
+        setCurrentPhase(loan.status);
+      } else {
+        setCurrentPhase(0); 
+      }
+    } else if (response.status === 404) {
+      setCurrentPhase(0); 
+    } else {
+      setError('Failed to update phase.');
     }
-  };
+  } catch (error) {
+    if (error.response && error.response.status === 404) {
+      setCurrentPhase(0);
+    } else {
+      setError('Failed to update phase.');
+    }
+  }
+};
 
   const phaseComponents = {
     Initial: <TakeLoan onAccept={handleLoanAccept} />,
