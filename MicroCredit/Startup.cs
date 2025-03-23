@@ -13,8 +13,6 @@ using System.Text;
 using MicroCredit.Data;
 using System.Net.Http;
 using System;
-using Microsoft.Extensions.Logging;
-using MicroCredit.Logging;
 using MicroCredit.Controllers;
 using MicroCredit.Interfaces;
 
@@ -115,14 +113,6 @@ namespace MicroCredit
                 options.AddPolicy("UserPolicy", policy => policy.RequireClaim("UserId"));
             });
 
-            // Clear default logging providers and register the custom logger provider
-            services.AddLogging(loggingBuilder =>
-            {
-
-                loggingBuilder.AddProvider(new LoggerCustomProvider(LogLevel.Information));
-                loggingBuilder.AddFilter("Microsoft", LogLevel.Warning);
-                loggingBuilder.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.Warning);
-            });
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

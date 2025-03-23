@@ -3,7 +3,19 @@ import axios from 'axios';
 import TakeLoan from './TakeLoan';
 import LoanInfo from './LoanInfo';
 
-const phases = ['Initial', 'Pending', 'Approved', 'Active', 'Paid', 'Due', 'Cancelled', 'Rejected'];
+const phases = [
+  'Initial',
+  'Create',
+  'Pending',
+  'Approved',
+  'Disbursed',
+  'Active',
+  'Paid',
+  'Due',
+  'Canceled',
+  'Rejected',
+  'Unknown'
+];
 
 const PhaseManager = () => {
   const [currentPhase, setCurrentPhase] = useState(null);
@@ -12,55 +24,18 @@ const PhaseManager = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchInitialPhase = async () => {
-      try {
-        const response = await axios.get(
-          'https://localhost:5001/api/loans/current-loan',
-          {
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        if (response.status === 200) {
-          const loan = response.data.loan;
-          if (loan) {
-            setLoanDetails(loan);
-            setCurrentPhase(loan.status);
-          } else {
-            setCurrentPhase(0); 
-          }
-        } else if (response.status === 404) {
-          setCurrentPhase(0); 
-        } else {
-          setError('Failed to fetch initial phase.');
-          setCurrentPhase(0);
-        }
-      } catch (error) {
-        if (error.response && error.response.status === 404) {
-          setCurrentPhase(0);
-        } else {
-          setError('Failed to fetch initial phase.');
-          setCurrentPhase(0); 
-        }
-      }
-    };
-
-    fetchInitialPhase();
+    handleChangeStatus();
   }, [token]);
 
-  const handleLoanAccept = (newPhase, loanDetails) => {
-    setCurrentPhase(newPhase);
+  const handleLoanAccept = (loanDetails) => {
     setLoanDetails(loanDetails);
+    setCurrentPhase(1); // Move to the next phase
   };
 
-  const handleNextPhase = async (newPhase, loanDetails) => {
+  const handleChangeStatus = async () => {
     try {
-      const response = await axios.post(
-        'https://localhost:5001/api/loans/update-phase',
-        { phase: newPhase, loanDetails },
+      const response = await axios.get(
+        'https://localhost:5001/api/phases/next',
         {
           headers: {
             'Content-Type': 'application/json',
@@ -69,80 +44,43 @@ const PhaseManager = () => {
         }
       );
       if (response.status === 200) {
-        setCurrentPhase(newPhase);
-        setLoanDetails(loanDetails);
+        console.log(response.data);
+        const loan = response.data.loan;
+        if (loan) {
+          setLoanDetails(loan);
+          setCurrentPhase(loan.status);
+        } else {
+          setCurrentPhase(0); 
+        }
+      } else if (response.status === 404) {
+        setCurrentPhase(0); 
       } else {
         setError('Failed to update phase.');
       }
     } catch (error) {
-      setError('Failed to update phase.');
-    }
-  };
-
-  const resetToInitial = async () => {
-    try {
-      const response = await axios.post(
-        'https://localhost:5001/api/loans/reset-phase',
-        { phase: 0 },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          }
-        }
-      );
-      if (response.status === 200) {
+      if (error.response && error.response.status === 404) {
         setCurrentPhase(0);
-        setLoanDetails(null);
       } else {
-        setError('Failed to reset phase.');
+        setError('Failed to update phase.');
       }
-    } catch (error) {
-      setError('Failed to reset phase.');
     }
   };
 
   const phaseComponents = {
     Initial: <TakeLoan onAccept={handleLoanAccept} />,
-    Pending: <LoanInfo loanDetails={loanDetails} phases={phases} onNext={handleNextPhase} />,
-    Approved: <LoanInfo loanDetails={loanDetails} phases={phases} onNext={handleNextPhase} />,
-    Active: <LoanInfo loanDetails={loanDetails} phases={phases} onNext={handleNextPhase} />,
-    Due: <LoanInfo loanDetails={loanDetails} phases={phases} onNext={handleNextPhase} />,
+    Pending: <LoanInfo loanDetails={loanDetails} phases={phases} />,
+    Approved: <LoanInfo loanDetails={loanDetails} phases={phases} />,
+    Active: <LoanInfo loanDetails={loanDetails} phases={phases} />,
+    Due: <LoanInfo loanDetails={loanDetails} phases={phases} />,
     Paid: (
       <div>
         <p>Payment complete!</p>
-        <button
-          style={{
-            padding: '10px 20px',
-            backgroundColor: '#f44336',
-            color: 'white',
-            border: 'none',
-            borderRadius: '5px',
-            cursor: 'pointer',
-          }}
-          onClick={resetToInitial}
-        >
-          Take Loan
-        </button>
       </div>
     ),
-    Cancelled: <LoanInfo loanDetails={loanDetails} phases={phases} onNext={handleNextPhase} />,
+    Cancelled: <LoanInfo loanDetails={loanDetails} phases={phases} />,
     Rejected: (
       <div>
         <p>Credito rechazado</p>
-        <button
-          style={{
-            padding: '10px 20px',
-            backgroundColor: '#f44336',
-            color: 'white',
-            border: 'none',
-            borderRadius: '5px',
-            cursor: 'pointer',
-          }}
-          onClick={resetToInitial}
-        >
-          Intentar de nuevo
-        </button>
       </div>
     ),
   };
@@ -156,7 +94,8 @@ const PhaseManager = () => {
       return <div>Loading...</div>;
     }
 
-    return phaseComponents[phases[currentPhase]] || <div>Phase: {phases[currentPhase]}</div>;
+    return phaseComponents[phases[currentPhase]] || 
+    <div>Phase: {phases[currentPhase]}</div>;
   };
 
   const styles = {
@@ -166,11 +105,24 @@ const PhaseManager = () => {
       alignItems: 'center',
       justifyContent: 'center',
     },
+    button: {
+      marginTop: '20px',
+      padding: '10px 20px',
+      backgroundColor: '#007bff',
+      color: 'white',
+      border: 'none',
+      borderRadius: '5px',
+      cursor: 'pointer',
+    },
   };
 
   return (
     <div style={styles.container}>
       {renderPhaseComponent()}
+      <button style={styles.button} 
+      onClick={handleChangeStatus}>
+        Change Status
+      </button>
     </div>
   );
 };
