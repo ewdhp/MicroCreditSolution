@@ -16,27 +16,18 @@ namespace MicroCredit.Controllers
 {
     [ApiController]
     [Route("api/testauth")]
-    public class AuthController : ControllerBase
+    public class AuthController(
+        UDbContext context,
+        ILogger<AuthController> logger,
+        IJwtTokenService jwtTokenService,
+        FingerprintService fingerprintService,
+        IUCService userContextService) : ControllerBase
     {
-        private readonly ILogger<AuthController> _logger;
-        private readonly IJwtTokenService _jwtTokenService;
-        private readonly UDbContext _context;
-        private readonly FingerprintService _fingerprintService;
-        private readonly IUCService _userContextService;
-
-        public AuthController(
-            ILogger<AuthController> logger,
-            IJwtTokenService jwtTokenService,
-            UDbContext context,
-            FingerprintService fingerprintService,
-            IUCService userContextService)
-        {
-            _logger = logger;
-            _jwtTokenService = jwtTokenService;
-            _context = context;
-            _fingerprintService = fingerprintService;
-            _userContextService = userContextService;
-        }
+        private readonly ILogger<AuthController> _logger = logger;
+        private readonly IJwtTokenService _jwtTokenService = jwtTokenService;
+        private readonly UDbContext _context = context;
+        private readonly FingerprintService _fingerprintService = fingerprintService;
+        private readonly IUCService _userContextService = userContextService;
 
         [HttpPost("send")]
         public IActionResult SendSMS([FromBody] SMSRequest request)

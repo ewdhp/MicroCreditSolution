@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading;
+using MicroCredit.Logging;
 
 namespace MicroCredit
 {
@@ -22,10 +22,10 @@ namespace MicroCredit
 
             var host = CreateHostBuilder(args).Build();
             var lifetime = host.Services
-            .GetRequiredService<IHostApplicationLifetime>();
+                .GetRequiredService<IHostApplicationLifetime>();
             lifetime.ApplicationStopping.Register(OnShutdown);
             host.RunAsync(cts.Token)
-            .GetAwaiter().GetResult();
+                .GetAwaiter().GetResult();
         }
 
         private static void OnShutdown()
@@ -35,6 +35,14 @@ namespace MicroCredit
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
+                .ConfigureLogging(logging =>
+                {
+                    logging.ClearProviders();
+                    logging.AddProvider(new CustomLoggerProvider(new CustomLoggerConfiguration
+                    {
+                        LogLevel = LogLevel.Information
+                    }));
+                })
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();

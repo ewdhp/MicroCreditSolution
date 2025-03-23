@@ -6,6 +6,7 @@ using MicroCredit.Interfaces;
 using System;
 using MicroCredit.Services;
 using MicroCredit.Models;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace MicroCredit.Controllers
 {
@@ -14,20 +15,22 @@ namespace MicroCredit.Controllers
     [Route("api/phases")]
     public class PhaseController : ControllerBase
     {
-        private readonly FactoryService _factory;
+        private readonly PhaseService _phaseService;
         private readonly ILogger<PhaseController> _logger;
+        private readonly IServiceProvider _serviceProvider;
 
-        public PhaseController(FactoryService phaseFactory, ILogger<PhaseController> logger)
+        public PhaseController(PhaseService phaseService, ILogger<PhaseController> logger, IServiceProvider serviceProvider)
         {
-            _factory = phaseFactory;
+            _phaseService = phaseService;
             _logger = logger;
+            _serviceProvider = serviceProvider;
         }
 
         [HttpPost("next")]
         public async Task<IActionResult> Next([FromBody] IPhaseRequest request)
         {
-            _logger.LogInformation("Entering Next method.");
-            _logger.LogInformation("Phase controller request received. Request: {@Request}", request);
+            _logger.LogInformation("PhaseController request received.");
+
             if (request == null)
             {
                 _logger.LogWarning("Next phase request is null.");
@@ -36,8 +39,8 @@ namespace MicroCredit.Controllers
 
             try
             {
-                _logger.LogInformation("Creating phase service.");
-                var phaseService = _factory.Create<PhaseService>();
+                _logger.LogInformation("Resolving PhaseService from service provider.");
+                var phaseService = _serviceProvider.GetRequiredService<PhaseService>();
                 _logger.LogInformation("Calling GetPhaseAsync.");
                 IPhaseResponse response = await phaseService.GetPhaseAsync(request);
                 _logger.LogInformation("Next phase request processed. Response: {@Response}", response);

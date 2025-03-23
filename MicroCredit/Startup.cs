@@ -8,13 +8,12 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using MicroCredit.Middleware;
 using MicroCredit.Services;
-using MicroCredit.ModelBinders;
 using System.Text;
 using MicroCredit.Data;
 using System.Net.Http;
 using System;
-using MicroCredit.Controllers;
 using MicroCredit.Interfaces;
+using MicroCredit.Models.Binders;
 
 namespace MicroCredit
 {
@@ -30,19 +29,19 @@ namespace MicroCredit
         public void ConfigureServices(IServiceCollection services)
         {
             // Register services
-            services.AddDbContext<UDbContext>(options =>
-                options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection")));
+            services.AddDbContext<UDbContext>(options => options.UseNpgsql
+            (Configuration.GetConnectionString("DefaultConnection")));
             services.AddScoped<JwtTokenService>();
             services.AddScoped<FingerprintService>();
 
             // Register factory service
             services.AddScoped<FactoryService>();
 
-            //Loan service
+            // Loan service
             services.AddScoped<ILoanService, LoanService>();
 
             // Register phase services
-            services.AddScoped<PhaseController>();
+            services.AddScoped<PhaseService>();
 
             // Register payment service
             services.AddScoped<IPaymentService, PaymentService>();
@@ -72,7 +71,8 @@ namespace MicroCredit
 
             services.AddControllers(options =>
             {
-                options.ModelBinderProviders.Insert(0, new PhaseRequestModelBinderProvider());
+                options.ModelBinderProviders.Insert(0, new IPhaseRequestModelBinderProvider());
+                options.ModelBinderProviders.Insert(1, new IPhaseResponseModelBinderProvider());
             });
 
             var jwtKey = Configuration["Jwt:Key"];
@@ -112,9 +112,7 @@ namespace MicroCredit
             {
                 options.AddPolicy("UserPolicy", policy => policy.RequireClaim("UserId"));
             });
-
         }
-
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())

@@ -1,11 +1,10 @@
-using MicroCredit.Services;
+using MicroCredit.Interfaces;
+using MicroCredit.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using MicroCredit.Models;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
-using MicroCredit.Interfaces;
 
 namespace MicroCredit.Controllers
 {
