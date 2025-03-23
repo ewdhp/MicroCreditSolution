@@ -1,14 +1,11 @@
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Linq;
-using System.Reflection;
+using System.IO;
 using System.Threading.Tasks;
 using MicroCredit.Interfaces;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using Microsoft.AspNetCore.Mvc;
-using System.IO;
 
 namespace MicroCredit.Models.Binders
 {
@@ -25,7 +22,7 @@ namespace MicroCredit.Models.Binders
 
         public PhaseRequestModelBinder(ILogger<PhaseRequestModelBinder> logger)
         {
-            _logger = logger;
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         public async Task BindModelAsync(ModelBindingContext bindingContext)
@@ -35,48 +32,68 @@ namespace MicroCredit.Models.Binders
                 throw new ArgumentNullException(nameof(bindingContext));
             }
 
-            _logger.LogInformation("Starting model binding for {ModelName}", bindingContext.ModelName);
+            _logger.LogInformation("Starting model binding.");
 
-            using (var reader = new StreamReader(bindingContext.HttpContext.Request.Body))
+            var request = bindingContext.HttpContext.Request;
+            if (!request.Body.CanRead)
+            {
+                _logger.LogWarning("Request body cannot be read.");
+                bindingContext.Result = ModelBindingResult.Failed();
+                return;
+            }
+
+            using (var reader = new StreamReader(request.Body))
             {
                 var body = await reader.ReadToEndAsync();
                 if (string.IsNullOrEmpty(body))
                 {
-                    _logger.LogWarning("Empty request body for {ModelName}", bindingContext.ModelName);
+                    _logger.LogWarning("Request body is empty.");
+                    bindingContext.Result = ModelBindingResult.Failed();
                     return;
                 }
 
+                _logger.LogInformation("Request body read successfully.");
+
                 try
                 {
-                    _logger.LogInformation("Parsing JSON value for {ModelName}", bindingContext.ModelName);
-                    var jsonObject = JObject.Parse(body);
-                    var discriminator = jsonObject["discriminator"]?.Value<string>();
-
-                    if (string.IsNullOrEmpty(discriminator))
+                    var jsonObject = JsonConvert.DeserializeObject<dynamic>(body);
+                    if (jsonObject.Status != null)
                     {
-                        _logger.LogError("Discriminator value is missing for {ModelName}", bindingContext.ModelName);
-                        throw new JsonException("Discriminator value is missing");
+
+                        int n = (int)jsonObject.Status;
+                        _logger.LogInformation("PROCESSING STATUS IN BINDER: {Status}", n);
+
+                        IPhaseRequest phaseRequest = n switch
+                        {
+                            0 => JsonConvert.DeserializeObject<InitialRequest>(body),
+                            1 => JsonConvert.DeserializeObject<CreateRequest>(body),
+                            2 => JsonConvert.DeserializeObject<ApprovalRequest>(body),
+                            _ => throw new ArgumentOutOfRangeException(nameof(n), n, null)
+                        };
+
+                        if (phaseRequest is InitialRequest initialRequest &&
+                            initialRequest.Data == null)
+                        {
+                            _logger.LogInformation("Model binding successful.");
+                            bindingContext.Result = ModelBindingResult.Success(phaseRequest);
+                            return;
+                        }
+
+                        _logger.LogInformation("Model binding successful.");
+                        bindingContext.Result = ModelBindingResult.Success(phaseRequest);
+                        return;
                     }
-
-                    _logger.LogInformation("Discriminator value: {Discriminator}", discriminator);
-                    var type = Assembly.GetExecutingAssembly().GetTypes()
-                        .FirstOrDefault(t => typeof(IPhaseRequest).IsAssignableFrom(t) && t.Name.Equals(discriminator, StringComparison.OrdinalIgnoreCase));
-
-                    if (type == null)
+                    else
                     {
-                        _logger.LogError("Unknown discriminator value: {Discriminator}", discriminator);
-                        throw new JsonException("Unknown discriminator value");
+                        _logger.LogWarning("Data or Status is missing in the request body.");
+                        bindingContext.Result = ModelBindingResult.Failed();
                     }
-
-                    _logger.LogInformation("Deserializing JSON to type {Type}", type.Name);
-                    var result = (IPhaseRequest)JsonConvert.DeserializeObject(jsonObject["data"].ToString(), type);
-                    bindingContext.Result = ModelBindingResult.Success(result);
-                    _logger.LogInformation("Model binding successful for {ModelName}", bindingContext.ModelName);
                 }
                 catch (JsonException ex)
                 {
-                    _logger.LogError(ex, "Error deserializing JSON for {ModelName}", bindingContext.ModelName);
-                    bindingContext.ModelState.TryAddModelError(bindingContext.ModelName, $"Invalid IPhaseRequest: {ex.Message}");
+                    _logger.LogError(ex, "Error deserializing JSON.");
+                    bindingContext.ModelState.AddModelError(bindingContext.ModelName, ex, bindingContext.ModelMetadata);
+                    bindingContext.Result = ModelBindingResult.Failed();
                 }
             }
         }

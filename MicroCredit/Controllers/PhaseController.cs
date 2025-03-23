@@ -30,16 +30,19 @@ namespace MicroCredit.Controllers
         {
             _logger.LogInformation("Phase request received.");
 
-            if (request == null)
+
+            _logger.LogInformation("Processing phase request: {@Request}", request);
+
+            try
             {
-                _logger.LogWarning("Request cannot be null.");
-                return BadRequest("Request cannot be null.");
+                await Task.Delay(1000);
+                return Ok(new { V = "ok" });
             }
-
-            // Simulate an asynchronous operation
-            await Task.Delay(100);
-
-            return Ok(new { request });
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while processing the phase request.");
+                return StatusCode(500, "An internal server error occurred.");
+            }
         }
     }
 }

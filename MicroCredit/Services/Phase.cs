@@ -9,42 +9,70 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace MicroCredit.Services
 {
-    public class PhaseService(
-        IUCService userCS,
-        UDbContext dbContext,
-        ILoanService loanService,
-        ILogger<PhaseService> logger)
+    public class PhaseService
     {
-        private readonly UDbContext _db = dbContext;
-        private readonly IUCService _user = userCS;
-        private readonly ILoanService _loan = loanService;
-        private readonly ILogger<PhaseService> _logger = logger;
+        private readonly UDbContext _db;
+        private readonly IUCService _user;
+        private readonly ILoanService _loan;
+        private readonly ILogger<PhaseService> _logger;
 
-        public async
-        Task<IPhaseResponse>
-        GetPhaseAsync(IPhaseRequest request)
+        public PhaseService(IUCService userCS, UDbContext dbContext, ILoanService loanService, ILogger<PhaseService> logger)
         {
-            var status = request.Data.Status;
-
-            return status switch
-            {
-                CStatus.Initial => await Init(request),
-                CStatus.Create => await Create(request),
-                CStatus.Pending => await Approval(request),
-                CStatus.Rejected => await Approval(request),
-                CStatus.Active => await Pay(request),
-                CStatus.Due => await Pay(request),
-
-                _ => throw new
-                ArgumentOutOfRangeException
-                (nameof(status), status, null)
-            };
+            _db = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+            _user = userCS ?? throw new ArgumentNullException(nameof(userCS));
+            _loan = loanService ?? throw new ArgumentNullException(nameof(loanService));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
+        public async Task<IPhaseResponse> GetPhaseAsync(IPhaseRequest request)
+        {
+            if (request == null)
+            {
+                _logger.LogError("Phase request is null.");
+                throw new ArgumentNullException(nameof(request));
+            }
+
+            if (request.Data == null)
+            {
+                _logger.LogError("Phase request data is null.");
+                throw new ArgumentNullException(nameof(request.Data));
+            }
+
+            var status = request.Data.Status;
+            _logger.LogInformation("PROCESSING STATUS IN BINDER: {Status}", status);
+            try
+            {
+                return status switch
+                {
+                    CStatus.Initial => await Init(request),
+                    CStatus.Create => await Create(request),
+                    CStatus.Pending => await Approval(request),
+                    CStatus.Rejected => await Approval(request),
+                    CStatus.Active => await Pay(request),
+                    CStatus.Due => await Pay(request),
+                    _ => throw new ArgumentOutOfRangeException(nameof(status), status, null)
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while processing the phase request.");
+                throw;
+            }
+        }
 
         public Task<IPhaseResponse> Init(IPhaseRequest request)
         {
-            throw new NotImplementedException();
+            if (request == null)
+            {
+                throw new ArgumentNullException(nameof(request));
+            }
+
+            var response = new InitialResponse
+            {
+                Data = request.Data
+            };
+
+            return Task.FromResult<IPhaseResponse>(response);
         }
 
         public Task<IPhaseResponse> Create(IPhaseRequest request)
@@ -62,5 +90,4 @@ namespace MicroCredit.Services
             throw new NotImplementedException();
         }
     }
-
 }

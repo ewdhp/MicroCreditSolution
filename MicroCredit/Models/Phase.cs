@@ -4,6 +4,7 @@ namespace MicroCredit.Models
 {
     public class InitialRequest : IPhaseRequest
     {
+        public CStatus Status { get; set; }
         public Loan Data { get; set; }
     }
 
