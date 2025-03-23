@@ -16,7 +16,12 @@ namespace MicroCredit.Services
         private readonly ILoanService _loan;
         private readonly ILogger<PhaseService> _logger;
 
-        public PhaseService(IUCService userCS, UDbContext dbContext, ILoanService loanService, ILogger<PhaseService> logger)
+        public PhaseService
+        (
+            IUCService userCS, 
+            UDbContext dbContext, 
+            ILoanService loanService, 
+            ILogger<PhaseService> logger)
         {
             _db = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
             _user = userCS ?? throw new ArgumentNullException(nameof(userCS));
@@ -32,12 +37,9 @@ namespace MicroCredit.Services
                 throw new ArgumentNullException(nameof(request));
             }
 
-
-            var status = request.Status;
-            _logger.LogInformation("PROCESSING STATUS IN BINDER: {Status}", status);
             try
             {
-                return status switch
+                return request.Status switch
                 {
                     CStatus.Initial => await Init(request),
                     CStatus.Create => await Create(request),
@@ -45,17 +47,20 @@ namespace MicroCredit.Services
                     CStatus.Rejected => await Approval(request),
                     CStatus.Active => await Pay(request),
                     CStatus.Due => await Pay(request),
-                    _ => throw new ArgumentOutOfRangeException(nameof(status), status, null)
+                    _ => throw new 
+                    ArgumentOutOfRangeException
+                    (nameof(request.Status), 
+                    request.Status, null)
                 };
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while processing the phase request.");
+                _logger.LogError(ex, "An error occurred in phase request.");
                 throw;
             }
         }
 
-        public Task<IPhaseResponse> Init(IPhaseRequest request)
+        public async Task<IPhaseResponse> Init(IPhaseRequest request)
         {
             if (request == null)
             {
@@ -67,20 +72,20 @@ namespace MicroCredit.Services
             response.Status = request.Status;
 
 
-            return Task.FromResult<IPhaseResponse>(response);
+            return response;
         }
 
-        public Task<IPhaseResponse> Create(IPhaseRequest request)
+        public async Task<IPhaseResponse> Create(IPhaseRequest request)
         {
             throw new NotImplementedException();
         }
 
-        public Task<IPhaseResponse> Approval(IPhaseRequest request)
+        public async Task<IPhaseResponse> Approval(IPhaseRequest request)
         {
             throw new NotImplementedException();
         }
 
-        public Task<IPhaseResponse> Pay(IPhaseRequest request)
+        public async Task<IPhaseResponse> Pay(IPhaseRequest request)
         {
             throw new NotImplementedException();
         }

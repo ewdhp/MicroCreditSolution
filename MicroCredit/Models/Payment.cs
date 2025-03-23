@@ -8,27 +8,16 @@ namespace MicroCredit.Models
         Online,
         InStore
     }
-
-    public class Payment1 : IPaymentDetails
+    public class PayOnlineResponse : IPayResponse
     {
-        public PMEnum Method { get; set; }
-    }
-    public class Payment2 : IPaymentDetails
-    {
-        public PMEnum Method { get; set; }
-    }
-    public class Payment3 : IPaymentDetails
-    {
-        public PMEnum Method { get; set; }
+        public bool Success { get; set; }
+        public Loan Data { get; set; }
     }
 
-    public class PaymentResponse : IPaymentResponse
+    public class PayInStoreResponse : IPayResponse
     {
-        public IPaymentDetails Data { get; set; }
-    }
-    public class PaymentRequest : IPaymentRequest
-    {
-        public IPaymentDetails Data { get; set; }
+        public bool Success { get; set; }
+        public Loan Data { get; set; }
     }
 }
 

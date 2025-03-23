@@ -2,7 +2,7 @@ import requests
 
 response = requests.post(
     "https://localhost:5001/api/auth/send",
-    json={"phoneNumber": "+523321890176"},
+    json={"phone": "+523321890176"},
     headers={"Origin": "http://localhost:3000"},
     verify=False  # Skip SSL verification for testing
 )

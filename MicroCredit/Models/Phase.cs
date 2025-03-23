@@ -17,11 +17,6 @@ namespace MicroCredit.Models
         public CStatus Status { get; set; }
     }
 
-    public class PayRequest : IPhaseRequest
-    {
-        public CStatus Status { get; set; }
-    }
-
     public class InitialResponse : IPhaseResponse
     {
         public CStatus Status { get; set; }

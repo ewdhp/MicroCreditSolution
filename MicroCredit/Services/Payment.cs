@@ -7,37 +7,39 @@ using Microsoft.Extensions.Logging;
 
 namespace MicroCredit.Services
 {
-    public class PaymentService(
-        IUCService user,
-        UDbContext context) : IPaymentService
+    public class PayService
+    (
+        IUCService user, 
+        UDbContext dbContext)
     {
-        private readonly IUCService _user = user ??
+        protected readonly IUCService _user = user ??
         throw new ArgumentNullException(nameof(user));
-        private readonly UDbContext _context = context ??
-        throw new ArgumentNullException(nameof(context));
 
-        public virtual Task<IPaymentDetails>
-            Pay(PaymentRequest request)
+        protected readonly UDbContext _dbContext = dbContext ??
+        throw new ArgumentNullException(nameof(dbContext));
+    }
+
+  public class PayOnline : PayService, IPay
+    {
+        public PayOnline(IUCService u, UDbContext c) : base(u, c)
         {
-            // Implement the payment logic here
+        }
+
+        public IPayResponse Process(Loan data)
+        {
             throw new NotImplementedException();
         }
     }
 
-
-    public class ExtendedPaymentService
-        (UDbContext context, IUCService user) :
-        PaymentService(user, context)
+    public class PayInStore : PayService, IPay
     {
-        public override async
-        Task<IPaymentDetails>
-        Pay(PaymentRequest request)
+        public PayInStore(IUCService u, UDbContext c) : base(u, c)
         {
-            // Implement the extended payment logic here
-            // For example, you can call the base method and add additional logic
-            var paymentDetails = await base.Pay(request);
-            // Add additional logic if needed
-            return paymentDetails;
+        }
+
+         public IPayResponse Process(Loan data)
+        {
+            throw new NotImplementedException();
         }
     }
 }

@@ -19,17 +19,20 @@ namespace MicroCredit.Controllers
         private readonly ILogger<PhaseController> _logger;
         private readonly IServiceProvider _sc;
 
-        public PhaseController(ILogger<PhaseController> logger, IServiceProvider serviceProvider)
+        public PhaseController
+        (ILogger<PhaseController> logger, 
+        IServiceProvider serviceProvider)
         {
             _logger = logger;
             _sc = serviceProvider;
         }
 
         [HttpPost("next")]
-        public async Task<IActionResult> ProcessNextPhase([MyBinder] IPhaseRequest request)
+        public async Task<IActionResult> 
+        ProcessNextPhase([MyBinder] 
+        IPhaseRequest request)
         {
             _logger.LogInformation("Phase request received.");
-            _logger.LogInformation("Processing status: {Status}", request.Status);
             try
             {
                 await Task.Delay(1000);
@@ -37,8 +40,8 @@ namespace MicroCredit.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while processing the phase request.");
-                return StatusCode(500, "An internal server error occurred.");
+                _logger.LogError(ex, "An error occurred in phase request.");
+                return StatusCode(500, "An error occurred in phase request.");
             }
         }
     }

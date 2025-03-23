@@ -44,7 +44,7 @@ namespace MicroCredit
             services.AddScoped<PhaseService>();
 
             // Register payment service
-            services.AddScoped<IPaymentService, PaymentService>();
+            services.AddScoped<PayService>();
 
             // Register IJwtTokenService
             services.AddScoped<IJwtTokenService, JwtTokenService>();

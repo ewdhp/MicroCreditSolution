@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useEffect } from 'react';
 
 const Signup = () => {
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [phone, setPhoneNumber] = useState('');
   const [smsCode, setSmsCode] = useState('');
   const [currentStep, setCurrentStep] = useState(0);
   const navigate = useNavigate();
@@ -30,7 +30,7 @@ const Signup = () => {
     try {
       const response = await axios.post('https://localhost:5001/api/testauth/send', {
         Action: 'signup',
-        Phone: `+52${phoneNumber}`, // Ensure the phone number includes the country code
+        Phone: `+52${phone}`, // Ensure the phone number includes the country code
       });
       if (response.status === 200) {
         setCurrentStep(1);
@@ -48,7 +48,7 @@ const Signup = () => {
     try {
       const response = await axios.post('https://localhost:5001/api/testauth/verify', {
         Action: 'signup',
-        Phone: `+52${phoneNumber}`, // Ensure the phone number includes the country code
+        Phone: `+52${phone}`, // Ensure the phone number includes the country code
         Code: smsCode,
       });
 
@@ -119,7 +119,7 @@ const Signup = () => {
           <input
             type="text"
             placeholder="Teléfono"
-            value={phoneNumber}
+            value={phone}
             onChange={handlePhoneNumberChange}
             style={styles.input}
           />

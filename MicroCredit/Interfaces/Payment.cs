@@ -3,22 +3,15 @@ using MicroCredit.Models;
 
 namespace MicroCredit.Interfaces
 {
-    public interface IPaymentService
+    public interface IPay
     {
-        public Task<IPaymentDetails> Pay(PaymentRequest request);
+        public IPayResponse Process(Loan data);
     }
 
-    public interface IPaymentDetails
+    public interface IPayResponse
     {
-        public PMEnum Method { get; set; }
-    }
-    public interface IPaymentRequest
-    {
-        public IPaymentDetails Data { get; set; }
-    }
-    public interface IPaymentResponse
-    {
-        public IPaymentDetails Data { get; set; }
+        public bool Success { get; set; }
+        public Loan Data { get; set; }
     }
 
 }

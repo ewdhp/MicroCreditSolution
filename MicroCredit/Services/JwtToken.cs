@@ -16,7 +16,7 @@ namespace MicroCredit.Services
 {
     public interface IJwtTokenService
     {
-        string GenerateJwtToken(string phoneNumber, string fingerprint);
+        string GenerateJwtToken(string phone, string fingerprint);
         void InvalidateToken(string userId);
         bool IsTokenInvalidated(string userId);
     }
@@ -39,24 +39,24 @@ namespace MicroCredit.Services
             _context = context;
         }
 
-        public string GenerateJwtToken(string phoneNumber, string fingerprint)
+        public string GenerateJwtToken(string phone, string fingerprint)
         {
-            _logger.LogInformation(
-                "Generating JWT token for phone number: {PhoneNumber}", phoneNumber);
+            _logger.LogInformation("Generating JWT token");
 
             var user = _context.Users
-                .FirstOrDefault(u => u.Phone == phoneNumber);
+                .FirstOrDefault(u => u.Phone == phone);
 
             if (user == null)
                 throw new Exception("User not found");
 
             var claims = new[]
             {
-                new Claim(JwtRegisteredClaimNames.Sub, phoneNumber),
-                new Claim("PhoneNumber", phoneNumber),
+                new Claim(JwtRegisteredClaimNames.Sub, phone),
+                new Claim("PhoneNumber", phone),
                 new Claim("Id", user.Id.ToString()),
                 new Claim("Fingerprint", fingerprint),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+                new Claim(JwtRegisteredClaimNames.Jti, 
+                Guid.NewGuid().ToString())
             };
 
             var key = new SymmetricSecurityKey(
@@ -71,9 +71,11 @@ namespace MicroCredit.Services
                 expires: DateTime.Now.AddMinutes(30),
                 signingCredentials: creds);
 
-            var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
+            var tokenString = new 
+            JwtSecurityTokenHandler()
+            .WriteToken(token);
 
-            _logger.LogInformation("Generated JWT token: {Token}", tokenString);
+            _logger.LogInformation("Generated JWT token");
 
             return tokenString;
         }

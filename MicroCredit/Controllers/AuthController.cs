@@ -111,13 +111,13 @@ namespace MicroCredit.Controllers
                     try
                     {
                         var jwtToken = tokenHandler.ReadJwtToken(request.Token);
-                        var phoneNumber = jwtToken.Claims.FirstOrDefault(c => c.Type == "PhoneNumber")?.Value;
+                        var phone = jwtToken.Claims.FirstOrDefault(c => c.Type == "PhoneNumber")?.Value;
                         var tokenFingerprint = jwtToken.Claims.FirstOrDefault(c => c.Type == "Fingerprint")?.Value;
                         var expClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == "exp")?.Value;
 
-                        _logger.LogInformation("Token Claims - PhoneNumber: {PhoneNumber}, Fingerprint: {Fingerprint}, Exp: {Exp}", phoneNumber, tokenFingerprint, expClaim);
+                        _logger.LogInformation("Token Claims - PhoneNumber: {PhoneNumber}, Fingerprint: {Fingerprint}, Exp: {Exp}", phone, tokenFingerprint, expClaim);
 
-                        if (phoneNumber != request.Phone)
+                        if (phone != request.Phone)
                         {
                             _logger.LogWarning("Token phone number does not match request phone number");
                             return BadRequest(new { message = "Invalid token" });
@@ -133,7 +133,7 @@ namespace MicroCredit.Controllers
                             }
                         }
 
-                        var existingUser = _context.Users.FirstOrDefault(u => u.Phone == phoneNumber);
+                        var existingUser = _context.Users.FirstOrDefault(u => u.Phone == phone);
                         if (existingUser == null)
                         {
                             _logger.LogInformation("User with phone number {PhoneNumber} not found", request.Phone);
@@ -181,9 +181,9 @@ namespace MicroCredit.Controllers
             return BadRequest(new { message = "Unexpected error occurred" });
         }
 
-        private string GenerateToken(string phoneNumber, string fingerprint)
+        private string GenerateToken(string phone, string fingerprint)
         {
-            return _jwtTokenService.GenerateJwtToken(phoneNumber, fingerprint);
+            return _jwtTokenService.GenerateJwtToken(phone, fingerprint);
         }
     }
 
