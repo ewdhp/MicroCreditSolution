@@ -15,49 +15,39 @@ namespace MicroCredit.Controllers
     [Route("api/phases")]
     public class PhaseController : ControllerBase
     {
-        private readonly PhaseService _phaseService;
         private readonly ILogger<PhaseController> _logger;
-        private readonly IServiceProvider _serviceProvider;
+        private readonly IServiceProvider _sc;
 
-        public PhaseController(PhaseService phaseService, ILogger<PhaseController> logger, IServiceProvider serviceProvider)
+        public PhaseController(ILogger<PhaseController> logger, IServiceProvider serviceProvider)
         {
-            _phaseService = phaseService;
             _logger = logger;
-            _serviceProvider = serviceProvider;
+            _sc = serviceProvider;
         }
 
         [HttpPost("next")]
         public async Task<IActionResult> Next([FromBody] IPhaseRequest request)
         {
-            _logger.LogInformation("PhaseController request received.");
+            _logger.LogInformation("Phase request received.");
 
             if (request == null)
             {
-                _logger.LogWarning("Next phase request is null.");
+                _logger.LogWarning("Request cannot be null.");
                 return BadRequest("Request cannot be null.");
             }
 
             try
             {
-                _logger.LogInformation("Resolving PhaseService from service provider.");
-                var phaseService = _serviceProvider.GetRequiredService<PhaseService>();
-                _logger.LogInformation("Calling GetPhaseAsync.");
-                IPhaseResponse response = await phaseService.GetPhaseAsync(request);
-                _logger.LogInformation("Next phase request processed. Response: {@Response}", response);
+                var phase = _sc.GetRequiredService<PhaseService>();
+                IPhaseResponse response = await phase.GetPhaseAsync(request);
 
-                if (response.Data.Status == CStatus.Unknown)
-                {
-                    return Ok(new { response });
-                }
-                else
-                {
-                    return BadRequest(new { response });
-                }
+                return response.Data.Status == CStatus.Unknown ?
+                    Ok(new { response }) :
+                    BadRequest(new { response });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while processing the next phase request.");
-                return StatusCode(500, "Internal server error");
+                _logger.LogError(ex, "An error occurred in next.");
+                return StatusCode(500, "Internal server error.");
             }
         }
     }

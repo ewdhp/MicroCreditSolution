@@ -71,8 +71,7 @@ namespace MicroCredit
 
             services.AddControllers(options =>
             {
-                options.ModelBinderProviders.Insert(0, new IPhaseRequestModelBinderProvider());
-                options.ModelBinderProviders.Insert(1, new IPhaseResponseModelBinderProvider());
+                options.ModelBinderProviders.Insert(0, new InitialRequestModelBinderProvider());
             });
 
             var jwtKey = Configuration["Jwt:Key"];

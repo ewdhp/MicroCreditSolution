@@ -32,7 +32,7 @@ namespace MicroCredit.Logging
             switch (logLevel)
             {
                 case LogLevel.Information:
-                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.ForegroundColor = ConsoleColor.White;
                     break;
                 case LogLevel.Warning:
                     Console.ForegroundColor = ConsoleColor.Yellow;

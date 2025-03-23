@@ -2,38 +2,45 @@ using MicroCredit.Interfaces;
 
 namespace MicroCredit.Models
 {
-    public class InitialRequest : IPhaseRequest
-    {
-        public Loan Data { get; set; }
-    }
-    public class CreateRequest : IPhaseRequest
-    {
-        public Loan Data { get; set; }
-    }
-    public class ApprovalRequest : IPhaseRequest
-    {
-        public Loan Data { get; set; }
-    }
-    public class PayRequest : IPhaseRequest
+    public abstract class PhaseRequest : IPhaseRequest
     {
         public Loan Data { get; set; }
     }
 
-    public class Initial : IPhaseResponse
+    public class InitialRequest : PhaseRequest
     {
-        public Loan Data { get; set; }
     }
-    public class Create : IPhaseResponse
-    {
-        public Loan Data { get; set; }
-    }
-    public class Approval : IPhaseResponse
-    {
-        public Loan Data { get; set; }
-    }
-    public class Pay : IPhaseResponse
-    {
 
+    public class CreateRequest : PhaseRequest
+    {
+    }
+
+    public class ApprovalRequest : PhaseRequest
+    {
+    }
+
+    public class PayRequest : PhaseRequest
+    {
+    }
+
+    public abstract class PhaseResponse : IPhaseResponse
+    {
         public Loan Data { get; set; }
+    }
+
+    public class InitialResponse : PhaseResponse
+    {
+    }
+
+    public class CreateResponse : PhaseResponse
+    {
+    }
+
+    public class ApprovalResponse : PhaseResponse
+    {
+    }
+
+    public class PayResponse : PhaseResponse
+    {
     }
 }
