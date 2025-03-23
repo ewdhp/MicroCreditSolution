@@ -32,13 +32,8 @@ namespace MicroCredit.Services
                 throw new ArgumentNullException(nameof(request));
             }
 
-            if (request.Data == null)
-            {
-                _logger.LogError("Phase request data is null.");
-                throw new ArgumentNullException(nameof(request.Data));
-            }
 
-            var status = request.Data.Status;
+            var status = request.Status;
             _logger.LogInformation("PROCESSING STATUS IN BINDER: {Status}", status);
             try
             {
@@ -67,10 +62,10 @@ namespace MicroCredit.Services
                 throw new ArgumentNullException(nameof(request));
             }
 
-            var response = new InitialResponse
-            {
-                Data = request.Data
-            };
+
+            InitialResponse response = new InitialResponse();
+            response.Status = request.Status;
+
 
             return Task.FromResult<IPhaseResponse>(response);
         }

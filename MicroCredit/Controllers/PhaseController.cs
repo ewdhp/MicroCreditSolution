@@ -29,10 +29,7 @@ namespace MicroCredit.Controllers
         public async Task<IActionResult> ProcessNextPhase([MyBinder] IPhaseRequest request)
         {
             _logger.LogInformation("Phase request received.");
-
-
-            _logger.LogInformation("Processing phase request: {@Request}", request);
-
+            _logger.LogInformation("Processing status: {Status}", request.Status);
             try
             {
                 await Task.Delay(1000);

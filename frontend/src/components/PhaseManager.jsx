@@ -30,13 +30,14 @@ const PhaseManager = () => {
 
   const handleChangeStatus = async () => {
     try {
-      const requestData = {
-       Status: 0,
+      const request = {
+       Status: 0, //this is the CStatus
+       Data: null // this is the Loan
       };
 
       const response = await axios.post(
         'https://localhost:5001/api/phases/next',
-        requestData,
+        request,
         {
           headers: {
             'Content-Type': 'application/json',

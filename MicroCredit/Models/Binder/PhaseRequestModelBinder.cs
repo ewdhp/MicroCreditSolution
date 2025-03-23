@@ -71,14 +71,6 @@ namespace MicroCredit.Models.Binders
                             _ => throw new ArgumentOutOfRangeException(nameof(n), n, null)
                         };
 
-                        if (phaseRequest is InitialRequest initialRequest &&
-                            initialRequest.Data == null)
-                        {
-                            _logger.LogInformation("Model binding successful.");
-                            bindingContext.Result = ModelBindingResult.Success(phaseRequest);
-                            return;
-                        }
-
                         _logger.LogInformation("Model binding successful.");
                         bindingContext.Result = ModelBindingResult.Success(phaseRequest);
                         return;

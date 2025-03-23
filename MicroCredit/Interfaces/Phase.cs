@@ -10,10 +10,10 @@ namespace MicroCredit.Interfaces
 {
     public interface IPhaseRequest
     {
-        public Loan Data { get; set; }
+        CStatus Status { get; set; }
     }
     public interface IPhaseResponse
     {
-        public Loan Data { get; set; }
+        public CStatus Status { get; set; }
     }
 }
