@@ -14,6 +14,7 @@ namespace MicroCredit.Interfaces
     }
     public interface IPhaseResponse
     {
+        public bool Success { get; set; }
         public CStatus Status { get; set; }
     }
 }

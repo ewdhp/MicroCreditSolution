@@ -7,14 +7,10 @@ using Microsoft.Extensions.Logging;
 
 namespace MicroCredit.Services
 {
-    public class PayService
-    (
-        IUCService user, 
-        UDbContext dbContext)
+    public class PayService(IUCService user, UDbContext dbContext)
     {
         protected readonly IUCService _user = user ??
         throw new ArgumentNullException(nameof(user));
-
         protected readonly UDbContext _dbContext = dbContext ??
         throw new ArgumentNullException(nameof(dbContext));
     }

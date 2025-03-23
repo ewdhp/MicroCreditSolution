@@ -18,9 +18,9 @@ namespace MicroCredit.Services
 
         public PhaseService
         (
-            IUCService userCS, 
-            UDbContext dbContext, 
-            ILoanService loanService, 
+            IUCService userCS,
+            UDbContext dbContext,
+            ILoanService loanService,
             ILogger<PhaseService> logger)
         {
             _db = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
@@ -47,37 +47,67 @@ namespace MicroCredit.Services
                     CStatus.Rejected => await Approval(request),
                     CStatus.Active => await Pay(request),
                     CStatus.Due => await Pay(request),
-                    _ => throw new 
+                    _ => throw new
                     ArgumentOutOfRangeException
-                    (nameof(request.Status), 
+                    (nameof(request.Status),
                     request.Status, null)
                 };
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred in phase request.");
+                _logger.LogError(ex, "Error in GetPhaseAsync.");
                 throw;
             }
         }
 
-        public async Task<IPhaseResponse> Init(IPhaseRequest request)
+        public Task<IPhaseResponse> Init(IPhaseRequest request)
         {
-            if (request == null)
+            InitialResponse response = new();
+
+            if (request.Status != CStatus.Initial)
             {
-                throw new ArgumentNullException(nameof(request));
+                response.Success = false;
+                response.Status = CStatus.Unknown;
+                return Task.FromResult<IPhaseResponse>(response);
             }
-
-
-            InitialResponse response = new InitialResponse();
-            response.Status = request.Status;
-
-
-            return response;
+            response.Success = true;
+            response.Status = CStatus.Create;
+            return Task.FromResult<IPhaseResponse>(response);
         }
 
         public async Task<IPhaseResponse> Create(IPhaseRequest request)
         {
-            throw new NotImplementedException();
+            CreateResponse response = new();
+            CreateRequest r = (CreateRequest)request;
+
+            try
+            {
+                var currentUser = _user.GetUserId();
+                if (request.Status != CStatus.Create ||
+                    currentUser == Guid.Empty)
+                {
+                    response.Success = false;
+                    response.Status = CStatus.Unknown;
+                    return response;
+                }
+
+                var loan = new Loan { Amount = r.Amount };
+
+                await _db.Loans.AddAsync(loan);
+                await _db.SaveChangesAsync();
+
+                response.Success = true;
+                response.Status = CStatus.Pending;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError
+                (ex, "Error creating the loan.");
+                response.Success = false;
+                response.Status = CStatus.Unknown;
+            }
+
+            return response;
         }
 
         public async Task<IPhaseResponse> Approval(IPhaseRequest request)

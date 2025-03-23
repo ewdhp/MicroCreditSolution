@@ -20,7 +20,7 @@ namespace MicroCredit.Controllers
         private readonly IServiceProvider _sc;
 
         public PhaseController
-        (ILogger<PhaseController> logger, 
+        (ILogger<PhaseController> logger,
         IServiceProvider serviceProvider)
         {
             _logger = logger;
@@ -28,21 +28,32 @@ namespace MicroCredit.Controllers
         }
 
         [HttpPost("next")]
-        public async Task<IActionResult> 
-        ProcessNextPhase([MyBinder] 
+        public async Task<IActionResult>
+        ProcessNextPhase([MyBinder]
         IPhaseRequest request)
         {
             _logger.LogInformation("Phase request received.");
+
             try
             {
-                await Task.Delay(1000);
-                return Ok(new { V = "ok" });
+                if (request == null)
+                {
+                    _logger.LogError("Phase request is null.");
+                    return BadRequest("Phase request is null.");
+                }
+
+                var phaseService = _sc.GetRequiredService<PhaseService>();
+                var r = await phaseService.GetPhaseAsync(request);
+
+                return r.Success ? Ok(r) : BadRequest
+                (new { Msg = "Phase failed.", Response = r });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred in phase request.");
-                return StatusCode(500, "An error occurred in phase request.");
+                _logger.LogError(ex, "Error in phase request.");
+                return StatusCode(500, "Error in phase request.");
             }
+
         }
     }
 }
