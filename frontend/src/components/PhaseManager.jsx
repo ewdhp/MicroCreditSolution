@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
 import TakeLoan from './TakeLoan';
 import LoanInfo from './LoanInfo';
@@ -23,19 +23,22 @@ const PhaseManager = () => {
   const [loanDetails, setLoanDetails] = useState(null);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    handleChangeStatus();
-  }, [token]);
-
   const handleLoanAccept = (loanDetails) => {
     setLoanDetails(loanDetails);
     setCurrentPhase(1); // Move to the next phase
   };
+
   const handleChangeStatus = async () => {
+    if (!token) {
+      setError("No token found.");
+      return;
+    }
+
     try {
       const requestData = {
+        discriminator: "InitialRequest", // Specify the request type
         data: {
-          status: "Initial", // Only include the necessary field
+          status: 0, // Only include the necessary field
         }
       };
 
@@ -57,10 +60,10 @@ const PhaseManager = () => {
           setLoanDetails(loan);
           setCurrentPhase(loan.status);
         } else {
-          setCurrentPhase(0); 
+          setCurrentPhase(0);
         }
       } else if (response.status === 404) {
-        setCurrentPhase(0); 
+        setCurrentPhase(0);
       } else {
         setError('Failed to update phase.');
       }
@@ -72,6 +75,7 @@ const PhaseManager = () => {
       }
     }
   };
+
   const phaseComponents = {
     Initial: <TakeLoan onAccept={handleLoanAccept} />,
     Pending: <LoanInfo loanDetails={loanDetails} phases={phases} />,
@@ -126,7 +130,7 @@ const PhaseManager = () => {
     <div style={styles.container}>
       {renderPhaseComponent()}
       <button style={styles.button} 
-      onClick={handleChangeStatus}>
+        onClick={handleChangeStatus}>
         Change Status
       </button>
     </div>
