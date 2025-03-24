@@ -14,7 +14,7 @@ namespace MicroCredit.Interfaces
         Task UpdateLoanStatusAsync(int status);
         Task<List<Loan>> GetAllLoansAsync();
         Task DeleteAllLoansAsync();
-        Task<bool> AreAllLoansPaidAsync();
-        Task<CStatus> ApproveAsync();
+        Task<bool> AreAllPaidAsync();
+
     }
 }

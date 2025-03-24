@@ -1,132 +1,61 @@
-import React, { useState } from 'react';
-import axios from 'axios';
-import TakeLoan from './TakeLoan';
-import LoanInfo from './LoanInfo';
-
-const phases = [
-  'Initial',
-  'Create',
-  'Pending',
-  'Approved',
-  'Disbursed',
-  'Active',
-  'Paid',
-  'Due',
-  'Canceled',
-  'Rejected',
-  'Unknown'
-];
+import React, { useState, useEffect } from 'react';
+import TakeLoan from './TakeLoan'; // Import TakeLoan component
+import LoanInfo from './LoanInfo'; // Import LoanInfo component
 
 const PhaseManager = () => {
-  const [currentPhase, setCurrentPhase] = useState(null);
-  const [token] = useState(localStorage.getItem('token'));
-  const [loanDetails, setLoanDetails] = useState(null);
-  const [error, setError] = useState(null);
+    const [phase, setPhaseData] = useState(null);
+    const [amount, setAmount] = useState(50); // Track amount for TakeLoan slider
 
-  const handleLoanAccept = (loanDetails) => {
-    setLoanDetails(loanDetails);
-    setCurrentPhase(1); // Move to the next phase
-  };
+    useEffect(() => {
+        console.log("⏳ Fetching phase data...");
 
-  const handleChangeStatus = async () => {
-    try {
-      const request = {
-       Status: 0, //this is the CStatus
-       Data: null // this is the Loan
-      };
+        // Simulate API call delay
+        setTimeout(() => {
+            const fetchedData = {
+                status: "Pending",
+                component: TakeLoan, // Initially render TakeLoan
+                props: { amount, setAmount },
+            };
 
-      const response = await axios.post(
-        'https://localhost:5001/api/phases/next',
-        request,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          }
-        }
-      );
+            console.log("✅ Fetched Data:", fetchedData);
+            setPhaseData(fetchedData);
+        }); // Simulate network delay
+    }, [amount]); // Dependency on amount state, triggers update when amount changes
 
-      if (response.status === 200) {
-        console.log(response.data);
-        const loan = response.data.loan;
-        if (loan) {
-          setLoanDetails(loan);
-          setCurrentPhase(loan.status);
-        } else {
-          setCurrentPhase(0); 
-        }
-      } else if (response.status === 404) {
-        setCurrentPhase(0); 
-      } else {
-        setError('Failed to update phase.');
-      }
-    } catch (error) {
-      if (error.response && error.response.status === 404) {
-        setCurrentPhase(0);
-      } else {
-        setError('Failed to update phase.');
-      }
-    }
-  };
-  const phaseComponents = {
-    Initial: <TakeLoan onAccept={handleLoanAccept} />,
-    Pending: <LoanInfo loanDetails={loanDetails} phases={phases} />,
-    Approved: <LoanInfo loanDetails={loanDetails} phases={phases} />,
-    Active: <LoanInfo loanDetails={loanDetails} phases={phases} />,
-    Due: <LoanInfo loanDetails={loanDetails} phases={phases} />,
-    Paid: (
-      <div>
-        <p>Payment complete!</p>
-      </div>
-    ),
-    Cancelled: <LoanInfo loanDetails={loanDetails} phases={phases} />,
-    Rejected: (
-      <div>
-        <p>Credito rechazado</p>
-      </div>
-    ),
-  };
-
-  const renderPhaseComponent = () => {
-    if (error) {
-      return <div style={{ color: 'red' }}>{error}</div>;
+    // ✅ Only render when phase is ready
+    if (!phase) {
+        return <p>Loading phase data...</p>;
     }
 
-    if (currentPhase === null) {
-      return <div>Loading...</div>;
-    }
+    const ComponentToRender = phase.component;
 
-    return phaseComponents[phases[currentPhase]] || 
-    <div>Phase: {phases[currentPhase]}</div>;
-  };
+    return (
+        <div>
+            <h2>Phase Manager</h2>
+            {/* Render dynamically based on the fetched component */}
+            <ComponentToRender {...phase.props} />
 
-  const styles = {
-    container: {
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    button: {
-      marginTop: '20px',
-      padding: '10px 20px',
-      backgroundColor: '#007bff',
-      color: 'white',
-      border: 'none',
-      borderRadius: '5px',
-      cursor: 'pointer',
-    },
-  };
+            {/* Button to simulate the next phase */}
+            <button onClick={() => {
+                const newData = {
+                    component: LoanInfo,
+                    data: {
+                        loan: {
+                            amount: 100,
+                            interestRate: 5,
+                            loanDescription: "description",
+                        },
+                    },
 
-  return (
-    <div style={styles.container}>
-      {renderPhaseComponent()}
-      <button style={styles.button} 
-        onClick={handleChangeStatus}>
-        Change Status
-      </button>
-    </div>
-  );
+                };
+
+                console.log("✅ Fetched Data for LoanInfo:", newData);
+                setPhaseData(newData); // Update phase to render LoanInfo
+            }}>
+                Go to Loan Info
+            </button>
+        </div>
+    );
 };
 
 export default PhaseManager;

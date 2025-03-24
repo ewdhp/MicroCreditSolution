@@ -94,17 +94,12 @@ namespace MicroCredit.Services
             await _context.SaveChangesAsync();
         }
 
-        public async Task<bool> AreAllLoansPaidAsync()
+        public async Task<bool> AreAllPaidAsync()
         {
             var userId = _userContextService.GetUserId();
             return !await _context.Loans
                 .AnyAsync(l => l.UserId == userId &&
                 l.Status != CStatus.Paid);
-        }
-
-        public Task<CStatus> ApproveAsync()
-        {
-            return Task.FromResult<CStatus>(CStatus.Rejected);
         }
     }
 }

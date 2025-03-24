@@ -2,6 +2,8 @@ import React from 'react';
 import PhaseManager from '../components/PhaseManager';
 
 const Dashboard = () => {
+  console.log("🚀 Dashboard Mounted");
+
   const styles = {
     container: {
       backgroundColor: '#fff',

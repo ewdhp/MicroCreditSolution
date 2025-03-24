@@ -6,6 +6,7 @@ namespace MicroCredit.Models
 {
     public enum CStatus
     {
+        Pre,
         Initial,
         Create,
         Pending,
@@ -16,7 +17,8 @@ namespace MicroCredit.Models
         Due,
         Canceled,
         Rejected,
-        Unknown
+        Unknown,
+
     }
 
     public class Loan

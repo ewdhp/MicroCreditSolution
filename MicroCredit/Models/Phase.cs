@@ -1,45 +1,31 @@
 using MicroCredit.Interfaces;
-
 namespace MicroCredit.Models
-{
-    public class InitialRequest : IPhaseRequest
+{   
+    public class PhaseResponse
     {
-        public CStatus Status { get; set; }
+        public bool Success { get; set; }
+        public string Msg { get; set; }
+        public string Component { get; set; }
+        public Loan LoanData { get; set; }
     }
 
-    public class CreateRequest : IPhaseRequest
+    public class PhaseRequest
     {
-        public CStatus Status { get; set; }
+        public PreRequest Pre { get; set; }
+        public InitialRequest Init { get; set; }
+        public ApprovalRequest Approval { get; set; }
+        public PayRequest Pay { get; set; }
+    }
+
+    public class PreRequest{}
+    public class InitialRequest
+    {
         public decimal Amount { get; set; }
     }
-
-    public class ApprovalRequest : IPhaseRequest
+    public class CreateRequest{}
+    public class ApprovalRequest{}
+    public class PayRequest
     {
-        public CStatus Status { get; set; }
-    }
-
-    public class InitialResponse : IPhaseResponse
-    {
-        public bool Success { get; set; }
-        public CStatus Status { get; set; }
-    }
-
-    public class CreateResponse : IPhaseResponse
-    {
-        public bool Success { get; set; }
-        public CStatus Status { get; set; }
-
-    }
-
-    public class ApprovalResponse : IPhaseResponse
-    {
-        public bool Success { get; set; }
-        public CStatus Status { get; set; }
-    }
-
-    public class PayResponse : IPhaseResponse
-    {
-        public bool Success { get; set; }
-        public CStatus Status { get; set; }
+        public string Method { get; set; }
     }
 }

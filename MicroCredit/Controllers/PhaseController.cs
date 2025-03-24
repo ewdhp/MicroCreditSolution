@@ -7,7 +7,7 @@ using System;
 using MicroCredit.Services;
 using MicroCredit.Models;
 using Microsoft.Extensions.DependencyInjection;
-using MicroCredit.Models.Binders;
+
 
 namespace MicroCredit.Controllers
 {
@@ -29,19 +29,12 @@ namespace MicroCredit.Controllers
 
         [HttpPost("next")]
         public async Task<IActionResult>
-        ProcessNextPhase([MyBinder]
-        IPhaseRequest request)
+        ProcessNextPhase(PhaseRequest request)
         {
             _logger.LogInformation("Phase request received.");
 
             try
             {
-                if (request == null)
-                {
-                    _logger.LogError("Phase request is null.");
-                    return BadRequest("Phase request is null.");
-                }
-
                 var phaseService = _sc.GetRequiredService<PhaseService>();
                 var r = await phaseService.GetPhaseAsync(request);
 

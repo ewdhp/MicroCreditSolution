@@ -13,7 +13,7 @@ using MicroCredit.Data;
 using System.Net.Http;
 using System;
 using MicroCredit.Interfaces;
-using MicroCredit.Models.Binders;
+
 
 namespace MicroCredit
 {
@@ -69,10 +69,7 @@ namespace MicroCredit
                     });
             });
 
-            services.AddControllers(options =>
-            {
-                options.ModelBinderProviders.Insert(0, new PhaseRequestModelBinderProvider());
-            });
+            services.AddControllers();
 
             var jwtKey = Configuration["Jwt:Key"];
             if (string.IsNullOrEmpty(jwtKey))
