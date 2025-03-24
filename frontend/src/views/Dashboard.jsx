@@ -1,4 +1,5 @@
 import React from 'react';
+import { LoanProvider } from '../context/LoanContext';
 import PhaseManager from '../components/PhaseManager';
 
 const Dashboard = () => {
@@ -18,7 +19,9 @@ const Dashboard = () => {
 
   return (
     <div style={styles.container}>
-      <PhaseManager />
+      <LoanProvider>
+        <PhaseManager />
+      </LoanProvider>
     </div>
   );
 };

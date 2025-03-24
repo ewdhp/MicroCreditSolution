@@ -11,13 +11,11 @@ namespace MicroCredit.Models
 
     public class PhaseRequest
     {
-        public PreRequest Pre { get; set; }
         public InitialRequest Init { get; set; }
         public ApprovalRequest Approval { get; set; }
         public PayRequest Pay { get; set; }
     }
 
-    public class PreRequest{}
     public class InitialRequest
     {
         public decimal Amount { get; set; }

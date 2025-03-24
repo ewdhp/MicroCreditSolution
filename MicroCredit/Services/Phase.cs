@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using System.Security.Cryptography.X509Certificates;
 using Azure.Core;
+using System.Runtime;
 
 namespace MicroCredit.Services
 {
@@ -52,29 +53,16 @@ namespace MicroCredit.Services
 
             try
             {
-                var loan = await _loan
-                .GetCurrentLoanAsync();
-                if(loan == null)
+                var loan = await _loan.GetCurrentLoanAsync();
+                var paid = await _loan.AreAllPaidAsync();               
+
+                var amount = 0;
+                CStatus status = CStatus.Pre;             
+                if(!paid && loan != null)
                 {
-                    _logger.LogError("Loan not found.");    
-                    return new PhaseResponse
-                    {
-                        Success = false,
-                        Msg = "Loan not found."
-                    };
+                    status= loan.Status;
+                    amount= (int)loan.Amount;
                 }
-
-                var status = loan.Status;
-                var paid = await _loan.AreAllPaidAsync();
-                if(paid) status = CStatus.Pre; 
-                var amount = (decimal)
-                (((request?.Init?.Amount?? 0) == 0) ? 
-                (decimal?)null : request.Init.Amount);
-
-                _logger.LogInformation
-                ("Phase status: {status}.",status);
-                logger.LogInformation
-                ("Phase amount: {amount}.",amount);
 
                 return status switch
                 {
@@ -98,32 +86,38 @@ namespace MicroCredit.Services
             }
         }
 
-        public async Task<PhaseResponse> 
-        Init(decimal a)
+        public async Task<PhaseResponse> Init(int amount)
         {
             _logger.LogInformation
-            ("Init.Amount.{amount}",a); 
+            ("Init.Amount.{amount}",amount); 
             PhaseResponse response = new();
 
-            if((int)a == 0) return new 
+            if((int)amount == 0) return new
                 PhaseResponse 
                 { 
                     Success = true,
                     Msg = "Pre",
                     Component = "TakeLoan",
+                    LoanData = new Loan()
+                    {Status = CStatus.Initial}
                 };
 
             try          
             {             
                 var l = new Loan
                 { 
-                    Amount = (decimal)a, 
+                    Amount = (decimal)amount,
                     Status = CStatus.Create 
                 };
+
                await _db.Loans.AddAsync(l);
                await _db.SaveChangesAsync(); 
                response.Success = true;
-               response.LoanData = l;         
+               response.Msg = "Loan created.";
+               response.Component = "LoanInfo";
+               response.LoanData = l; 
+
+               _logger.LogInformation("Loan created: {loan}.",l);        
             }
             catch (Exception ex)
             {
