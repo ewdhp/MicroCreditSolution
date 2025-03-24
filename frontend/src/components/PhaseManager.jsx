@@ -7,15 +7,15 @@ const PhaseManager = () => {
     const [phase, setPhaseData] = useState(null);
     const { amount, setAmount } = useContext(LoanContext); // Use context for amount and setAmount
     const [currentRequest, setCurrentRequest] = useState({ Init: null });
+    const requests = {
+        0: {},
+        1: { Init: { amount } },
+        2: { Approval: {} },
+        3: { Pay: { method: 'CreditCard' } }
+    };
     const fetchPhaseData = async (request) => {
         console.log("⏳ Fetching phase data...");
         const token = localStorage.getItem('token'); // Retrieve the token from localStorage
-        const requests = {
-            'Pre': {},
-            'Initial': { Init: { amount } },
-            'Approval': { Approval: {} },
-            'Pay': { Pay: { method: 'CreditCard' } }
-        };
         try {
             const response = await 
             fetch('https://localhost:5001/api/phases/next', {
@@ -50,20 +50,16 @@ const PhaseManager = () => {
                         props
                     });
                     const loanStatus = fetchedData.loanData?.status;
-                    const statusKey =
-                        loanStatus === 1 ? 'Initial' :
-                        loanStatus === 2 ? 'Approval' :
-                        'Pay'; // Adjust status keys as needed
-                    setCurrentRequest(requests[statusKey]); // Update next request only once
+                    setCurrentRequest(requests[loanStatus]); // Update next request only once
                 } else {
-                    console.error("❌ Error:", fetchedData.msg);
+                    console.error("Error:", fetchedData.msg);
                 }
             } else {
                 const errorData = await response.json();
-                console.error("❌ Request failed:", errorData);
+                console.error("Error::", errorData);
             }
         } catch (error) {
-            console.error("❌ Error fetching phase data:", error);
+            console.error("Error fetching:", error);
         }
     };
 
