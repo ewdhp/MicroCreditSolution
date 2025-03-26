@@ -66,6 +66,11 @@ namespace MicroCredit.Controllers
                 return BadRequest(new ErrorResponse { Message = "User with the same phone or name already exists" });
             }
 
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new ErrorResponse { Message = "Invalid user data" });
+            }
+            
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 

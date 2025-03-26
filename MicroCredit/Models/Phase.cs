@@ -1,4 +1,3 @@
-using MicroCredit.Interfaces;
 namespace MicroCredit.Models
 {   
     public class PhaseResponse
@@ -20,7 +19,6 @@ namespace MicroCredit.Models
     {
         public decimal Amount { get; set; }
     }
-    public class CreateRequest{}
     public class ApprovalRequest{}
     public class PayRequest
     {

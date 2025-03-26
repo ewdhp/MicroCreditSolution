@@ -132,6 +132,24 @@ def get_all_loans(token):
     else:
         print(f"Failed to retrieve all loans: {response.status_code} - {response.text}")
         return None
+def are_all_loans_paid(token):
+    url = f"{loan_base_url}/are-all-paid"  # Adjust the endpoint as per your API
+    headers = {
+        "Authorization": f"Bearer {token}"
+    }
+    response = requests.get(url, headers=headers, verify=False)
+    if response.status_code == 200:
+        result = response.json()
+        all_paid = result.get("allPaid")
+        loan = result.get("loan")
+        print("Are all loans paid:", all_paid)
+        if loan:
+            print("Unpaid loan details:")
+            print(json.dumps(loan, indent=4))
+        return all_paid, loan
+    else:
+        print(f"Failed to check if all loans are paid: {response.status_code} - {response.text}")
+        return None, None
     
 if __name__ == "__main__":
     # First, try to signup to get the token
@@ -145,21 +163,33 @@ if __name__ == "__main__":
     
     if token and token != "USER_EXISTS":
         
-        # Retrieve all loans
+     
+            # Check if all loans are paid
+            all_paid, unpaid_loan = are_all_loans_paid(token)
+            if all_paid:
+                print("All loans are paid.")
+            elif unpaid_loan:
+                print("There are unpaid loans.")
+                print(json.dumps(unpaid_loan, indent=4))
+
+
+""" 
+   # Retrieve all loans
         all_loans = get_all_loans(token)
 
-       
         amount = 150.0  # Example amount
         loan_id = create_loan(token, amount)
         print(f"Loan id: {loan_id}")
         
-        if loan_id:
+        if loan_id: 
             # Update the status of the created loan
             update_loan_status(token, 1)  # Use integer value for status
             
             # Retrieve the current loan
             current_loan = get_current_loan(token)
 
-
-        delete_all_loans(token)    
+            # Introduce a delay of 1 second
+            time.sleep(1)
+"""
+    
 

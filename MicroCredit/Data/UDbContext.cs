@@ -21,8 +21,8 @@ namespace MicroCredit.Data
                 .AddJsonFile("appsettings.json")
                 .Build();
 
-            var optionsBuilder = new DbContextOptionsBuilder
-            <UDbContext>();
+            var optionsBuilder = new 
+            DbContextOptionsBuilder<UDbContext>();
             var connectionString = configuration
             .GetConnectionString("DefaultConnection");
             optionsBuilder.UseNpgsql(connectionString);
@@ -35,7 +35,8 @@ namespace MicroCredit.Data
     public class UDbContext : DbContext
     {
         public UDbContext
-        (DbContextOptions<UDbContext> options)
+        (DbContextOptions
+        <UDbContext> options)
             : base(options)
         {
         }

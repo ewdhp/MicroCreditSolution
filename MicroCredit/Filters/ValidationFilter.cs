@@ -3,7 +3,8 @@ using Microsoft.AspNetCore.Mvc.Filters;
 
 public class ValidationFilter : IActionFilter
 {
-    public void OnActionExecuting(ActionExecutingContext context)
+    public void OnActionExecuting
+    (ActionExecutingContext context)
     {
         if (!context.ModelState.IsValid)
             context.Result = new

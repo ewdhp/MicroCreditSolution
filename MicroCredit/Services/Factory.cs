@@ -6,10 +6,13 @@ namespace MicroCredit.Services
     {
         T Create<T>() where T : class;
     }
-    public class FactoryService(IServiceProvider sp) : IFactoryService
+    
+    public class FactoryService
+    (IServiceProvider sp) : 
+        IFactoryService
     {
-        private readonly IServiceProvider _sp = sp;
-
+        private readonly 
+        IServiceProvider _sp = sp;
         public T Create<T>() where T : class
         {
             return _sp.GetRequiredService<T>();

@@ -1,5 +1,5 @@
-using MicroCredit.Interfaces;
 using MicroCredit.Models;
+using MicroCredit.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -25,8 +25,8 @@ namespace MicroCredit.Controllers
         [HttpGet("current-loan")]
         public async Task<IActionResult> GetCurrentLoan()
         {
-            var loan = await _loanService.GetCurrentLoanAsync();
-            if (loan == null)
+            var (success, loan) = await _loanService.GetCurrentLoanAsync();
+            if (!success)
             {
                 _logger.LogDebug("No current loan found for user.");
                 return NotFound(new { loan = (Loan)null });

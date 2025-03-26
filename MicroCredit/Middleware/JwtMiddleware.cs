@@ -18,7 +18,11 @@ namespace MicroCredit.Middleware
         private readonly ILogger<JwtMiddleware> _logger;
         private readonly FingerprintService _fingerprintService;
 
-        public JwtMiddleware(RequestDelegate next, IConfiguration configuration, ILogger<JwtMiddleware> logger, FingerprintService fingerprintService)
+        public JwtMiddleware
+        (RequestDelegate next, 
+        IConfiguration configuration, 
+        ILogger<JwtMiddleware> logger, 
+        FingerprintService fingerprintService)
         {
             _next = next;
             _configuration = configuration;
@@ -28,25 +32,35 @@ namespace MicroCredit.Middleware
 
         public async Task Invoke(HttpContext context)
         {
-            var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
+            var token = context.Request
+            .Headers["Authorization"]
+            .FirstOrDefault()?
+            .Split(" ").Last();
             if (token != null)
             {
-                _logger.LogInformation("Token found in request");
+                _logger.LogInformation
+                ("Token found in request");
                 AttachUserToContext(context, token);
             }
             await _next(context);
         }
 
-        private void AttachUserToContext(HttpContext context, string token)
+        private void AttachUserToContext
+            (HttpContext context, 
+            string token)
         {
             try
             {
-                var tokenHandler = new JwtSecurityTokenHandler();
-                var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Key"]);
-                tokenHandler.ValidateToken(token, new TokenValidationParameters
+                var tokenHandler = new 
+                JwtSecurityTokenHandler();
+                var key = Encoding.ASCII
+                .GetBytes(_configuration["Jwt:Key"]);
+                tokenHandler.ValidateToken(token, 
+                new TokenValidationParameters
                 {
                     ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(key),
+                    IssuerSigningKey = new 
+                    SymmetricSecurityKey(key),
                     ValidateIssuer = true,
                     ValidateAudience = true,
                     ValidIssuer = _configuration["Jwt:Issuer"],
@@ -55,19 +69,26 @@ namespace MicroCredit.Middleware
                 }, out SecurityToken validatedToken);
 
                 var jwtToken = (JwtSecurityToken)validatedToken;
-                var userId = jwtToken.Claims.FirstOrDefault(x => x.Type == "Id")?.Value; // Use "Id" instead of "UserId"
-                var fingerprint = jwtToken.Claims.FirstOrDefault(x => x.Type == "Fingerprint")?.Value;
+                var userId = jwtToken.Claims.FirstOrDefault
+                (x => x.Type == "Id")?.Value; 
+                var fingerprint = jwtToken.Claims.FirstOrDefault
+                (x => x.Type == "Fingerprint")?.Value;
 
                 if (userId == null)
                 {
-                    _logger.LogWarning("Id claim not found in token.");
-                    throw new SecurityTokenException("Id claim not found in token.");
+                    _logger.LogWarning
+                    ("Id claim not found in token.");
+                    throw new SecurityTokenException
+                    ("Id claim not found in token.");
                 }
 
                 // Validate fingerprint
-                var requestFingerprint = _fingerprintService.GenerateFingerprint(context);
-                _logger.LogInformation("Token Fingerprint: {TokenFingerprint}, Request Fingerprint: {RequestFingerprint}", fingerprint, requestFingerprint);
-                _logger.LogInformation("IP Address: {IPAddress}, User-Agent: {UserAgent}", context.Connection.RemoteIpAddress?.ToString(), context.Request.Headers["User-Agent"].ToString());
+                var requestFingerprint = _fingerprintService
+                .GenerateFingerprint(context);
+                _logger.LogInformation
+                ("Token Fingerprint: {TokenFingerprint}, Request Fingerprint: {RequestFingerprint}", fingerprint, requestFingerprint);
+                _logger.LogInformation
+                ("IP Address: {IPAddress}, User-Agent: {UserAgent}", context.Connection.RemoteIpAddress?.ToString(), context.Request.Headers["User-Agent"].ToString());
                 if (fingerprint != requestFingerprint)
                 {
                     _logger.LogWarning("Invalid fingerprint. Expected: {Expected}, Actual: {Actual}", fingerprint, requestFingerprint);

@@ -12,9 +12,6 @@ using System.Text;
 using MicroCredit.Data;
 using System.Net.Http;
 using System;
-using MicroCredit.Interfaces;
-
-
 namespace MicroCredit
 {
     public class Startup

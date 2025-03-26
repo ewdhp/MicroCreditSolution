@@ -15,15 +15,12 @@ namespace MicroCredit.Models
         Active,
         Paid,
         Due,
-        Canceled,
         Rejected,
         Unknown,
-
     }
 
     public class Loan
     {
-
         [Key]
         [Column(TypeName = "uuid")]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
