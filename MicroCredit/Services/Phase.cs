@@ -219,21 +219,28 @@ namespace MicroCredit.Services
             if (loan.Status == CStatus.Active ||
                 loan.Status == CStatus.Due)
             {
-                loan.Status = CStatus.Paid;
-                await _db.SaveChangesAsync();
-                return new PhaseResponse
-                {
-                    Success = true,
-                    Msg = "Loan Paid.",
-                    Component = "LoanInfo",
-                    LoanData = loan
-                };
-            }
+                var isPaid = true;
 
+                if (isPaid)
+                {
+                    loan.Status = CStatus.Paid;
+                    await _db.SaveChangesAsync();
+                    return new PhaseResponse
+                    {
+                        Success = true,
+                        Msg = "Loan Paid.",
+                        Component = "LoanInfo",
+                        LoanData = loan
+                    };
+
+                }
+            }
+            loan.Status = CStatus.Unknown;
+            await _db.SaveChangesAsync();
             return new PhaseResponse
             {
                 Success = false,
-                Msg = "Loan Not Paid.",
+                Msg = "Error.",
                 Component = "LoanInfo",
                 LoanData = loan
             };
