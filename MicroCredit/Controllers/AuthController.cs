@@ -6,10 +6,7 @@ using MicroCredit.Data;
 using MicroCredit.Models;
 using System;
 using System.Linq;
-using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
-using System.Text;
-using System.Security.Cryptography;
 using Microsoft.IdentityModel.Tokens;
 
 namespace MicroCredit.Controllers

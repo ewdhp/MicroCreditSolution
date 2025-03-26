@@ -1,18 +1,20 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { LoanContext } from '../context/LoanContext';
-import TakeLoan from './TakeLoan'; // Import TakeLoan component
-import LoanInfo from './LoanInfo'; // Import LoanInfo component
+import TakeLoan from './TakeLoan';
+import LoanInfo from './LoanInfo'; 
 
 const PhaseManager = () => {
     const [phase, setPhaseData] = useState(null);
-    const { amount, setAmount } = useContext(LoanContext); // Use context for amount and setAmount
-    const [currentRequest, setCurrentRequest] = useState( { Action: "getLoan"});
+    const { amount, setAmount } = useContext(LoanContext); 
+    const [currentRequest, setCurrentRequest] = useState
+    ( { Action: "getLoan"});
 
     
 
-const fetchPhaseData = async (request) => {
+const fetchPhaseData = async (request) => {   
     console.log("⏳ Fetching phase data...");
-    const token = localStorage.getItem('token');
+    const token = localStorage
+    .getItem('token');
 
     const requests = {
         1: { Init: { amount } },
@@ -21,7 +23,7 @@ const fetchPhaseData = async (request) => {
     };
 
     try {
-        console.log("🚀 Sending request with status:", request);
+        console.log("🚀 Sending request", request);
         const response = await 
             fetch('https://localhost:5001/api/phases/next', {
             method: 'POST',
@@ -64,14 +66,14 @@ const fetchPhaseData = async (request) => {
                         props.setAmount = setAmount;
                     }
                 }
-                setPhaseData({
-                    component: ComponentToRender,
-                    props
-                });
-               
+                setPhaseData({component: ComponentToRender,props});              
                 const loanStatus = fetchedData.loanData?.status;
                  console.log("🎉 Fetched loanStatus:", loanStatus);
-                setCurrentRequest(requests[loanStatus]);
+                 if(loanStatus == "Paid"){
+                    setCurrentRequest(requests[1]);
+                 }else{
+                    setCurrentRequest(requests[loanStatus]);
+                 }
             } else {
                 console.error("Error:", fetchedData.msg);
             }
@@ -84,25 +86,20 @@ const fetchPhaseData = async (request) => {
     }
 };
     useEffect(() => {
-        fetchPhaseData(currentRequest); // Fetch initial phase data on mount
-    }, []); // Empty dependency array ensures this runs only once
+        fetchPhaseData(currentRequest);
+    }, []); 
 
-    // ✅ Only render when phase is ready
     if (!phase) {
         return <p>Loading phase data...</p>;
     }
-
     const ComponentToRender = phase.component;
 
     return (
         <div>
             <h2>Phase Manager</h2>
-            {/* Render dynamically based on the fetched component */}
             <ComponentToRender {...phase.props} />
-
-            {/* Button to trigger the next phase */}
             <button onClick={() => {
-                fetchPhaseData(currentRequest); // Trigger fetch with the updated current request
+                fetchPhaseData(currentRequest); 
             }}>
                 Go to Next Phase
             </button>

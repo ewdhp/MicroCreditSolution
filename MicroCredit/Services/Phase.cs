@@ -65,7 +65,7 @@ namespace MicroCredit.Services
                     CStatus.Create => await Approval(),
                     CStatus.Pending => await Approval(),
                     CStatus.Rejected => await Approval(),
-                    CStatus.Disbursed => await Approval(),
+                    CStatus.Disbursed => await Pay(),
                     CStatus.Active => await Pay(),
                     CStatus.Due => await Pay(),
                     _ => throw new
@@ -154,6 +154,8 @@ namespace MicroCredit.Services
 
             if (loan.Status == CStatus.Pending)
             {
+                /**
+                 wait for approval...
                 return new PhaseResponse
                 {
                     Success = false,
@@ -161,7 +163,17 @@ namespace MicroCredit.Services
                     Component = "LoanInfo",
                     LoanData = loan
                 };
+                */
 
+                loan.Status = CStatus.Paid;
+                await _db.SaveChangesAsync();
+                return new PhaseResponse
+                {
+                    Success = true,
+                    Msg = "Loan Paid.",
+                    Component = "TakeLoan",
+                    LoanData = loan
+                };
             }
 
             if (loan.Status == CStatus.Rejected)
@@ -216,24 +228,19 @@ namespace MicroCredit.Services
                 };
             }
 
-            if (loan.Status == CStatus.Active ||
-                loan.Status == CStatus.Due)
+            if (loan.Status == CStatus.Disbursed)
             {
-                var isPaid = true;
 
-                if (isPaid)
+                loan.Status = CStatus.Paid;
+                await _db.SaveChangesAsync();
+                return new PhaseResponse
                 {
-                    loan.Status = CStatus.Paid;
-                    await _db.SaveChangesAsync();
-                    return new PhaseResponse
-                    {
-                        Success = true,
-                        Msg = "Loan Paid.",
-                        Component = "LoanInfo",
-                        LoanData = loan
-                    };
+                    Success = true,
+                    Msg = "Loan Paid.",
+                    Component = "LoanInfo",
+                    LoanData = loan
+                };
 
-                }
             }
             loan.Status = CStatus.Unknown;
             await _db.SaveChangesAsync();

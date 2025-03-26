@@ -27,7 +27,7 @@ namespace MicroCredit.Models
         public Guid Id { get; set; }
 
         [Required(ErrorMessage = "User ID is required")]
-        public Guid UserId { get; set; }  // Changed to Guid
+        public Guid UserId { get; set; }
 
         [Required(ErrorMessage = "Start date is required")]
         public DateTime StartDate { get; set; }
@@ -45,7 +45,7 @@ namespace MicroCredit.Models
         public decimal InterestRate { get; } = 0.9M;
 
         [Required(ErrorMessage = "Currency is required")]
-        [StringLength(3, ErrorMessage = "Currency must be a 3-letter ISO code")]
+        [StringLength(3, ErrorMessage = "Currency must be a 3-letter")]
         public string Currency { get; } = "MXN";
 
         [Required(ErrorMessage = "Status is required")]
@@ -53,19 +53,13 @@ namespace MicroCredit.Models
 
         [Required(ErrorMessage = "Loan description is required")]
         [StringLength(500, MinimumLength = 10,
-        ErrorMessage = "Loan description must be between 10 and 500 characters")]
+        ErrorMessage = "Loan description must be between 10 and 500 chars")]
         public string LoanDescription => "Credito por 7 dias con 5% de interes diario";
 
-        public Loan() { }
-
-        public Loan(Guid userId, decimal amount)
+        public Loan()
         {
-
-            UserId = userId;
-            Amount = amount;
-            Status = CStatus.Initial;
             StartDate = DateTime.UtcNow;
-            EndDate = DateTime.UtcNow.AddDays(7);
+            EndDate = StartDate.AddDays(7);
         }
 
         public decimal DailyInterest()
@@ -81,29 +75,5 @@ namespace MicroCredit.Models
                 return InterestRate * Amount * totalDays / totalDays;
             return 0;
         }
-    }
-
-    public class PhaseResult
-    {
-        public bool Success { get; set; }
-        public string Message { get; set; }
-    }
-
-    public class CreateLoanRequest
-    {
-        public double Amount { get; set; }
-    }
-    public class UpdateLoanStatusRequest
-    {
-        public int Status { get; set; }
-    }
-
-    public class LoanStatusUpdate
-    {
-        [Required]
-        public Guid Id { get; set; }
-
-        [Required]
-        public CStatus Status { get; set; }
     }
 }
