@@ -14,15 +14,14 @@ namespace MicroCredit.Services
     {
         Task<(bool Success, Loan Loan)>
         CreateLoanAsync(decimal amount);
-
-        Task<(bool,Loan)> GetCurrentLoanAsync();
+        Task<(bool, Loan)> GetCurrentLoanAsync();
         Task<Loan> GetLoanByIdAsync(Guid id);
         Task UpdateLoanStatusAsync(int status);
         Task<List<Loan>> GetAllLoansAsync();
         Task DeleteAllLoansAsync();
-        Task<(bool,Loan loan)> AreAllPaidAsync();
+        Task<(bool, Loan loan)> AreAllPaidAsync();
     }
-    
+
     public class LoanService : ILoanService
     {
         private readonly UDbContext _db;
@@ -36,13 +35,13 @@ namespace MicroCredit.Services
         {
             _logger = logger ?? throw new
             ArgumentNullException(nameof(logger));
-            _context = context ?? throw new 
-            ArgumentNullException(nameof(context));          
-            _db = db ?? throw new 
-            ArgumentNullException(nameof(db));           
+            _context = context ?? throw new
+            ArgumentNullException(nameof(context));
+            _db = db ?? throw new
+            ArgumentNullException(nameof(db));
         }
 
-        public async Task<(bool Success, Loan Loan)> 
+        public async Task<(bool Success, Loan Loan)>
         CreateLoanAsync(decimal amount)
         {
             // Get the current user's ID
@@ -52,7 +51,7 @@ namespace MicroCredit.Services
             var existingLoan = await _db.Loans
                 .AsNoTracking() // Prevents tracking to avoid concurrency issues
                 .FirstOrDefaultAsync
-                (l => l.UserId == userId && 
+                (l => l.UserId == userId &&
                 l.Status != CStatus.Paid);
 
             if (existingLoan != null)
@@ -92,36 +91,30 @@ namespace MicroCredit.Services
                 return (false, null);
             }
         }
-
         public async Task<(bool, Loan)> GetCurrentLoanAsync()
         {
             var userId = _context.GetUserId();
             var loan = await _db.Loans.FirstOrDefaultAsync(
-                l => l.UserId == userId && 
+                l => l.UserId == userId &&
                 (int)l.Status != 7);
             return (loan != null, loan);
         }
-
-//3.142039650961743
-//1.571019825480872
         public async Task<Loan> GetLoanByIdAsync(Guid id)
         {
             return await _db.Loans.FindAsync(id);
         }
-
         public async Task UpdateLoanStatusAsync(int status)
         {
             var userId = _context.GetUserId();
             var existingLoan = await _db.Loans
             .FirstOrDefaultAsync
-            (l => l.UserId == userId);           
+            (l => l.UserId == userId);
             if (existingLoan == null) throw new
-            InvalidOperationException("No loan found.");           
+            InvalidOperationException("No loan found.");
             existingLoan.Status = (CStatus)status;
             _db.Loans.Update(existingLoan);
             await _db.SaveChangesAsync();
         }
-
         public async Task<List<Loan>> GetAllLoansAsync()
         {
             var userId = _context.GetUserId();
@@ -129,22 +122,20 @@ namespace MicroCredit.Services
                 (l => l.UserId == userId)
                     .ToListAsync();
         }
-
         public async Task DeleteAllLoansAsync()
         {
             var userId = _context.GetUserId();
             var userLoans = await _db.Loans
              .Where(l => l.UserId == userId)
                 .ToListAsync();
-            if (!userLoans.Any()) throw new 
+            if (!userLoans.Any()) throw new
                 InvalidOperationException
                 ("No loans found.");
             _db.Loans
             .RemoveRange(userLoans);
             await _db.SaveChangesAsync();
         }
-
-        public async Task<(bool,Loan)>AreAllPaidAsync()
+        public async Task<(bool, Loan)> AreAllPaidAsync()
         {
             var userId = _context.GetUserId();
             var allPaid = !await _db.Loans.AnyAsync

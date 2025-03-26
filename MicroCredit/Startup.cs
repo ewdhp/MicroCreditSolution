@@ -31,9 +31,6 @@ namespace MicroCredit
             services.AddScoped<JwtTokenService>();
             services.AddScoped<FingerprintService>();
 
-            // Register factory service
-            services.AddScoped<FactoryService>();
-
             // Loan service
             services.AddScoped<ILoanService, LoanService>();
 

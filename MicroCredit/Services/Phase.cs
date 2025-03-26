@@ -80,7 +80,6 @@ namespace MicroCredit.Services
                 throw;
             }
         }
-
         private async Task<PhaseResponse> Pre()
         {
 
