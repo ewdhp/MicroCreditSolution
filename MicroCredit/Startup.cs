@@ -17,18 +17,21 @@ namespace MicroCredit
 {
     public class Startup
     {
+        public IConfiguration Configuration { get; }
+
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
         }
 
-        public IConfiguration Configuration { get; }
-
-        public void ConfigureServices(IServiceCollection services)
+        public void ConfigureServices
+        (IServiceCollection services)
         {
             // Register services
-            services.AddDbContext<UDbContext>(options => options.UseNpgsql
-            (Configuration.GetConnectionString("DefaultConnection")));
+            services.AddDbContext<UDbContext>
+            (options => options.UseNpgsql
+            (Configuration.GetConnectionString
+            ("DefaultConnection")));
             services.AddScoped<JwtTokenService>();
             services.AddScoped<FingerprintService>();
 
@@ -49,6 +52,9 @@ namespace MicroCredit
 
             // Register phase services
             services.AddScoped<PhaseService>();
+
+            // Register Loan services
+            services.AddScoped<LoanService>();
 
             // Register payment service
             services.AddScoped<PayService>();
@@ -117,7 +123,9 @@ namespace MicroCredit
             });
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure
+        (IApplicationBuilder app,
+        IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
             {
@@ -148,7 +156,8 @@ namespace MicroCredit
             // Add JwtMiddleware for HTTP requests
             app.UseMiddleware<JwtMiddleware>();
 
-            // Add WebSocketAuthMiddleware for WebSocket requests
+            // Add WebSocketAuthMiddleware for 
+            // WebSocket requests
             app.UseMiddleware<UnifiedAuth>();
 
             app.UseEndpoints(endpoints =>

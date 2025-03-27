@@ -25,7 +25,7 @@ const fetchPhaseData = async (request) => {
     try {
         console.log("🚀 Sending request", request);
         const response = await 
-            fetch('https://localhost:5001/api/phases/next', {
+            fetch('https://localhost:5001/api/loan/next', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

@@ -10,7 +10,7 @@ const HistoryPage = () => {
     const fetchLoans = async () => {
       try {
         const response = await axios
-        .get('https://localhost:5001/api/loans/all', {
+        .get('https://localhost:5001/api/loan/all', {
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
