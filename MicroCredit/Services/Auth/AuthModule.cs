@@ -23,9 +23,11 @@ namespace MicroCredit.Services.Auth
             // Initialize services in the correct order
             auditLoggingService = new AuditLoggingService();
             errorHandlingService = new ErrorHandlingService();
-            tokenValidationService = new TokenValidationService(configuration);
+            tokenValidationService = new
+            TokenValidationService(configuration);
             tokenManagementService = new TokenManagementService
-            (auditLoggingService, configuration["TokenManagement:SecretKey"]);
+            (auditLoggingService,
+            configuration["TokenManagement:SecretKey"]);
             rbacService = new RBACService();
         }
 
@@ -41,9 +43,12 @@ namespace MicroCredit.Services.Auth
                 var context = await httpListener.GetContextAsync();
                 if (context.Request.IsWebSocketRequest)
                 {
-                    var wsContext = await context.AcceptWebSocketAsync(null);
-                    var token = context.Request.Headers["Authorization"];
-                    await HandleWebSocketConnection(wsContext.WebSocket, token);
+                    var wsContext = await context
+                    .AcceptWebSocketAsync(null);
+                    var token = context.Request
+                    .Headers["Authorization"];
+                    await HandleWebSocketConnection
+                    (wsContext.WebSocket, token);
                 }
                 else
                 {
@@ -91,10 +96,12 @@ namespace MicroCredit.Services.Auth
 
         public async Task HandleConnection(WebSocket socket, string token)
         {
-            var validationResult = tokenValidationService.ValidateToken(token);
+            var validationResult = tokenValidationService
+            .ValidateToken(token);
             if (validationResult.IsValid)
             {
-                Console.WriteLine("Token validated. Handling WebSocket connection...");
+                Console.WriteLine
+                ("Token validated. Handling WebSocket connection...");
                 var buffer = new byte[1024 * 4];
                 WebSocketReceiveResult result;
                 do
@@ -113,9 +120,12 @@ namespace MicroCredit.Services.Auth
             }
             else
             {
-                Console.WriteLine("Invalid token. Closing WebSocket connection...");
-                await socket.CloseAsync(WebSocketCloseStatus.PolicyViolation,
-                "Invalid token", System.Threading.CancellationToken.None);
+                Console.WriteLine
+                ("Invalid token. Closing WebSocket connection...");
+                await socket.CloseAsync
+                (WebSocketCloseStatus.PolicyViolation,
+                "Invalid token", System.Threading
+                .CancellationToken.None);
             }
         }
     }
