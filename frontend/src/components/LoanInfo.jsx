@@ -23,7 +23,9 @@ const LoanInfo = ({ loan }) => {
   return (
     <div>
       <h2>Loan Details</h2>
+      <p>Status: {phases[loan?.status ?? 10]}</p>
       <p>Amount: {loan?.amount ?? "N/A"}</p>
+
       <p>Interest Rate: {loan?.interestRate ?? "N/A"}%</p>
       <p>Description: {loan?.loanDescription ?? "N/A"}</p>
     </div>

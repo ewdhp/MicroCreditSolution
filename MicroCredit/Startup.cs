@@ -12,6 +12,7 @@ using System.Text;
 using MicroCredit.Data;
 using System.Net.Http;
 using System;
+using MicroCredit.Services.Auth;
 namespace MicroCredit
 {
     public class Startup
@@ -30,6 +31,18 @@ namespace MicroCredit
             (Configuration.GetConnectionString("DefaultConnection")));
             services.AddScoped<JwtTokenService>();
             services.AddScoped<FingerprintService>();
+
+            // Register TokenValidationService
+            services.AddSingleton<TokenValidationService>();
+
+            // Register other services as needed
+            services.AddSingleton<TokenManagementService>();
+            services.AddSingleton<AuditLoggingService>();
+            services.AddSingleton<ErrorHandlingService>();
+            services.AddSingleton<RBACService>();
+
+            // Register AuthModule
+            services.AddSingleton<AuthModule>();
 
             // Loan service
             services.AddScoped<ILoanService, LoanService>();
@@ -120,9 +133,23 @@ namespace MicroCredit
             app.UseStaticFiles();
             app.UseRouting();
             app.UseCors("AllowFrontend");
+
+            // Enable WebSocket support
+            var webSocketOptions = new WebSocketOptions
+            {
+                KeepAliveInterval = TimeSpan.FromSeconds(120)
+            };
+            app.UseWebSockets(webSocketOptions);
+
+            // Add JWT authentication middleware
             app.UseAuthentication();
             app.UseAuthorization();
+
+            // Add JwtMiddleware for HTTP requests
             app.UseMiddleware<JwtMiddleware>();
+
+            // Add WebSocketAuthMiddleware for WebSocket requests
+            app.UseMiddleware<UnifiedAuth>();
 
             app.UseEndpoints(endpoints =>
             {
