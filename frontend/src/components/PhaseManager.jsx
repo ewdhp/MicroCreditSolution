@@ -11,13 +11,6 @@ const PhaseManager = () => {
     const fetchPhaseData = async (request) => {
         console.log("⏳ Fetching phase data...");
         const token = localStorage.getItem('token'); 
-
-        //this is not used?
-        if (amount == null) {
-            console.error("Amount is null, cannot fetch.");
-            return;
-        }
-
         try {
             console.log("🚀 Sending request", request);
             const response = await 
