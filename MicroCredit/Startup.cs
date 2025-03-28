@@ -73,7 +73,7 @@ namespace MicroCredit
                 options.AddPolicy("AllowFrontend",
                     builder =>
                     {
-                        builder.WithOrigins("http://localhost:3000")
+                        builder.WithOrigins("http://74.208.246.177:3000")
                             .AllowAnyHeader()
                             .AllowAnyMethod();
                     });

@@ -40,7 +40,7 @@ namespace MicroCredit
                     {
                         serverOptions.Configure(context.Configuration.GetSection("Kestrel"));
                     });
-                    webBuilder.UseUrls("http://localhost:5000", "https://localhost:5001");
+                    webBuilder.UseUrls("http://74.208.246.177:5000", "http://74.208.246.177:5001");
                 });
     }
 }

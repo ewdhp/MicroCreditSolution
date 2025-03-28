@@ -18,7 +18,7 @@ namespace MicroCredit.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasDefaultSchema("Account")
-                .HasAnnotation("ProductVersion", "9.0.2")
+                .HasAnnotation("ProductVersion", "9.0.3")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);

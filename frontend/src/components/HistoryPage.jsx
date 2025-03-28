@@ -73,8 +73,9 @@ const HistoryPage = () => {
         <thead>
           <tr>
             <th style={styles.th}>#</th>
-            <th style={styles.th}>Amount</th>
-            <th style={styles.th}>Status</th>
+            <th style={styles.th}>Cantidad</th>
+            <th style={styles.th}>Estado</th>
+             <th style={styles.th}>Fecha</th>
           </tr>
         </thead>
         <tbody>
@@ -83,6 +84,7 @@ const HistoryPage = () => {
               <td style={styles.td}>{index + 1}</td>
               <td style={styles.td}>${loan.amount}</td>
               <td style={styles.td}>{loan.status}</td>
+              <td style={styles.td}>{loan.endDate}</td>
             </tr>
           ))}
         </tbody>

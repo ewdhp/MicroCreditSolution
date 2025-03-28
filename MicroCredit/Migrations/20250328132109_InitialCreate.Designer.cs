@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MicroCredit.Migrations
 {
     [DbContext(typeof(UDbContext))]
-    [Migration("20250326220046_UpdateLoanModel")]
-    partial class UpdateLoanModel
+    [Migration("20250328132109_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -21,7 +21,7 @@ namespace MicroCredit.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasDefaultSchema("Account")
-                .HasAnnotation("ProductVersion", "9.0.2")
+                .HasAnnotation("ProductVersion", "9.0.3")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);

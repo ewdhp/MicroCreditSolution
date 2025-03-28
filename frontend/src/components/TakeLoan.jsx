@@ -17,11 +17,10 @@ const TakeLoan = ({ loan=null, onFetchNextPhase }) => {
     };
 
     return (
-        <div>
-            <h3>Take a Loan</h3>
+        <div><h3>Toma un credito</h3>
                 <div>
                     <label htmlFor="amount-slider">
-                        Loan Amount: {sliderValue}</label>
+                        Cantidad: {sliderValue}</label>
                     <input
                         id="amount-slider"
                         type="range"
@@ -32,7 +31,7 @@ const TakeLoan = ({ loan=null, onFetchNextPhase }) => {
                         onChange={(e) => handleSliderChange(Number(e.target.value))}
                     />
                     <button onClick={() => onFetchNextPhase(sliderValue)}>
-                        Fetch Next Phase
+                        Aceptar
                     </button>
                 </div>
         </div>

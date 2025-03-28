@@ -84,7 +84,6 @@ const PhaseManager = () => {
 
     return (
         <div>
-            <h2>Phase Manager</h2>
             <ComponentToRender {...phase.props} 
             onFetchNextPhase={handleFetchAmount} 
              />

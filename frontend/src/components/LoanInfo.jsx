@@ -1,14 +1,14 @@
 import React from 'react';
 
 const phases = [
-  'Pre',
-  'Initial',
+  'Inicial',
+  'Inicial',
   'Create',
-  'Pending',
-  'Approved',
+  'Pendiente',
+  'Aprovado',
   'Disbursed',
-  'Active',
-  'Paid',
+  'Activo',
+  'Pagado',
   'Due',
   'Canceled',
   'Rejected',
@@ -18,16 +18,16 @@ const phases = [
 const LoanInfo = ({ loan }) => {
   if (!loan) {
     console.error("🚨 LoanInfo received null or undefined 'data'!", loan);
-    return <p>Loading loan data...</p>;  // Avoid crash
+    return <p>Espera...</p>;  // Avoid crash
   }
 
   return (
     <div>
-      <h2>Loan Details</h2>
-      <p>Status: {phases[loan?.status ?? 10]}</p>
-      <p>Amount: {loan?.amount ?? "N/A"}</p>
+      <h2>Detalles del credito</h2>
+      <p>Estado: {phases[loan?.status ?? 10]}</p>
+      <p>Cantidad: {loan?.amount ?? "N/A"} MXN</p>
 
-      <p>Interest Rate: {loan?.interestRate ?? "N/A"}%</p>
+      <p>Interes: {loan?.interestRate ?? "N/A"}%</p>
       <p>Description: {loan?.loanDescription ?? "N/A"}</p>
     </div>
   );
