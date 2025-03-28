@@ -10,8 +10,8 @@ const PhaseManager = () => {
 
     const fetchPhaseData = async (request) => {
         console.log("⏳ Fetching phase data...");
+        const token = localStorage.getItem('token'); 
 
-        const token = localStorage.getItem('token');       
         //this is not used?
         if (amount == null) {
             console.error("Amount is null, cannot fetch.");
@@ -33,24 +33,26 @@ const PhaseManager = () => {
             if (response.status === 200) {            
                 const fetchedData = await response.json();
                 console.log("✅ Fetched Data:", fetchedData);
+
                 if (fetchedData.success) {
                     const componentMap = {
                         'TakeLoan': TakeLoan,
                         'LoanInfo': LoanInfo
                     };
-
                     const ComponentToRender = fetchedData.component
                         ? componentMap[fetchedData.component]: null;
                     const loanData = fetchedData.loanData || null;
                     if (!ComponentToRender) {
-                        console.error(`Component "
-                        ${fetchedData.component}" not found.`);
+                        console.error
+                        (`${fetchedData.component}" not found.`);
                         return;
-                    }     
+                    } 
+                    if(loanData.status == 7){
+                        fetchPhaseData({ Amount: 0 });
+                        return;
+                    }    
                     setPhaseData({ component: ComponentToRender, 
                         props: { loan: loanData } });                 
-                    const loanStatus = fetchedData.loanData?.status;
-                    console.log("loanStatus:", loanStatus);
                 } else {
                     console.error("Error:", fetchedData.msg);
                 }
@@ -69,17 +71,14 @@ const PhaseManager = () => {
         }
     };
 
-    const handleFetchNextPhase = (amount) => {
-        console.log
-        ("Fetching next:", amount);
-        fetchPhaseData({ Amount: amount});
-       
+    const handleFetchAmount = (amount) => {
+        console.log("Fetching next:", amount);
+        fetchPhaseData({ Amount: amount});       
     };
 
     useEffect(() => {
         if (isFirstLoad) {
-            fetchPhaseData
-            ({ init: { amount: 0 } });
+            fetchPhaseData({ amount: 0 });
             setIsFirstLoad(false);
         }
     }, [isFirstLoad]);
@@ -94,7 +93,7 @@ const PhaseManager = () => {
         <div>
             <h2>Phase Manager</h2>
             <ComponentToRender {...phase.props} 
-            onFetchNextPhase={handleFetchNextPhase} 
+            onFetchNextPhase={handleFetchAmount} 
              />
         </div>
     );

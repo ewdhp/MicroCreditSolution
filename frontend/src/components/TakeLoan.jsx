@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { LoanContext } from '../context/LoanContext';
 
-const TakeLoan = ({ loan, onFetchNextPhase }) => {
+const TakeLoan = ({ loan=null, onFetchNextPhase }) => {
     const { amount, setAmount } = useContext(LoanContext);
     const [sliderValue, setSliderValue] = useState(amount || 0);
 
