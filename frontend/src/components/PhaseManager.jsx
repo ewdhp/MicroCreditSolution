@@ -6,65 +6,72 @@ import LoanInfo from './LoanInfo';
 const PhaseManager = () => {
     const [phase, setPhaseData] = useState(null);
     const { amount, setAmount } = useContext(LoanContext); // Get amount from LoanContext
-    const [currentRequest, setCurrentRequest] = useState({Pre:null}); // Start with the initial phase
+    const [currentRequest, setCurrentRequest] = useState({pre:null}); // Start with the initial phase
     const [isManualFetch, setIsManualFetch] = useState(false); // Track if the fetch is manual
     const [isInitialFetchDone, setIsInitialFetchDone] = useState(false); // Track if the initial fetch is done
 
     const fetchPhaseData = async (request) => {
-        console.log("⏳ Fetching phase data...");
-        const token = localStorage.getItem('token');
+    console.log("⏳ Fetching phase data...");
+    const token = localStorage.getItem('token');
 
-        try {
-            console.log("🚀 Sending request", request);
-            const response = await fetch('https://localhost:5001/api/loan/next', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify(request)
-            });
+    try {
+        console.log("🚀 Sending request", request);
+        const response = await fetch('https://localhost:5001/api/loan/next', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(request)
+        });
 
-            if (response.status === 200) {
-                const fetchedData = await response.json();
-                console.log("✅ Fetched Data:", fetchedData);
+        if (response.status === 200) {
+            const fetchedData = await response.json();
+            console.log("✅ Fetched Data:", fetchedData);
 
-                if (fetchedData.success) {
-                    const componentMap = {
-                        'TakeLoan': TakeLoan,
-                        'LoanInfo': LoanInfo
-                    };
+            if (fetchedData.success) {
+                const componentMap = {
+                    'TakeLoan': TakeLoan,
+                    'LoanInfo': LoanInfo
+                };
 
-                    const ComponentToRender = fetchedData.component
-                        ? componentMap[fetchedData.component]
-                        : componentMap['TakeLoan'];
-                    const loanData = fetchedData.loanData;
-                    console.log("Loan Data:", loanData);
-                    console.log("Component:", fetchedData.component);
-                    console.log("ComponentToRender:", ComponentToRender);
+                const ComponentToRender = fetchedData.component
+                    ? componentMap[fetchedData.component]
+                    : null;
+                const loanData = fetchedData.loanData || null;
 
-                    if (!ComponentToRender) {
-                        console.error(`Component "${fetchedData.component}" not found in componentMap.`);
-                        return;
-                    }
-                    
-                    setPhaseData({ component: ComponentToRender, loan: loanData });
+                console.log("Loan Data:", loanData);
 
-                    const loanStatus = fetchedData.loanData?.status;
-                    console.log("🎉 Fetched loanStatus:", loanStatus);
+                setCurrentRequest({ Amount: 200 });
 
-                } else {
-                    console.error("Error:", fetchedData.msg);
+                console.log("Component:", fetchedData.component);
+                console.log("ComponentToRender:", ComponentToRender);
+
+                if (!ComponentToRender) {
+                    console.error(`Component "${fetchedData.component}" not found.`);
+                    return;
+                }
+
+                setPhaseData({ component: ComponentToRender, props: { loan: loanData } });
+
+                const loanStatus = fetchedData.loanData?.status;
+                console.log("🎉 Fetched loanStatus:", loanStatus);
+
+                if (loanStatus === 7) {
+                    console.log("🔄 Status is 7, automatically fetching the next phase...");
+                    fetchPhaseData({ Amount: 200 }); 
                 }
             } else {
-                const errorData = await response.json();
-                console.error("Error::", errorData);
+                console.error("Error:", fetchedData.msg);
             }
-        } catch (error) {
-            console.error("Error fetching:", error);
+        } else {
+            const errorData = await response.json();
+            console.error("Error::", errorData);
         }
-    };
-
+    } catch (error) {
+        console.error("Error fetching:", error);
+    }
+};
     useEffect(() => {
         // Fetch the initial phase data only once
         if (!isInitialFetchDone) {
@@ -78,11 +85,12 @@ const PhaseManager = () => {
     }
 
     const ComponentToRender = phase.component;
-
+    console.log("Props being passed to ComponentToRender:", phase.props);
     return (
         <div>
             <h2>Phase Manager</h2>
-            <ComponentToRender {...phase.loan} />
+            
+            <ComponentToRender {...phase.props} />
             <button
                 onClick={() => {
                     setIsManualFetch(true); // Mark this as a manual fetch

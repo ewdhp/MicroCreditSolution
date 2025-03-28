@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 import { LoanContext } from '../context/LoanContext';
 
-const TakeLoan = () => {
+const TakeLoan = (loan) => {
     const { amount, setAmount } = useContext(LoanContext); // Use context for amount and setAmount
 
     const handleAmountChange = (event) => {

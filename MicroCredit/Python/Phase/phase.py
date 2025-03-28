@@ -85,6 +85,6 @@ if __name__ == "__main__":
         exit(1)
 
     # Test maximum concurrent requests
-    payload = {"type": "Pre", "LoanData": None, "Amount": 0, "Data": None, "payMethod": None}
-    max_concurrent_calls = 100  # Adjust this value to test different levels of concurrency
+    payload = {"type": "Pre", "LoanData": None, "Amount": 100, "Data": None, "payMethod": None}
+    max_concurrent_calls = 5  # Adjust this value to test different levels of concurrency
     test_max_concurrent_requests(token, payload, max_concurrent_calls)
