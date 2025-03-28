@@ -4,7 +4,7 @@ import axios from 'axios';
 const HistoryPage = () => {
   const [loans, setLoans] = useState([]);
   const [error, setError] = useState(null);
-  const token = localStorage.getItem('token'); // Retrieve token from localStorage
+  const token = localStorage.getItem('token');
 
   useEffect(() => {
     const fetchLoans = async () => {

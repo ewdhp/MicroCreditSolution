@@ -24,8 +24,7 @@ namespace MicroCredit
             Configuration = configuration;
         }
 
-        public void ConfigureServices
-        (IServiceCollection services)
+        public void ConfigureServices(IServiceCollection services)
         {
             // Register services
             services.AddDbContext<UDbContext>
@@ -62,10 +61,8 @@ namespace MicroCredit
             // Register IJwtTokenService
             services.AddScoped<IJwtTokenService, JwtTokenService>();
 
-            // Http context accessor
+            // Register IUCService and IHttpContextAccessor
             services.AddHttpContextAccessor();
-
-            // Register IUCService
             services.AddScoped<IUCService, UserContextService>();
 
             // Register HttpClient
@@ -123,9 +120,7 @@ namespace MicroCredit
             });
         }
 
-        public void Configure
-        (IApplicationBuilder app,
-        IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
             {
@@ -159,6 +154,11 @@ namespace MicroCredit
             // Add WebSocketAuthMiddleware for 
             // WebSocket requests
             app.UseMiddleware<UnifiedAuth>();
+
+            // Lock middleware
+            // to prevent multiple requests
+            // from the same user
+            app.UseMiddleware<UserRequestLockMiddleware>();
 
             app.UseEndpoints(endpoints =>
             {

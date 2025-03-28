@@ -6,71 +6,52 @@ using Microsoft.Extensions.Logging;
 namespace MicroCredit.Services
 {
     public class PhaseService
-    (
-        IUCService userCS,
-        UDbContext dbContext,
-        ILoanService loanService,
-        ILogger<PhaseService> logger)
     {
-        private readonly UDbContext _db = dbContext ??
-        throw new ArgumentNullException(nameof(dbContext));
-        private readonly IUCService _user = userCS ??
-        throw new ArgumentNullException(nameof(userCS));
-        private readonly ILoanService _loan = loanService ??
-        throw new ArgumentNullException(nameof(loanService));
-        private readonly ILogger<PhaseService> _logger = logger ??
-        throw new ArgumentNullException(nameof(logger));
+        private readonly UDbContext _db;
+        private readonly IUCService _u;
+        private readonly ILoanService _loan;
+        private readonly ILogger<PhaseService> _logger;
 
-        public async
-        Task<PhaseResponse>
-        GetPhaseAsync(PhaseRequest request)
+        public PhaseService(
+            IUCService userCS,
+            UDbContext dbContext,
+            ILoanService loanService,
+            ILogger<PhaseService> logger)
+        {
+            _db = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+            _u = userCS ?? throw new ArgumentNullException(nameof(userCS));
+            _loan = loanService ?? throw new ArgumentNullException(nameof(loanService));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        }
+
+        public async Task<PhaseResponse> GetPhaseAsync(PhaseRequest request)
         {
             try
             {
-                if (request == null)
+                if (request == null ||
+                    _u.GetUserId() == Guid.Empty)
                     return new PhaseResponse
                     {
                         Success = false,
-                        Msg = "Phase request is null."
-                    };
-                var currentUser = _user.GetUserId();
-                if (currentUser == Guid.Empty)
-                    return new PhaseResponse
-                    {
-                        Success = false,
-                        Msg = "User not found."
+                        Msg = "REQUEST OR USER NULL"
                     };
 
                 var (sucess, loan) = await
                 _loan.GetCurrentLoanAsync();
-                CStatus status = CStatus.Unknown;
-
-                if (!sucess && loan == null)
+                if (!sucess) return await Pre(request);
+                request.LoanData = loan;
+                return request.LoanData.Status switch
                 {
-                    status = CStatus.Pre;
-                    _logger.LogInformation
-                    ($"\nNO LOANS FOUND, STATUS: Pre.\n");
-                }
-                else
-                {
-                    status = loan.Status;
-                    _logger.LogInformation
-                    ($"\nLOAN FOUND, STATUS: {status}.\n");
-                }
-
-                return status switch
-                {
-                    CStatus.Pre => await Pre(),
                     CStatus.Initial => await Init(request),
-                    CStatus.Create => await Approval(),
-                    CStatus.Pending => await Approval(),
-                    CStatus.Rejected => await Approval(),
-                    CStatus.Disbursed => await Pay(),
-                    CStatus.Active => await Pay(),
-                    CStatus.Due => await Pay(),
+                    CStatus.Pending => await Approval(request),
+                    CStatus.Rejected => await Approval(request),
+                    CStatus.Disbursed => await Approval(request),
+                    CStatus.Active => await Pay(request),
+                    CStatus.Due => await Pay(request),
                     _ => throw new
                     ArgumentOutOfRangeException
-                    (nameof(status), status, null)
+                    (nameof(request.LoanData.Status),
+                    request.LoanData.Status, null)
                 };
             }
             catch (Exception ex)
@@ -80,175 +61,159 @@ namespace MicroCredit.Services
                 throw;
             }
         }
-        private async Task<PhaseResponse> Pre()
+        private async Task<PhaseResponse> Pre(PhaseRequest request)
         {
+            _logger.LogInformation("\nPre -> Initial\n");
 
-            _logger.LogInformation("Pre phase.");
-            var newLoan = new Loan
+            try
             {
-                Amount = 0,
-                UserId = _user.GetUserId(),
-                Status = CStatus.Initial
-            };
-            await _db.Loans.AddAsync(newLoan);
-            await _db.SaveChangesAsync();
+                var newLoan = new Loan
+                {
+                    UserId = _u.GetUserId(),
+                    Status = CStatus.Initial
+                };
 
-            _logger.LogInformation("Loan created status Pre");
+                await _db.Loans.AddAsync(newLoan);
+                await _db.SaveChangesAsync();
 
-            return new PhaseResponse
+                return new PhaseResponse
+                {
+                    Success = true,
+                    Msg = "Pre",
+                    Component = "TakeLoan",
+                    LoanData = newLoan
+                };
+            }
+            catch (Exception ex)
             {
-                Success = true,
-                Msg = "Pre",
-                Component = "TakeLoan",
-                LoanData = newLoan
-            };
+                return new PhaseResponse
+                {
+                    Success = false,
+                    Msg = "PRE " + ex.Message,
+                    Component = "LoanInfo",
+                    LoanData = null
+                };
+            }
         }
         private async Task<PhaseResponse> Init(PhaseRequest request)
         {
+            _logger.LogInformation("\nInitial -> Pending\n");
+
             try
             {
-                if (request.Init?.Amount == null)
+                var loan = request.LoanData;
+                if (request.Amount < 100 || request.Amount > 300)
+                {
                     return new PhaseResponse
                     {
                         Success = false,
-                        Msg = "Amount is null."
+                        Msg = "Amount error."
                     };
-
-                var amount = request.Init.Amount;
-                var (success, loan) = await
-                _loan.GetCurrentLoanAsync();
-                loan.Amount = amount;
+                }
                 loan.Status = CStatus.Pending;
+                loan.Amount = request.Amount;
+                loan.StartDate = DateTime.UtcNow;
+                loan.EndDate = loan.StartDate.AddDays(7);
                 await _db.SaveChangesAsync();
                 return new PhaseResponse
                 {
                     Success = true,
-                    Msg = "Initial",
+                    Msg = "Initial -> Pending",
                     Component = "LoanInfo",
                     LoanData = loan
                 };
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error in Loan.");
                 return new PhaseResponse
                 {
                     Success = false,
-                    Msg = "Error in Loan."
+                    Msg = "Init " + ex.Message,
+                    Component = "LoanInfo",
+                    LoanData = request.LoanData,
+
                 };
             }
         }
-        private async Task<PhaseResponse> Approval()
+        private async Task<PhaseResponse> Approval(PhaseRequest request)
         {
-            var (success, loan) = await _loan
-                .GetCurrentLoanAsync();
-            if (!success || loan == null)
+            _logger.LogInformation("\nApproval ->Active\n");
+
+            try
+            {
+                var loan = request.LoanData;
+                if (loan.Status == CStatus.Pending)
+                {
+                    loan.Status = CStatus.Active;
+                    await _db.SaveChangesAsync();
+                    return new PhaseResponse
+                    {
+                        Success = true,
+                        Msg = "Loan Active.",
+                        Component = "LoanInfo",
+                        LoanData = loan
+                    };
+                }
+            }
+            catch (Exception ex)
             {
                 return new PhaseResponse
                 {
                     Success = false,
-                    Msg = "Error. No loan found."
-                };
-            }
-
-            if (loan.Status == CStatus.Pending)
-            {
-                /**
-                 wait for approval...
-                return new PhaseResponse
-                {
-                    Success = false,
-                    Msg = "Loan Pending.",
+                    Msg = "APPROVAL " + ex.Message,
                     Component = "LoanInfo",
-                    LoanData = loan
-                };
-                */
+                    LoanData = request.LoanData,
 
-                loan.Status = CStatus.Paid;
-                await _db.SaveChangesAsync();
-                return new PhaseResponse
-                {
-                    Success = true,
-                    Msg = "Loan Paid.",
-                    Component = "TakeLoan",
-                    LoanData = loan
                 };
             }
 
-            if (loan.Status == CStatus.Rejected)
-            {
-                loan.Status = CStatus.Pre;
-                loan.Amount = 0;
-                await _db.SaveChangesAsync();
-                return new PhaseResponse
-                {
-                    Success = false,
-                    Msg = "Loan rejected.",
-                    Component = "LoanInfo",
-                    LoanData = loan
-                };
-
-            }
-
-            if (loan.Status == CStatus.Disbursed)
-            {
-                loan.Status = CStatus.Active;
-                await _db.SaveChangesAsync();
-                return new PhaseResponse
-                {
-                    Success = true,
-                    Msg = "Loan Active.",
-                    Component = "LoanInfo",
-                    LoanData = loan
-                };
-
-            }
-
-            loan.Status = CStatus.Unknown;
-            await _db.SaveChangesAsync();
             return new PhaseResponse
             {
                 Success = false,
-                Msg = "Approval failed",
+                Msg = "Pay CStatus error.",
                 Component = "LoanInfo",
-                LoanData = loan
+                LoanData = request.LoanData
             };
         }
-        private async Task<PhaseResponse> Pay()
+
+        private async Task<PhaseResponse> Pay(PhaseRequest request)
         {
-            var (success, loan) = await _loan
-                .GetCurrentLoanAsync();
-            if (!success || loan == null)
+            _logger.LogInformation("\nPay ->Paid\n");
+
+            try
+            {
+                var loan = request.LoanData;
+                if (loan.Status == CStatus.Active)
+                {
+                    loan.Status = CStatus.Paid;
+                    await _db.SaveChangesAsync();
+                    return new PhaseResponse
+                    {
+                        Success = true,
+                        Msg = "Loan Paid.",
+                        Component = "TakeLoan",
+                        LoanData = loan
+                    };
+                }
+            }
+            catch (Exception ex)
             {
                 return new PhaseResponse
                 {
                     Success = false,
-                    Msg = "Error. No loan found."
-                };
-            }
-
-            if (loan.Status == CStatus.Disbursed)
-            {
-
-                loan.Status = CStatus.Paid;
-                await _db.SaveChangesAsync();
-                return new PhaseResponse
-                {
-                    Success = true,
-                    Msg = "Loan Paid.",
+                    Msg = "PAY " + ex.Message,
                     Component = "LoanInfo",
-                    LoanData = loan
-                };
+                    LoanData = request.LoanData,
 
+                };
             }
-            loan.Status = CStatus.Unknown;
-            await _db.SaveChangesAsync();
+
             return new PhaseResponse
             {
                 Success = false,
-                Msg = "Error.",
+                Msg = "Pay CStatus error.",
                 Component = "LoanInfo",
-                LoanData = loan
+                LoanData = request.LoanData
             };
         }
     }

@@ -1,6 +1,7 @@
 import React from 'react';
 
 const phases = [
+  'Pre',
   'Initial',
   'Create',
   'Pending',

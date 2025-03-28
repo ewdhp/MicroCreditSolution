@@ -16,7 +16,7 @@ namespace MicroCredit.Models
         Paid,
         Due,
         Rejected,
-        Unknown,
+        Unknown
     }
 
     public class Loan
@@ -27,7 +27,7 @@ namespace MicroCredit.Models
         public Guid Id { get; set; }
 
         [Required(ErrorMessage = "User ID is required")]
-        public Guid UserId { get; set; }
+        public Guid UserId { get; set; } = GetCurrentUserId();
 
         [Required(ErrorMessage = "Start date is required")]
         public DateTime StartDate { get; set; }
@@ -49,7 +49,7 @@ namespace MicroCredit.Models
         public string Currency { get; } = "MXN";
 
         [Required(ErrorMessage = "Status is required")]
-        public CStatus Status { get; set; }
+        public CStatus Status { get; set; } = CStatus.Unknown;
 
         [Required(ErrorMessage = "Loan description is required")]
         [StringLength(500, MinimumLength = 10,
@@ -74,6 +74,14 @@ namespace MicroCredit.Models
             if (!(elapsedDays < 0))
                 return InterestRate * Amount * totalDays / totalDays;
             return 0;
+        }
+
+        private static Guid GetCurrentUserId()
+        {
+            // Replace this with your actual logic to retrieve the current user's ID
+            // For example, if using ASP.NET Core, you might use:
+            // return Guid.Parse(HttpContext.Current.User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            return Guid.NewGuid(); // Placeholder for demonstration
         }
     }
 }
