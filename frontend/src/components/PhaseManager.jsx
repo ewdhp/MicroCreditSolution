@@ -17,7 +17,8 @@ const PhaseManager = () => {
         }
         try {
             console.log("🚀 Sending request", request);
-            const response = await fetch('https://localhost:5001/api/loan/next', {
+            const response = await 
+            fetch('https://localhost:5001/api/loan/next', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -46,14 +47,15 @@ const PhaseManager = () => {
                     console.log("ComponentToRender:", ComponentToRender);
 
                     if (!ComponentToRender) {
-                        console.error(`Component "${fetchedData.component}" not found.`);
+                        console.error(`Component "
+                        ${fetchedData.component}" not found.`);
                         return;
                     }
-
-       
-                        setPhaseData({ component: ComponentToRender, props: { loan: loanData } });
-                    
-
+      
+                    setPhaseData({ 
+                        component: ComponentToRender, 
+                        props: { loan: loanData } });
+                  
                     const loanStatus = fetchedData.loanData?.status;
                     console.log("🎉 Fetched loanStatus:", loanStatus);
 
@@ -65,26 +67,30 @@ const PhaseManager = () => {
                 console.error("Error::", errorData);
                 // Handle "Amount error." case
                 if (errorData.response.msg === "Amount error.") {
-                    console.log("🚫 Amount error detected. Showing TakeLoan component.");
-                    setPhaseData({ component: TakeLoan, props: { loan: null } });
+                    console.log("🚫 Amount error detected." + 
+                        "Showing TakeLoan component.");
+                    setPhaseData({ component: TakeLoan, 
+                        props: { loan: null } });
                 }
             }
         } catch (error) {
-            console.error("Error fetching:", error);
+            console.error
+            ("Error fetching:", error);
         }
     };
 
     const handleFetchNextPhase = (amount) => {
-        console.log("Fetching next phase with amount:", amount);
+        console.log
+        ("Fetching next:", amount);
         fetchPhaseData({ Amount: amount});
        
     };
 
     useEffect(() => {
-        // Fetch the initial phase data only once
         if (isFirstLoad) {
-            fetchPhaseData({ init: { amount: 0 } }); // Start with amount 0
-            setIsFirstLoad(false); // Mark the first load as handled
+            fetchPhaseData
+            ({ init: { amount: 0 } });
+            setIsFirstLoad(false);
         }
     }, [isFirstLoad]);
 
@@ -93,14 +99,13 @@ const PhaseManager = () => {
     }
 
     const ComponentToRender = phase.component;
-    console.log("Props being passed to ComponentToRender:", phase.props);
 
     return (
         <div>
             <h2>Phase Manager</h2>
-
-            {/* Render the current phase component */}
-            <ComponentToRender {...phase.props} onFetchNextPhase={handleFetchNextPhase} />
+            <ComponentToRender {...phase.props} 
+            onFetchNextPhase={handleFetchNextPhase} 
+             />
         </div>
     );
 };
