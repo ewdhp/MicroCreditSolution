@@ -32,12 +32,14 @@ const StepLabel = styled.div`
   font-size: 12px;
 `;
 
-const Stepper = ({ steps, currentStep }) => {
+const Stepper = ({ steps, cs }) => {
   return (
     <StepperContainer>
       {steps.map((step, index) => (
         <Step key={index}>
-          <StepNumber $active={index === currentStep}>{index + 1}</StepNumber>
+          <StepNumber 
+          $active={index === cs}>{index + 1}
+          </StepNumber>
           <StepLabel>{step}</StepLabel>
         </Step>
       ))}

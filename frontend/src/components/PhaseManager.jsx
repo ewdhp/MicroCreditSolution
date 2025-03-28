@@ -5,20 +5,23 @@ import LoanInfo from './LoanInfo';
 
 const PhaseManager = () => {
     const [phase, setPhaseData] = useState(null);
-    const { amount } = useContext(LoanContext); // Get amount from LoanContext
-    const [isFirstLoad, setIsFirstLoad] = useState(true); // Track if it's the first page load
+    const { amount } = useContext(LoanContext);
+    const [isFirstLoad, setIsFirstLoad] = useState(true);
 
     const fetchPhaseData = async (request) => {
         console.log("⏳ Fetching phase data...");
-        const token = localStorage.getItem('token');
+
+        const token = localStorage.getItem('token');       
+        //this is not used?
         if (amount == null) {
-            console.error("Amount is null, cannot fetch phase data.");
+            console.error("Amount is null, cannot fetch.");
             return;
         }
+
         try {
             console.log("🚀 Sending request", request);
             const response = await 
-            fetch('https://localhost:5001/api/loan/next', {
+                fetch('https://localhost:5001/api/loan/next', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -27,10 +30,9 @@ const PhaseManager = () => {
                 body: JSON.stringify(request)
             });
 
-            if (response.status === 200) {
+            if (response.status === 200) {            
                 const fetchedData = await response.json();
                 console.log("✅ Fetched Data:", fetchedData);
-
                 if (fetchedData.success) {
                     const componentMap = {
                         'TakeLoan': TakeLoan,
@@ -38,34 +40,23 @@ const PhaseManager = () => {
                     };
 
                     const ComponentToRender = fetchedData.component
-                        ? componentMap[fetchedData.component]
-                        : null;
+                        ? componentMap[fetchedData.component]: null;
                     const loanData = fetchedData.loanData || null;
-
-                    console.log("Loan Data:", loanData);
-                    console.log("Component:", fetchedData.component);
-                    console.log("ComponentToRender:", ComponentToRender);
-
                     if (!ComponentToRender) {
                         console.error(`Component "
                         ${fetchedData.component}" not found.`);
                         return;
-                    }
-      
-                    setPhaseData({ 
-                        component: ComponentToRender, 
-                        props: { loan: loanData } });
-                  
+                    }     
+                    setPhaseData({ component: ComponentToRender, 
+                        props: { loan: loanData } });                 
                     const loanStatus = fetchedData.loanData?.status;
-                    console.log("🎉 Fetched loanStatus:", loanStatus);
-
+                    console.log("loanStatus:", loanStatus);
                 } else {
                     console.error("Error:", fetchedData.msg);
                 }
             } else {
                 const errorData = await response.json();
                 console.error("Error::", errorData);
-                // Handle "Amount error." case
                 if (errorData.response.msg === "Amount error.") {
                     console.log("🚫 Amount error detected." + 
                         "Showing TakeLoan component.");
@@ -74,8 +65,7 @@ const PhaseManager = () => {
                 }
             }
         } catch (error) {
-            console.error
-            ("Error fetching:", error);
+            console.error("Error fetching:", error);
         }
     };
 
@@ -95,7 +85,7 @@ const PhaseManager = () => {
     }, [isFirstLoad]);
 
     if (!phase) {
-        return <p>Loading phase data...</p>;
+        return <p>Loading phase</p>;
     }
 
     const ComponentToRender = phase.component;
