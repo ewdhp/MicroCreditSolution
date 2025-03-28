@@ -5,15 +5,16 @@ import LoanInfo from './LoanInfo';
 
 const PhaseManager = () => {
     const [phase, setPhaseData] = useState(null);
-    const { amount, setAmount } = useContext(LoanContext); // Get amount from LoanContext
-    const [currentRequest, setCurrentRequest] = useState({ init: { amount } }); // Start with the initial phase
-    const [isManualFetch, setIsManualFetch] = useState(false); // Track if the fetch is manual
-    const [isInitialFetchDone, setIsInitialFetchDone] = useState(false); // Track if the initial fetch is done
+    const { amount } = useContext(LoanContext); // Get amount from LoanContext
+    const [isFirstLoad, setIsFirstLoad] = useState(true); // Track if it's the first page load
 
     const fetchPhaseData = async (request) => {
         console.log("⏳ Fetching phase data...");
         const token = localStorage.getItem('token');
-
+        if (amount == null) {
+            console.error("Amount is null, cannot fetch phase data.");
+            return;
+        }
         try {
             console.log("🚀 Sending request", request);
             const response = await fetch('https://localhost:5001/api/loan/next', {
@@ -49,12 +50,9 @@ const PhaseManager = () => {
                         return;
                     }
 
-                    if (loanData.status === 1) {
-                        setPhaseData({ component: componentMap['TakeLoan'], props: { loan: null } });
-                        fetchPhaseData({ Amount: amount }); // Use dynamic amount from slider
-                    } else {
+       
                         setPhaseData({ component: ComponentToRender, props: { loan: loanData } });
-                    }
+                    
 
                     const loanStatus = fetchedData.loanData?.status;
                     console.log("🎉 Fetched loanStatus:", loanStatus);
@@ -65,20 +63,30 @@ const PhaseManager = () => {
             } else {
                 const errorData = await response.json();
                 console.error("Error::", errorData);
+                // Handle "Amount error." case
+                if (errorData.response.msg === "Amount error.") {
+                    console.log("🚫 Amount error detected. Showing TakeLoan component.");
+                    setPhaseData({ component: TakeLoan, props: { loan: null } });
+                }
             }
         } catch (error) {
             console.error("Error fetching:", error);
         }
     };
 
+    const handleFetchNextPhase = (amount) => {
+        console.log("Fetching next phase with amount:", amount);
+        fetchPhaseData({ Amount: amount});
+       
+    };
+
     useEffect(() => {
         // Fetch the initial phase data only once
-        if (!isInitialFetchDone) {
-            fetchPhaseData({ init: { amount } }); // Use dynamic amount from slider
-            console.log("Initial fetch done");
-            setIsInitialFetchDone(true); // Mark the initial fetch as done
+        if (isFirstLoad) {
+            fetchPhaseData({ init: { amount: 0 } }); // Start with amount 0
+            setIsFirstLoad(false); // Mark the first load as handled
         }
-    }, [isInitialFetchDone, amount]);
+    }, [isFirstLoad]);
 
     if (!phase) {
         return <p>Loading phase data...</p>;
@@ -91,34 +99,8 @@ const PhaseManager = () => {
         <div>
             <h2>Phase Manager</h2>
 
-            {/* Slider to adjust the amount */}
-                        {phase.props?.loan?.status === 1 && (
-                            <div>
-                                <label htmlFor="amount-slider">Loan Amount: {amount}</label>
-                                <input
-                                    id="amount-slider"
-                                    type="range"
-                                    min="100"
-                                    max="1000"
-                                    step="50"
-                                    value={amount}
-                                    onChange={(e) => setAmount(Number(e.target.value))} // Update amount dynamically
-                                />
-                            </div>
-                        )}
-
-                        {/* Render the current phase component */}
-            <ComponentToRender {...phase.props} />
-
-            {/* Button to trigger the next phase */}
-            <button
-                onClick={() => {
-                    setIsManualFetch(true); // Mark this as a manual fetch
-                    fetchPhaseData({ Amount: amount }); // Use dynamic amount from slider
-                }}
-            >
-                Go to Next Phase
-            </button>
+            {/* Render the current phase component */}
+            <ComponentToRender {...phase.props} onFetchNextPhase={handleFetchNextPhase} />
         </div>
     );
 };
