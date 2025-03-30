@@ -30,12 +30,13 @@ const TwilioSMS = ({ onVerifySuccess, onError }) => {
     setErrorMessage(''); // Clear previous errors
 
     if (!validatePhoneNumber(`+52${phone}`)) {
-      setErrorMessage('El número de teléfono no es válido. Debe incluir el código de país.');
+      setErrorMessage('El número de teléfono no es válido.');
       return;
     }
 
     try {
-      const response = await axios.post('https://localhost:5001/api/testauth/send', {
+      const response = await axios
+      .post('https://localhost:5001/api/testauth/send', {
         Phone: `+52${phone}`, // Ensure the phone number includes the country code
       });
       if (response.status === 200) {

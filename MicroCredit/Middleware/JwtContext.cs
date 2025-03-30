@@ -19,10 +19,11 @@ namespace MicroCredit.Middleware
         private readonly FingerprintService _fingerprintService;
 
         public JwtMiddleware
-        (RequestDelegate next,
-        IConfiguration configuration,
-        ILogger<JwtMiddleware> logger,
-        FingerprintService fingerprintService)
+        (
+            RequestDelegate next,
+            IConfiguration configuration,
+            ILogger<JwtMiddleware> logger,
+            FingerprintService fingerprintService)
         {
             _next = next;
             _configuration = configuration;

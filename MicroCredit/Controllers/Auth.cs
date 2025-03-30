@@ -54,6 +54,7 @@ namespace MicroCredit.Controllers
             ("Code request sent for phone: {Phone}", request.Phone);
             return Ok(new { message = "Code request sent" });
         }
+
         [HttpPost("verify")]
         public IActionResult VerifySMS([FromBody] SMSRequest request)
         {
@@ -61,83 +62,31 @@ namespace MicroCredit.Controllers
 
             if (!ModelState.IsValid)
             {
-                return BadRequest(new { message = "Invalid request model" });
+                return BadRequest
+                (new { message = "Invalid request model" });
             }
 
             if (request.Code != "123456")
             {
-                return BadRequest(new { message = "Invalid code" });
+                return BadRequest
+                (new { message = "Invalid code" });
             }
 
             try
             {
-                // Extract the token from the Authorization header
-                var authHeader = HttpContext.Request.Headers["Authorization"].FirstOrDefault();
-                string token = null;
-
-                if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer "))
-                {
-                    token = authHeader.Substring("Bearer ".Length).Trim();
-                }
-
-                var existingUser = _context.Users.FirstOrDefault(u => u.Phone == request.Phone);
+                var existingUser = _context.Users
+                .FirstOrDefault(u => u.Phone == request.Phone);
                 if (existingUser != null)
                 {
-                    if (!string.IsNullOrEmpty(token))
+                    var token = GenerateToken
+                    (request.Phone,
+                    _fpService.GenerateFingerprint(HttpContext));
+                    return Ok(new
                     {
-                        _logger.LogInformation("Token provided for phone: {Phone}", request.Phone);
-                        try
-                        {
-                            var tokenHandler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
-                            var jwtToken = tokenHandler.ReadJwtToken(token);
-                            var phone = jwtToken.Claims.FirstOrDefault(c => c.Type == "PhoneNumber")?.Value;
-
-                            if (phone != request.Phone)
-                            {
-                                return BadRequest(new { message = "Phone does not match" });
-                            }
-
-                            var expClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == "exp")?.Value;
-                            if (expClaim != null && long.TryParse(expClaim, out var exp))
-                            {
-                                var expDate = DateTimeOffset.FromUnixTimeSeconds(exp).UtcDateTime;
-                                if (expDate < DateTime.UtcNow)
-                                {
-                                    throw new SecurityTokenExpiredException("Token has expired");
-                                }
-                            }
-
-                            var fingerprint = _fpService.GenerateFingerprint(HttpContext);
-                            var tokenFingerprint = jwtToken.Claims.FirstOrDefault(c => c.Type == "Fingerprint")?.Value;
-
-                            if (fingerprint != tokenFingerprint)
-                            {
-                                return BadRequest(new { message = "Invalid fingerprint" });
-                            }
-
-                            return Ok(new
-                            {
-                                message = "Login successful",
-                                token = token,
-                                loginProviders = existingUser.LoginProviders
-                            });
-                        }
-                        catch (SecurityTokenExpiredException ex)
-                        {
-                            _logger.LogWarning(ex, "Token has expired");
-                            return BadRequest(new { message = "Token has expired" });
-                        }
-                    }
-                    else
-                    {
-                        _logger.LogInformation("User without token");
-                        return Ok(new
-                        {
-                            message = "Login with no token",
-                            token = GenerateToken(request.Phone, _fpService.GenerateFingerprint(HttpContext)),
-                            loginProviders = existingUser.LoginProviders
-                        });
-                    }
+                        message = "Login successful",
+                        token = token,
+                        loginProviders = existingUser.LoginProviders
+                    });
                 }
 
                 var newUser = new User
@@ -150,7 +99,9 @@ namespace MicroCredit.Controllers
                 _context.Users.Add(newUser);
                 _context.SaveChanges();
 
-                var newToken = GenerateToken(request.Phone, _fpService.GenerateFingerprint(HttpContext));
+                var newToken = GenerateToken
+                (request.Phone,
+                _fpService.GenerateFingerprint(HttpContext));
                 _logger.LogInformation("Signup successful");
 
                 return Ok(new
@@ -163,7 +114,9 @@ namespace MicroCredit.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error during verification");
-                return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Internal server error" });
+                return StatusCode
+                (StatusCodes.Status500InternalServerError,
+                new { message = "Internal server error" });
             }
         }
         [HttpGet("login-providers")]

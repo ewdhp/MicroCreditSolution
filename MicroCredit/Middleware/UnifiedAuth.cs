@@ -12,8 +12,9 @@ namespace MicroCredit.Middleware
         private readonly TokenValidationService _tokenValidationService;
 
         public UnifiedAuth
-        (RequestDelegate next,
-        TokenValidationService tokenValidationService)
+        (
+            RequestDelegate next,
+            TokenValidationService tokenValidationService)
         {
             _next = next ?? throw new ArgumentNullException(nameof(next));
             _tokenValidationService = tokenValidationService ??
@@ -25,16 +26,19 @@ namespace MicroCredit.Middleware
             // Check if the request is a WebSocket request
             if (context.WebSockets.IsWebSocketRequest)
             {
-                var token = context.Request.Headers["Authorization"].ToString();
+                var token = context.Request
+                .Headers["Authorization"].ToString();
 
                 if (string.IsNullOrWhiteSpace(token))
                 {
                     context.Response.StatusCode = 400; // Bad Request
-                    await context.Response.WriteAsync("Authorization token is missing.");
+                    await context.Response.WriteAsync
+                    ("Authorization token is missing.");
                     return;
                 }
 
-                var (isValid, claims) = _tokenValidationService.ValidateToken(token);
+                var (isValid, claims) = _tokenValidationService
+                    .ValidateToken(token);
                 if (!isValid)
                 {
                     context.Response.StatusCode = 401; // Unauthorized
@@ -43,7 +47,8 @@ namespace MicroCredit.Middleware
                 }
 
                 // If valid, proceed with WebSocket connection
-                var webSocket = await context.WebSockets.AcceptWebSocketAsync();
+                var webSocket = await context
+                .WebSockets.AcceptWebSocketAsync();
                 await HandleWebSocketConnection(webSocket, token);
             }
             else
@@ -70,9 +75,11 @@ namespace MicroCredit.Middleware
 
                 var responseMessage = System.Text.Encoding
                 .UTF8.GetBytes("Message received.");
+
                 await webSocket.SendAsync(new ArraySegment<byte>
-                (responseMessage), System.Net.WebSockets.WebSocketMessageType.Text,
-                true, System.Threading.CancellationToken.None);
+                (responseMessage), System.Net.WebSockets
+                .WebSocketMessageType.Text, true,
+                System.Threading.CancellationToken.None);
 
                 result = await webSocket.ReceiveAsync
                 (new ArraySegment<byte>(buffer),
@@ -80,8 +87,8 @@ namespace MicroCredit.Middleware
             }
 
             await webSocket.CloseAsync(result.CloseStatus.Value,
-            result.CloseStatusDescription,
-            System.Threading.CancellationToken.None);
+            result.CloseStatusDescription, System.Threading
+            .CancellationToken.None);
         }
     }
 }
