@@ -9,7 +9,6 @@ const PhaseManager = () => {
     const [isFirstLoad, setIsFirstLoad] = useState(true);
 
     const fetchPhaseData = async (request) => {
-        console.log("⏳ Fetching phase data...");
         const token = localStorage.getItem('token'); 
         try {
             console.log("🚀 Sending request", request);
@@ -22,30 +21,24 @@ const PhaseManager = () => {
                 },
                 body: JSON.stringify(request)
             });
-
             if (response.status === 200) {            
                 const fetchedData = await response.json();
-                console.log("✅ Fetched Data:", fetchedData);
-
                 if (fetchedData.success) {
                     const componentMap = {
                         'TakeLoan': TakeLoan,
                         'LoanInfo': LoanInfo
                     };
                     const ComponentToRender = fetchedData.component
-                        ? componentMap[fetchedData.component]: null;
+                    ? componentMap[fetchedData.component]: null;
                     const loanData = fetchedData.loanData || null;
-                    if (!ComponentToRender) {
-                        console.error
-                        (`${fetchedData.component}" not found.`);
-                        return;
-                    } 
+                    if (!ComponentToRender) return;
                     if(loanData.status == 7){
                         fetchPhaseData({ Amount: 0 });
                         return;
                     }    
-                    setPhaseData({ component: ComponentToRender, 
-                        props: { loan: loanData } });                 
+                    setPhaseData({
+                      component: ComponentToRender, 
+                      props: { loan: loanData } });                 
                 } else {
                     console.error("Error:", fetchedData.msg);
                 }
@@ -54,13 +47,13 @@ const PhaseManager = () => {
                 console.error("Error::", errorData);
                 if (errorData.response.msg === "Amount error.") {
                     console.log("🚫 Amount error detected." + 
-                        "Showing TakeLoan component.");
+                    "Showing TakeLoan component.");
                     setPhaseData({ component: TakeLoan, 
                         props: { loan: null } });
                 }
             }
         } catch (error) {
-            console.error("Error fetching:", error);
+            console.error(error);
         }
     };
 

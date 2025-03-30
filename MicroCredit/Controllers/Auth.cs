@@ -13,174 +13,262 @@ namespace MicroCredit.Controllers
 {
     [ApiController]
     [Route("api/testauth")]
-    public class AuthController(
-        UDbContext context,
-        ILogger<AuthController> logger,
-        IJwtTokenService jwtTokenService,
-        FingerprintService fingerprintService,
-        IUCService userContextService) : ControllerBase
+    public class AuthController : ControllerBase
     {
-        private readonly ILogger<AuthController> _logger = logger;
-        private readonly IJwtTokenService _jwtTokenService = jwtTokenService;
-        private readonly UDbContext _context = context;
-        private readonly FingerprintService _fingerprintService = fingerprintService;
-        private readonly IUCService _userContextService = userContextService;
+        private readonly UDbContext _context;
+        private readonly ILogger<AuthController> _logger;
+        private readonly IJwtTokenService _jwtTkService;
+        private readonly FingerprintService _fpService;
+        private readonly IUCService _ucs;
+
+        public AuthController
+        (
+            UDbContext context,
+            ILogger<AuthController> logger,
+            IJwtTokenService jwtTkService,
+            FingerprintService fpService,
+            IUCService ucs
+            )
+        {
+            _context = context;
+            _logger = logger;
+            _jwtTkService = jwtTkService;
+            _fpService = fpService;
+            _ucs = ucs;
+        }
 
         [HttpPost("send")]
         public IActionResult SendSMS([FromBody] SMSRequest request)
         {
-            _logger.LogInformation("Simulating sending verification SMS to {PhoneNumber}", request.Phone);
-
-            if (string.IsNullOrEmpty(request.Phone) || !request.Phone.StartsWith("+"))
+            if (string.IsNullOrEmpty(request.Phone) ||
+                !request.Phone.StartsWith("+"))
             {
-                _logger.LogWarning("Invalid phone number format: {PhoneNumber}", request.Phone);
-                return BadRequest(new { message = "Phone number must be in E.164 format (e.g., +1234567890)" });
+                _logger.LogWarning("Invalid phone format");
+                return BadRequest(new
+                {
+                    message = "Phone number must be in E.164 format"
+                });
             }
 
-            _logger.LogInformation("Verification SMS simulated for {PhoneNumber}", request.Phone);
-            return Ok(new { message = "Verification SMS simulated" });
+            _logger.LogInformation
+            ("Code request sent for phone: {Phone}", request.Phone);
+            return Ok(new { message = "Code request sent" });
         }
 
         [HttpPost("verify")]
         public IActionResult VerifySMS([FromBody] SMSRequest request)
         {
-            _logger.LogInformation("Simulating verification for {PhoneNumber}", request.Phone);
+            _logger.LogInformation("Simulating verification");
 
             if (!ModelState.IsValid)
             {
-                _logger.LogInformation("Invalid model request");
-                return BadRequest(new { message = "Invalid model request" });
+                return BadRequest
+                (new { message = "Invalid request model" });
             }
 
-            if (request.Code != "123456") // Simulate a fixed verification code
+            if (request.Code != "123456")
             {
-                return BadRequest(new { message = "Invalid verification code" });
+                return BadRequest
+                (new { message = "Invalid code" });
             }
 
-            if (request.Action == "signup")
+            try
             {
-                try
-                {
-                    var currentUser = _userContextService.GetUserId();
-                    if (currentUser != Guid.Empty)
-                    {
-                        _logger.LogInformation("UserContext with phone number {PhoneNumber} already exists", request.Phone);
-                        return BadRequest(new { message = "User already exists" });
-                    }
-                }
-                catch (UnauthorizedAccessException ex)
-                {
-                    _logger.LogWarning(ex, "User ID claim is missing or invalid.");
-                }
-
-                var existingUser = _context.Users.FirstOrDefault(u => u.Phone == request.Phone);
+                var existingUser = _context
+                .Users.FirstOrDefault
+                (u => u.Phone == request.Phone);
                 if (existingUser != null)
                 {
-                    _logger.LogInformation("User with phone number {PhoneNumber} already exists", request.Phone);
-                    return BadRequest(new { message = "User already exists" });
+                    if (!string.IsNullOrEmpty(request.Token))
+                    {
+                        try
+                        {
+                            var tokenHandler = new System
+                            .IdentityModel.Tokens.Jwt
+                            .JwtSecurityTokenHandler();
+                            var jwtToken = tokenHandler
+                            .ReadJwtToken(request.Token);
+                            var phone = jwtToken.Claims
+                            .FirstOrDefault
+                            (c => c.Type == "PhoneNumber")?
+                            .Value;
+
+                            if (phone != request.Phone)
+                            {
+                                return BadRequest(new
+                                {
+                                    message = "Phone does not match"
+                                });
+                            }
+
+                            var expClaim = jwtToken
+                            .Claims.FirstOrDefault
+                            (c => c.Type == "exp")?.Value;
+                            if (expClaim != null && long
+                            .TryParse(expClaim, out var exp))
+                            {
+                                var expDate = DateTimeOffset
+                                .FromUnixTimeSeconds(exp).UtcDateTime;
+                                if (expDate < DateTime.UtcNow)
+                                {
+                                    throw new
+                                    SecurityTokenExpiredException
+                                    ("Token has expired");
+                                }
+                            }
+
+                            var fingerprint = _fpService
+                            .GenerateFingerprint(HttpContext);
+                            var tokenFingerprint = jwtToken.Claims
+                            .FirstOrDefault(c => c.Type == "Fingerprint")?
+                            .Value;
+
+                            if (fingerprint != tokenFingerprint)
+                            {
+                                return BadRequest(new
+                                {
+                                    message = "Invalid fingerprint"
+                                });
+                            }
+                            return Ok(new
+                            {
+                                message = "Login successful",
+                                token = request.Token,
+                                loginProviders = existingUser.LoginProviders
+                            });
+                        }
+                        catch (SecurityTokenExpiredException ex)
+                        {
+                            _logger.LogWarning
+                            (ex, "Token has expired");
+                            return BadRequest
+                            (new { message = "Token has expired" });
+                        }
+                    }
+
+                    return Ok(new
+                    {
+                        message = "Login successful",
+                        token = GenerateToken(request.Phone,
+                        _fpService.GenerateFingerprint(HttpContext))
+                    });
                 }
 
-                var fingerprint = _fingerprintService.GenerateFingerprint(HttpContext);
-                _logger.LogInformation("User fingerprint generated successfully for {PhoneNumber}", request.Phone);
-
-                _logger.LogInformation("request info: {Action}, {Phone}, {Name}", request.Action, request.Phone, request.Name);
                 var newUser = new User
                 {
                     Phone = request.Phone,
                     Name = "Usuario",
                     RegDate = DateTime.UtcNow
                 };
+
                 _context.Users.Add(newUser);
                 _context.SaveChanges();
-                _logger.LogInformation("User created and saved successfully for {PhoneNumber}", request.Phone);
 
-                var token = GenerateToken(request.Phone, fingerprint);
-                _logger.LogInformation("Token generated successfully for {PhoneNumber}", request.Phone);
+                var token = GenerateToken(request.Phone,
+                _fpService.GenerateFingerprint(HttpContext));
+                _logger.LogInformation("Signup successful");
 
-                return Ok(new { message = "Signup successful", token });
+                return Ok(new
+                {
+                    message = "Signup successful",
+                    token,
+                    loginProviders = newUser.LoginProviders
+                });
             }
-            else if (request.Action == "login")
+            catch (Exception ex)
             {
-                if (!string.IsNullOrEmpty(request.Token))
+                _logger.LogError
+                (ex, "Error during verification");
+                return StatusCode(StatusCodes
+                .Status500InternalServerError, new
                 {
-                    // Validate the provided token
-                    var tokenHandler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
-                    try
-                    {
-                        var jwtToken = tokenHandler.ReadJwtToken(request.Token);
-                        var phone = jwtToken.Claims.FirstOrDefault(c => c.Type == "PhoneNumber")?.Value;
-                        var tokenFingerprint = jwtToken.Claims.FirstOrDefault(c => c.Type == "Fingerprint")?.Value;
-                        var expClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == "exp")?.Value;
-
-                        _logger.LogInformation("Token Claims - PhoneNumber: {PhoneNumber}, Fingerprint: {Fingerprint}, Exp: {Exp}", phone, tokenFingerprint, expClaim);
-
-                        if (phone != request.Phone)
-                        {
-                            _logger.LogWarning("Token phone number does not match request phone number");
-                            return BadRequest(new { message = "Invalid token" });
-                        }
-
-                        if (expClaim != null && long.TryParse(expClaim, out var exp))
-                        {
-                            var expirationDate = DateTimeOffset.FromUnixTimeSeconds(exp).UtcDateTime;
-                            if (expirationDate < DateTime.UtcNow)
-                            {
-                                _logger.LogWarning("Token has expired");
-                                throw new SecurityTokenExpiredException("Token has expired");
-                            }
-                        }
-
-                        var existingUser = _context.Users.FirstOrDefault(u => u.Phone == phone);
-                        if (existingUser == null)
-                        {
-                            _logger.LogInformation("User with phone number {PhoneNumber} not found", request.Phone);
-                            return NotFound(new { message = "User not found" });
-                        }
-
-                        var fp = _fingerprintService.GenerateFingerprint(HttpContext);
-                        if (fp != tokenFingerprint)
-                        {
-                            _logger.LogWarning("Invalid fingerprint. Expected: {Expected}, Actual: {Actual}", fp, tokenFingerprint);
-                            return BadRequest(new { message = "Invalid fingerprint" });
-                        }
-
-                        _logger.LogInformation("Token validated successfully for {PhoneNumber}", request.Phone);
-                        return Ok(new { message = "Login successful", token = request.Token });
-                    }
-                    catch (SecurityTokenExpiredException ex)
-                    {
-                        _logger.LogWarning(ex, "Token has expired");
-                        // Skip to else block to generate a new token
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "Invalid token");
-                        return BadRequest(new { message = "Invalid token" });
-                    }
-                }
-
-                // This else block will be executed if the token is expired or not provided
-                var user = _context.Users.FirstOrDefault(u => u.Phone == request.Phone);
-                if (user == null)
-                {
-                    _logger.LogInformation("User with phone number {PhoneNumber} not found", request.Phone);
-                    return NotFound(new { message = "User not found" });
-                }
-
-                var fingerprint = _fingerprintService.GenerateFingerprint(HttpContext);
-                _logger.LogInformation("User fingerprint generated successfully for {PhoneNumber}", request.Phone);
-
-                var token = GenerateToken(request.Phone, fingerprint);
-                _logger.LogInformation("Token generated successfully for {PhoneNumber}", request.Phone);
-
-                return Ok(new { message = "Login successful", token });
+                    message = "Internal server error"
+                });
             }
-            return BadRequest(new { message = "Unexpected error occurred" });
         }
 
-        private string GenerateToken(string phone, string fingerprint)
+        [HttpGet("login-providers")]
+        public IActionResult GetLoginProviders()
         {
-            return _jwtTokenService.GenerateJwtToken(phone, fingerprint);
+            var phone = HttpContext
+            .User.Claims.FirstOrDefault
+            (c => c.Type == "PhoneNumber")?.Value;
+            if (string.IsNullOrEmpty(phone))
+            {
+                _logger.LogWarning
+                ("Phone number not found in token");
+                return Unauthorized(new
+                {
+                    message = "Unauthorized access"
+                });
+            }
+            var user = _context
+            .Users.FirstOrDefault
+            (u => u.Phone == phone);
+            if (user == null)
+            {
+                return NotFound(new
+                {
+                    message = "User not found"
+                });
+            }
+
+            return Ok(new
+            {
+                loginProviders = user.LoginProviders
+            });
+        }
+
+        [HttpPost("add-login-provider")]
+        public IActionResult AddLoginProvider([FromBody] string provider)
+        {
+            var phone = HttpContext.User.Claims
+            .FirstOrDefault(c => c.Type == "PhoneNumber")?.Value;
+
+            if (string.IsNullOrEmpty(phone))
+            {
+                _logger.LogWarning("Phone number not found in token");
+                return Unauthorized(new
+                {
+                    message = "Unauthorized access"
+                });
+            }
+
+            var user = _context.Users
+            .FirstOrDefault(u => u.Phone == phone);
+            if (user == null)
+            {
+                return NotFound(new
+                {
+                    message = "User not found"
+                });
+            }
+
+            if (user.LoginProviders
+                .Contains(provider))
+            {
+                return BadRequest(new
+                {
+                    message = "Provider already exists"
+                });
+            }
+
+            user.LoginProviders.Add(provider);
+            _context.SaveChanges();
+
+            _logger.LogInformation("Added login provider");
+
+            return Ok(new
+            {
+                message = "Login provider added",
+                loginProviders = user.LoginProviders
+            });
+        }
+        private string GenerateToken
+        (string phone, string fingerprint)
+        {
+            return _jwtTkService
+            .GenerateJwtToken(phone, fingerprint);
         }
     }
 
@@ -188,17 +276,22 @@ namespace MicroCredit.Controllers
     {
         [Required]
         [MaxLength(10)]
-        [RegularExpression(@"^(signup|login|verify)$", ErrorMessage = "Action must be either 'signup', 'login', or 'verify'")]
+        [RegularExpression(@"^(signup|login)$",
+        ErrorMessage = "Action must be 'signup' or 'login'")]
         public string Action { get; set; }
 
-        [RegularExpression(@"^\+\d{10,15}$", ErrorMessage = "Phone number must be in E.164 format")]
+        [Required]
+        [RegularExpression(@"^\+\d{10,15}$",
+        ErrorMessage = "Phone number must be in E.164 format")]
         public string Phone { get; set; }
 
         [MaxLength(50)]
-        [RegularExpression(@"^[a-zA-Z]+$", ErrorMessage = "Name must contain only letters")]
+        [RegularExpression(@"^[a-zA-Z]+$",
+        ErrorMessage = "Name must contain only letters")]
         public string Name { get; set; }
 
-        [RegularExpression(@"^\d{6}$", ErrorMessage = "Code must be exactly 6 digits")]
+        [RegularExpression(@"^\d{6}$",
+        ErrorMessage = "Code must be exactly 6 digits")]
         public string Code { get; set; }
 
         [MaxLength(500)]

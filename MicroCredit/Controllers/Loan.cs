@@ -1,13 +1,11 @@
+using System;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
-using System;
-using System.Collections.Concurrent;
 using MicroCredit.Services;
 using MicroCredit.Models;
-using System.Threading;
 
 namespace MicroCredit.Controllers
 {
@@ -16,12 +14,13 @@ namespace MicroCredit.Controllers
     [Route("api/loan")]
     public class LoanController : ControllerBase
     {
-        private readonly ILogger<LoanController> _logger;
         private readonly IServiceProvider _sc;
+        private readonly ILogger<LoanController> _logger;
 
         public LoanController
-        (ILogger<LoanController> logger,
-        IServiceProvider serviceProvider)
+        (
+            ILogger<LoanController> logger,
+            IServiceProvider serviceProvider)
         {
             _logger = logger;
             _sc = serviceProvider;
@@ -34,8 +33,10 @@ namespace MicroCredit.Controllers
             ("Fetching loans for the current user.");
             try
             {
-                var loanService = _sc.GetRequiredService<LoanService>();
-                var loans = await loanService.GetAllLoansAsync();
+                var loanService = _sc
+                .GetRequiredService<LoanService>();
+                var loans = await loanService
+                .GetAllLoansAsync();
                 return Ok(loans);
             }
             catch (Exception ex)
@@ -48,9 +49,9 @@ namespace MicroCredit.Controllers
         }
 
         [HttpPost("next")]
-        public async Task<IActionResult> ProcessNextPhase(PhaseRequest request)
+        public async Task<IActionResult>
+        ProcessNextPhase(PhaseRequest request)
         {
-            _logger.LogInformation("Phase request received.");
             try
             {
                 if (request == null)

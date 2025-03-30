@@ -1,21 +1,10 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { useAuth } from '../context/AuthContext';
-import { useEffect } from 'react';
 
-const Login = () => {
+const TwilioSMS = ({ onVerifySuccess, onError }) => {
   const [phone, setPhoneNumber] = useState('');
   const [smsCode, setSmsCode] = useState('');
   const [currentStep, setCurrentStep] = useState(0);
-  const navigate = useNavigate();
-  const { login, isAuthenticated } = useAuth();
-
-   useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/dashboard');
-    }
-  }, [isAuthenticated, navigate]);
 
   const handlePhoneNumberChange = (e) => {
     setPhoneNumber(e.target.value);
@@ -29,52 +18,42 @@ const Login = () => {
     e.preventDefault();
     try {
       const response = await axios.post('https://localhost:5001/api/testauth/send', {
-        Action: 'login',
+        Action: 'signup',
         Phone: `+52${phone}`, // Ensure the phone number includes the country code
       });
       if (response.status === 200) {
-        setCurrentStep(1);
+        setCurrentStep(1); // Move to SMS verification step
       } else {
-        alert('Failed to send SMS. Please try again.');
+        onError('Failed to send SMS. Please try again.');
       }
     } catch (error) {
       console.error('Error sending SMS:', error);
-      alert('Failed to send SMS. Please try again.');
+      onError('Failed to send SMS. Please try again.');
     }
   };
 
   const handleVerifySms = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('https://localhost:5001/api/testauth/verify', {
-        Action: 'login',
+      const response = await axios
+      .post('https://localhost:5001/api/testauth/verify', {
+        Action: 'signup',
         Phone: `+52${phone}`, // Ensure the phone number includes the country code
         Code: smsCode,
       });
 
       if (response.status === 200) {
-        const token = response.data.token;
-        login(token); // Update the authentication state
-        console.log('Verification successful, navigating to dashboard...');
-        navigate('/');
+        onVerifySuccess(response.data); // Pass the response data to the parent component
       } else {
-        alert('Invalid SMS code. Please try again.');
+        onError('Invalid SMS code. Please try again.');
       }
     } catch (error) {
       console.error('Error verifying SMS:', error);
-      alert('Invalid SMS code. Please try again.');
+      onError('Invalid SMS code. Please try again.');
     }
   };
 
   const styles = {
-    container: {
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      height: 'calc(100vh - 100px)', // Adjust the height to account for the navbar
-      padding: '30px',
-      backgroundColor: '#f9f9f9',
-    },
     form: {
       display: 'flex',
       flexDirection: 'column',
@@ -92,7 +71,7 @@ const Login = () => {
       marginBottom: '20px',
       borderRadius: '4px',
       border: '1px solid #ccc',
-      boxSizing: 'border-box', // Ensure padding is included in the width
+      boxSizing: 'border-box',
     },
     button: {
       width: '100%',
@@ -103,16 +82,15 @@ const Login = () => {
       color: '#fff',
       fontSize: '1em',
       cursor: 'pointer',
-      boxSizing: 'border-box', // Ensure padding is included in the width
+      boxSizing: 'border-box',
     },
     heading: {
-      margin: '0 0 20px 0', // Remove extra margin and add bottom margin
+      margin: '0 0 20px 0',
     },
   };
 
   return (
-    <div style={styles.container}>
-      <h1>Acceso</h1>
+    <>
       {currentStep === 0 && (
         <form style={styles.form} onSubmit={handleSendSms}>
           <h2 style={styles.heading}>Ingresa tu télefono</h2>
@@ -139,8 +117,8 @@ const Login = () => {
           <button type="submit" style={styles.button}>Verificar</button>
         </form>
       )}
-    </div>
+    </>
   );
 };
 
-export default Login;
+export default TwilioSMS;

@@ -38,21 +38,20 @@ namespace MicroCredit.Services
             _context = context ?? throw new
             ArgumentNullException(nameof(context));
             _db = db ?? throw new
-            ArgumentNullException(nameof(db));
+            ArgumentNullException
+            (nameof(db));
         }
 
-        public async Task<(bool Success, Loan Loan)>
+        public async
+        Task<(bool Success, Loan Loan)>
         CreateLoanAsync(decimal amount)
         {
             // Get the current user's ID
             var userId = _context.GetUserId();
-            _logger.LogInformation("\nUSER ID: {id}\n", userId);
             // Check if the user already has any loan that is not in the Paid status
-            var existingLoan = await _db.Loans
-                .AsNoTracking() // Prevents tracking to avoid concurrency issues
-                .FirstOrDefaultAsync
-                (l => l.UserId == userId &&
-                l.Status != CStatus.Paid);
+            var existingLoan = await _db.Loans.AsNoTracking() // Prevents tracking to avoid concurrency issues
+            .FirstOrDefaultAsync(l => l.UserId == userId &&
+              l.Status != CStatus.Paid);
 
             if (existingLoan != null)
             {
@@ -86,7 +85,7 @@ namespace MicroCredit.Services
                 // Return success with the created loan
                 return (true, loan);
             }
-            catch (DbUpdateException ex)
+            catch (DbUpdateException)
             {
                 return (false, null);
             }
@@ -94,8 +93,8 @@ namespace MicroCredit.Services
         public async Task<(bool, Loan)> GetCurrentLoanAsync()
         {
             var userId = _context.GetUserId();
-            var loan = await _db.Loans.FirstOrDefaultAsync(
-                l => l.UserId == userId &&
+            var loan = await _db.Loans.FirstOrDefaultAsync
+              (l => l.UserId == userId &&
                 (int)l.Status != 7);
             return (loan != null, loan);
         }
@@ -107,8 +106,8 @@ namespace MicroCredit.Services
         {
             var userId = _context.GetUserId();
             var existingLoan = await _db.Loans
-            .FirstOrDefaultAsync
-            (l => l.UserId == userId);
+              .FirstOrDefaultAsync
+              (l => l.UserId == userId);
             if (existingLoan == null) throw new
             InvalidOperationException("No loan found.");
             existingLoan.Status = (CStatus)status;
@@ -126,8 +125,8 @@ namespace MicroCredit.Services
         {
             var userId = _context.GetUserId();
             var userLoans = await _db.Loans
-             .Where(l => l.UserId == userId)
-                .ToListAsync();
+              .Where(l => l.UserId == userId)
+              .ToListAsync();
             if (!userLoans.Any()) throw new
                 InvalidOperationException
                 ("No loans found.");
@@ -141,8 +140,10 @@ namespace MicroCredit.Services
             var allPaid = !await _db.Loans.AnyAsync
             (l => l.UserId == userId &&
             l.Status != CStatus.Paid);
-            var loan = await _db.Loans.FirstOrDefaultAsync
-            (l => l.UserId == userId && l.Status != CStatus.Paid);
+            var loan = await _db.Loans
+            .FirstOrDefaultAsync
+            (l => l.UserId == userId &&
+            l.Status != CStatus.Paid);
             return (allPaid, loan);
         }
     }

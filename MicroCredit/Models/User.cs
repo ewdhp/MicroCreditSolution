@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 namespace MicroCredit.Models
@@ -29,6 +30,9 @@ namespace MicroCredit.Models
 
         [Timestamp]
         public byte[] RowVersion { get; set; }
+
+        // New property to track login providers
+        public List<string> LoginProviders { get; set; } = [];
 
         public User()
         {

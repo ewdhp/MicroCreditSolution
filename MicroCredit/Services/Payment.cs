@@ -5,8 +5,7 @@ namespace MicroCredit.Services
 {
     public interface IPay
     {
-        public IPayResponse 
-        Process(Loan data);
+        public IPayResponse Process(Loan data);
     }
 
     public interface IPayResponse
@@ -16,19 +15,19 @@ namespace MicroCredit.Services
     }
 
     public class PayService
-    ( UDbContext dbContext,
+    (UDbContext dbContext,
         IUCService user)
     {
-        protected readonly IUCService _user = user ?? 
+        protected readonly IUCService _user = user ??
         throw new ArgumentNullException(nameof(user));
-        
-        protected readonly UDbContext _dbContext = dbContext ?? 
+
+        protected readonly UDbContext _dbContext = dbContext ??
         throw new ArgumentNullException(nameof(dbContext));
     }
 
     public class PayOnline
-    (IUCService u, UDbContext c) : 
-        PayService(c, u), 
+    (IUCService u, UDbContext c) :
+        PayService(c, u),
             IPay
     {
         public IPayResponse Process(Loan data)
@@ -38,8 +37,8 @@ namespace MicroCredit.Services
     }
 
     public class PayInStore
-    (IUCService u, UDbContext c) : 
-        PayService(c, u), 
+    (IUCService u, UDbContext c) :
+        PayService(c, u),
             IPay
     {
         public IPayResponse Process(Loan data)

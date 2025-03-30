@@ -18,10 +18,14 @@ namespace MicroCredit.Services
             ILoanService loanService,
             ILogger<PhaseService> logger)
         {
-            _db = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-            _u = userCS ?? throw new ArgumentNullException(nameof(userCS));
-            _loan = loanService ?? throw new ArgumentNullException(nameof(loanService));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _db = dbContext ?? throw new
+            ArgumentNullException(nameof(dbContext));
+            _u = userCS ?? throw new
+            ArgumentNullException(nameof(userCS));
+            _loan = loanService ?? throw new
+            ArgumentNullException(nameof(loanService));
+            _logger = logger ?? throw new
+            ArgumentNullException(nameof(logger));
         }
 
         public async Task<PhaseResponse> GetPhaseAsync(PhaseRequest request)
@@ -102,7 +106,8 @@ namespace MicroCredit.Services
             try
             {
                 var loan = request.LoanData;
-                if (request.Amount < 100 || request.Amount > 300)
+                if (request.Amount < 100 ||
+                    request.Amount > 300)
                 {
                     return new PhaseResponse
                     {

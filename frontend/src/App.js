@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Home from './views/Home';
-import Login from './components/Login';
+import LoginPage from './components/login/Login';
 import Dashboard from './views/Dashboard';
 import DashboardLayout from './components/DashboardLayout';
 import History from './views/History';
@@ -33,7 +33,7 @@ const App = () => {
         <div style={styles.mainContent}>
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/login" element={<Login />} />
+            <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/dashboard" element={<ProtectedRoute element={<DashboardLayout />} />}>
               <Route index element={<Dashboard />} />

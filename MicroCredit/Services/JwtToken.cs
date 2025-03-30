@@ -15,17 +15,17 @@ using MicroCredit.Data;
 namespace MicroCredit.Services
 {
     public interface IJwtTokenService
-    {      
+    {
         void InvalidateToken(string userId);
         bool IsTokenInvalidated(string userId);
         string GenerateJwtToken
-        (string phone, 
+        (string phone,
             string fp
             );
     }
 
-    public class 
-    JwtTokenService : 
+    public class
+    JwtTokenService :
     IJwtTokenService
     {
         private readonly UDbContext _context;
@@ -46,13 +46,11 @@ namespace MicroCredit.Services
 
         public string GenerateJwtToken(string phone, string fp)
         {
-            _logger.LogInformation
-            ("Generating JWT token");
-            var user = _context.Users
-                .FirstOrDefault
-                (u => u.Phone == phone);
+            var user = _context
+            .Users.FirstOrDefault
+            (u => u.Phone == phone);
             if (user == null)
-                throw new 
+                throw new
                 Exception("User not found");
 
             var claims = new[]
@@ -61,29 +59,27 @@ namespace MicroCredit.Services
                 new Claim("PhoneNumber", phone),
                 new Claim("Id", user.Id.ToString()),
                 new Claim("Fingerprint", fp),
-                new Claim(JwtRegisteredClaimNames.Jti, 
+                new Claim(JwtRegisteredClaimNames.Jti,
                 Guid.NewGuid().ToString())
             };
 
             var key = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes
-                (_configuration["Jwt:Key"]));
+            Encoding.UTF8.GetBytes
+            (_configuration["Jwt:Key"]));
             var creds = new SigningCredentials(
-                key, SecurityAlgorithms.HmacSha256);
+            key, SecurityAlgorithms.HmacSha256);
             var token = new JwtSecurityToken(
-                issuer: _configuration["Jwt:Issuer"],
-                audience: _configuration["Jwt:Issuer"],
-                claims: claims,
-                expires: DateTime.Now.AddMinutes(30),
-                signingCredentials: creds);
-
-            var tokenString = new 
+            issuer: _configuration["Jwt:Issuer"],
+            audience: _configuration["Jwt:Issuer"],
+            claims: claims, expires: DateTime
+            .Now.AddMinutes(30),
+            signingCredentials: creds);
+            var tokenString = new
                 JwtSecurityTokenHandler()
                 .WriteToken(token);
 
-            _logger.LogInformation
-            ("token generated");  
-                     
+            _logger.LogInformation("token generated");
+
             return tokenString;
         }
 
