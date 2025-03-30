@@ -17,8 +17,7 @@ def signup_login(phone, code):
     """
     payload = {
         "Phone": phone,
-        "Code": code,
-        "Action": "login"
+        "Code": code
     }
 
     print("\nPerforming Login or signup...")

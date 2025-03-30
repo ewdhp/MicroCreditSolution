@@ -7,7 +7,7 @@ import Dashboard from './views/Dashboard';
 import DashboardLayout from './components/DashboardLayout';
 import History from './views/History';
 import Refer from './views/Refer';
-import Signup from './components/Signup';
+
 
 import { AuthProvider, useAuth } from './context/AuthContext';
 import './App.css';
@@ -34,8 +34,10 @@ const App = () => {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<LoginPage />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/dashboard" element={<ProtectedRoute element={<DashboardLayout />} />}>
+            <Route path="/signup" element={<LoginPage />} />
+            <Route path="/dashboard" 
+            element={<ProtectedRoute 
+            element={<DashboardLayout />} />}>
               <Route index element={<Dashboard />} />
               <Route path="history" element={<History />} />
               <Route path="refer" element={<Refer />} />

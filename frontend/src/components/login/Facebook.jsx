@@ -1,61 +1,67 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
-import TwilioSMS from './TwilioSMS';
+import PropTypes from 'prop-types';
 
-const Facebook = () => {
-  const [currentStep, setCurrentStep] = useState(0); // 0: SMS verification, 1: Image upload and selection
-  const [errorMessage, setErrorMessage] = useState(''); // Store error messages
-  const [uploadedImages, setUploadedImages] = useState([]); // Store uploaded images
-  const [selectedImages, setSelectedImages] = useState([]); // Store selected images
-  const navigate = useNavigate();
-  const { login } = useAuth();
+const Facebook = ({ onSubmit }) => {
+  const [images, setImages] = useState([]);
+  const [submissionStatus, setSubmissionStatus] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleVerifySuccess = (data) => {
-    const { token } = data;
-    login(token); // Update the authentication state
-    setCurrentStep(1); // Move to the image upload and selection step
+  const handleImageUpload = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length + images.length > 5) {
+      setSubmissionStatus('You can upload up to 5 images only.');
+      return;
+    }
+    setImages((prevImages) => [...prevImages, ...files]);
+    setSubmissionStatus('');
   };
 
-  const handleImageUpload = (event) => {
-    const files = Array.from(event.target.files);
-    const imageUrls = files.map((file) => URL.createObjectURL(file));
-    setUploadedImages((prev) => [...prev, ...imageUrls]);
-  };
-
-  const handleImageSelection = (image) => {
-    setSelectedImages((prev) =>
-      prev.includes(image) ? 
-    prev.filter((img) => img !== image) : 
-    [...prev, image]
-    );
+  const handleRemoveImage = (index) => {
+    setImages((prevImages) => prevImages.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async () => {
+    if (images.length === 0) {
+      setSubmissionStatus('Please upload at least one image.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmissionStatus('');
     try {
-      const token = localStorage.getItem('token'); // Retrieve the token from localStorage
-      const response = await 
-      fetch('https://localhost:5001/auth/add-login-provider', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ 
-          provider: 'facebook', 
-          images: selectedImages }),
+      const token = localStorage.getItem('token'); 
+      const formData = new FormData();
+      formData.append('provider', 'facebook');
+      images.forEach((image, index) => {
+        formData.append(`images[${index}]`, image);
       });
+      
+    // Prepare the payload as a JSON object
+    const payload = JSON.stringify({ Provider: 'facebook' });
+
+    const response = await 
+    fetch("https://localhost:5001/api/testauth/add-login-provider", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: payload,
+    });
 
       if (response.ok) {
-        navigate('/dashboard'); // Redirect to the dashboard after successful submission
+        setSubmissionStatus('Images uploaded successfully!');
+        onSubmit(); 
       } else {
         const errorData = await response.json();
-        setErrorMessage(`Error: 
-          ${errorData.message || 
-            'Failed to add login provider'}`);
+        setSubmissionStatus(`Error: ${errorData.message || 
+          'Failed to add login provider'}`);
       }
     } catch (error) {
-      setErrorMessage(`Error: ${error.message}`);
+      console.error('Error during submission:', error);
+      setSubmissionStatus('An error occurred. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -64,86 +70,114 @@ const Facebook = () => {
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      height: 'calc(100vh - 100px)', // Adjust the height to account for the navbar
-      padding: '30px',
-      backgroundColor: '#f9f9f9',
+      maxWidth: '400px',
+      margin: '0 auto',
+      padding: '1rem',
+      backgroundColor: '#fff',
+      borderRadius: '8px',
+      boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)',
     },
-    errorMessage: {
-      color: 'red',
-      marginTop: '1rem',
+    title: {
+      marginBottom: '1rem',
+      fontSize: '1.5rem',
+      fontWeight: 'bold',
+      color: '#333',
     },
-    imageGrid: {
-      display: 'grid',
-      gridTemplateColumns: 'repeat(3, 1fr)',
+    imagePreview: {
+      display: 'flex',
+      flexWrap: 'wrap',
       gap: '10px',
-      marginTop: '20px',
+      marginBottom: '1rem',
     },
     image: {
-      width: '100px',
-      height: '100px',
+      width: '80px',
+      height: '80px',
+      objectFit: 'cover',
+      borderRadius: '4px',
+      position: 'relative',
+    },
+    removeButton: {
+      position: 'absolute',
+      top: '5px',
+      right: '5px',
+      backgroundColor: 'red',
+      color: 'white',
+      border: 'none',
+      borderRadius: '50%',
       cursor: 'pointer',
-      border: '2px solid transparent',
+      width: '20px',
+      height: '20px',
+      fontSize: '12px',
     },
-    selectedImage: {
-      border: '2px solid blue',
-    },
-    uploadInput: {
-      marginTop: '20px',
-    },
-    submitButton: {
-      marginTop: '20px',
-      padding: '10px 20px',
+    button: {
+      width: '100%',
+      maxWidth: '300px',
+      padding: '10px',
       backgroundColor: '#007bff',
       color: 'white',
       border: 'none',
-      borderRadius: '5px',
+      borderRadius: '4px',
+      fontSize: '1rem',
       cursor: 'pointer',
+      marginBottom: '0.5rem',
+    },
+    disabledButton: {
+      backgroundColor: '#ccc',
+      cursor: 'not-allowed',
+    },
+    status: {
+      marginTop: '1rem',
+      fontSize: '1rem',
+      color: submissionStatus
+      .includes('successfully') ? 'green' : 'red',
     },
   };
 
   return (
     <div style={styles.container}>
-      <h1>Acceso</h1>
-      {errorMessage && <p style={styles.errorMessage}>{errorMessage}</p>}
-
-      {currentStep === 0 && (
-        <TwilioSMS
-          onVerifySuccess={handleVerifySuccess}
-          onError={setErrorMessage}
-        />
-      )}
-
-      {currentStep === 1 && (
-        <>
-          <h2>Upload and Select Images</h2>
-          <input
-            type="file"
-            accept="image/*"
-            multiple
-            style={styles.uploadInput}
-            onChange={handleImageUpload}
-          />
-          <div style={styles.imageGrid}>
-            {uploadedImages.map((image, index) => (
-              <img
-                key={index}
-                src={image}
-                alt={`Uploaded ${index}`}
-                style={{
-                  ...styles.image,
-                  ...(selectedImages.includes(image) ? styles.selectedImage : {}),
-                }}
-                onClick={() => handleImageSelection(image)}
-              />
-            ))}
+      <h2 style={styles.title}>Upload Images for Facebook Login</h2>
+      <div style={styles.imagePreview}>
+        {images.map((image, index) => (
+          <div key={index} style={{ position: 'relative' }}>
+            <img
+              src={URL.createObjectURL(image)}
+              alt={`Uploaded ${index + 1}`}
+              style={styles.image}
+            />
+            <button
+              style={styles.removeButton}
+              onClick={() => handleRemoveImage(index)}
+            >
+              &times;
+            </button>
           </div>
-          <button style={styles.submitButton} onClick={handleSubmit}>
-            Submit
-          </button>
-        </>
-      )}
+        ))}
+      </div>
+      <input
+        type="file"
+        accept="image/*"
+        multiple
+        onChange={handleImageUpload}
+        disabled={isSubmitting}
+      />
+      <button
+        style={{
+          ...styles.button,
+          ...(isSubmitting ? styles.disabledButton : {}),
+        }}
+        onClick={handleSubmit}
+        disabled={isSubmitting}
+      >
+        {isSubmitting ? 'Submitting...' : 'Submit'}
+      </button>
+      {submissionStatus && 
+      <p style={styles.status}>{submissionStatus}</p>}
     </div>
   );
+};
+
+Facebook.propTypes = {
+  onSubmit: PropTypes.func.isRequired,
 };
 
 export default Facebook;

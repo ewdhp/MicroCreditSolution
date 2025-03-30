@@ -5,6 +5,7 @@ const TwilioSMS = ({ onVerifySuccess, onError }) => {
   const [phone, setPhoneNumber] = useState('');
   const [smsCode, setSmsCode] = useState('');
   const [currentStep, setCurrentStep] = useState(0);
+  const [errorMessage, setErrorMessage] = useState(''); // State for error messages
 
   const handlePhoneNumberChange = (e) => {
     setPhoneNumber(e.target.value);
@@ -14,45 +15,87 @@ const TwilioSMS = ({ onVerifySuccess, onError }) => {
     setSmsCode(e.target.value);
   };
 
+  const validatePhoneNumber = (phone) => {
+    const phoneRegex = /^\+\d{10,15}$/; // E.164 format
+    return phoneRegex.test(phone);
+  };
+
+  const validateSmsCode = (code) => {
+    const codeRegex = /^\d{6}$/; // Exactly 6 digits
+    return codeRegex.test(code);
+  };
+
   const handleSendSms = async (e) => {
     e.preventDefault();
+    setErrorMessage(''); // Clear previous errors
+
+    if (!validatePhoneNumber(`+52${phone}`)) {
+      setErrorMessage('El número de teléfono no es válido. Debe incluir el código de país.');
+      return;
+    }
+
     try {
       const response = await axios.post('https://localhost:5001/api/testauth/send', {
-        Action: 'signup',
         Phone: `+52${phone}`, // Ensure the phone number includes the country code
       });
       if (response.status === 200) {
         setCurrentStep(1); // Move to SMS verification step
       } else {
-        onError('Failed to send SMS. Please try again.');
+        onError('No se pudo enviar el SMS. Inténtalo de nuevo.');
       }
     } catch (error) {
       console.error('Error sending SMS:', error);
-      onError('Failed to send SMS. Please try again.');
+      onError('No se pudo enviar el SMS. Inténtalo de nuevo.');
     }
   };
 
-  const handleVerifySms = async (e) => {
-    e.preventDefault();
-    try {
-      const response = await axios
-      .post('https://localhost:5001/api/testauth/verify', {
-        Action: 'signup',
+const handleVerifySms = async (e) => {
+  e.preventDefault();
+  setErrorMessage(''); // Clear previous errors
+
+  if (!validateSmsCode(smsCode)) {
+    setErrorMessage('El código SMS debe tener exactamente 6 dígitos.');
+    return;
+  }
+
+  try {
+    let token = localStorage.getItem('token');
+    if (token) {
+      token = `Bearer ${token}`;
+    } else {
+      console.warn('Token is missing from localStorage');
+    }
+
+    const response = await axios.post(
+      'https://localhost:5001/api/testauth/verify',
+      {
         Phone: `+52${phone}`, // Ensure the phone number includes the country code
         Code: smsCode,
-      });
-
-      if (response.status === 200) {
-        onVerifySuccess(response.data); // Pass the response data to the parent component
-      } else {
-        onError('Invalid SMS code. Please try again.');
+      },
+      {
+        headers: {
+          Authorization: token || '', // Include the token in the Authorization header if it exists
+        },
       }
-    } catch (error) {
-      console.error('Error verifying SMS:', error);
-      onError('Invalid SMS code. Please try again.');
-    }
-  };
+    );
 
+    if (response.status === 200) {
+
+        const { token} = response.data;
+        if (token) {
+          localStorage.setItem('token', token);
+          console.log('Token saved to localStorage:', token);
+        }
+
+      onVerifySuccess(response.data); // Pass the response data to the parent component
+    } else {
+      onError('El código SMS no es válido. Inténtalo de nuevo.');
+    }
+  } catch (error) {
+    console.error('Error verifying SMS:', error);
+    onError('El código SMS no es válido. Inténtalo de nuevo.');
+  }
+};
   const styles = {
     form: {
       display: 'flex',
@@ -84,6 +127,10 @@ const TwilioSMS = ({ onVerifySuccess, onError }) => {
       cursor: 'pointer',
       boxSizing: 'border-box',
     },
+    error: {
+      color: 'red',
+      marginBottom: '20px',
+    },
     heading: {
       margin: '0 0 20px 0',
     },
@@ -94,12 +141,14 @@ const TwilioSMS = ({ onVerifySuccess, onError }) => {
       {currentStep === 0 && (
         <form style={styles.form} onSubmit={handleSendSms}>
           <h2 style={styles.heading}>Ingresa tu télefono</h2>
+          {errorMessage && <p style={styles.error}>{errorMessage}</p>}
           <input
             type="text"
             placeholder="Teléfono"
             value={phone}
             onChange={handlePhoneNumberChange}
             style={styles.input}
+            aria-label="Teléfono"
           />
           <button type="submit" style={styles.button}>Enviar Código</button>
         </form>
@@ -107,12 +156,14 @@ const TwilioSMS = ({ onVerifySuccess, onError }) => {
       {currentStep === 1 && (
         <form style={styles.form} onSubmit={handleVerifySms}>
           <h2 style={styles.heading}>Verificar Código</h2>
+          {errorMessage && <p style={styles.error}>{errorMessage}</p>}
           <input
             type="text"
             placeholder="Código SMS"
             value={smsCode}
             onChange={handleSmsCodeChange}
             style={styles.input}
+            aria-label="Código SMS"
           />
           <button type="submit" style={styles.button}>Verificar</button>
         </form>

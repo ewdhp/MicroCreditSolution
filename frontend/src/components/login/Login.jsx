@@ -11,9 +11,16 @@ const Login = () => {
   const { login } = useAuth();
 
   const handleVerifySuccess = (data) => {
-    const { token } = data;
+    const { token, loginProviders } = data;
+    console.log('received:', data);
     login(token); // Update the authentication state
-    setCurrentStep(1); // Move to the Facebook login step
+console.log('login provider: ', loginProviders[0]);
+  if (loginProviders[0] === 'facebook') {
+    console.log('Login successful');
+    navigate('/dashboard');
+  }
+    console.log('Login successful');
+    setCurrentStep(1);
   };
 
   const handleProviderSubmitSuccess = () => {
