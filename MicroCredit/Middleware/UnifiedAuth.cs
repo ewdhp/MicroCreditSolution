@@ -58,7 +58,8 @@ namespace MicroCredit.Middleware
             }
         }
 
-        private async Task HandleWebSocketConnection
+        private async Task
+        HandleWebSocketConnection
         (System.Net.WebSockets.WebSocket webSocket, string token)
         {
             // Example WebSocket handling logic

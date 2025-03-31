@@ -8,7 +8,6 @@ import DashboardLayout from './components/DashboardLayout';
 import History from './views/History';
 import Refer from './views/Refer';
 
-
 import { AuthProvider, useAuth } from './context/AuthContext';
 import './App.css';
 
@@ -22,22 +21,23 @@ const App = () => {
     navbar: {},
     mainContent: {
       marginTop: '65px', // Adjust this value based on the height of your Navbar
-       backgroundColor: 'rgba(183, 176, 187, 0.9)',
+      backgroundColor: 'rgba(183, 176, 187, 0.9)',
     },
   };
 
   return (
-    <AuthProvider>
-      <Router>
+    <Router>
+      <AuthProvider>
         <Navbar style={styles.navbar} />
         <div style={styles.mainContent}>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<LoginPage />} />
-            <Route path="/dashboard" 
-            element={<ProtectedRoute 
-            element={<DashboardLayout />} />}>
+            <Route
+              path="/dashboard"
+              element={<ProtectedRoute element={<DashboardLayout />} />}
+            >
               <Route index element={<Dashboard />} />
               <Route path="history" element={<History />} />
               <Route path="refer" element={<Refer />} />
@@ -45,8 +45,8 @@ const App = () => {
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </div>
-      </Router>
-    </AuthProvider>
+      </AuthProvider>
+    </Router>
   );
 };
 
