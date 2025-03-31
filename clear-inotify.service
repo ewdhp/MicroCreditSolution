@@ -1,0 +1,11 @@
+[Unit]
+Description=Clear Excessive Inotify Instances for .NET Processes
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/clear_inotify.sh
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

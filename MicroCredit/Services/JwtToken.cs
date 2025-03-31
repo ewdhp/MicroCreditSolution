@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
@@ -11,6 +10,7 @@ using System.Security.Cryptography;
 using System.Text;
 using MicroCredit.Models;
 using MicroCredit.Data;
+using Microsoft.AspNetCore.Http;
 
 namespace MicroCredit.Services
 {
@@ -18,21 +18,16 @@ namespace MicroCredit.Services
     {
         void InvalidateToken(string userId);
         bool IsTokenInvalidated(string userId);
-        string GenerateJwtToken
-        (string phone,
-            string fp
-            );
+        string GenerateJwtToken(string phone, string fingerprint);
+        bool IsTokenValid(string token, string currentFingerprint); // Add this method
     }
 
-    public class
-    JwtTokenService :
-    IJwtTokenService
+    public class JwtTokenService : IJwtTokenService
     {
         private readonly UDbContext _context;
         private readonly IConfiguration _configuration;
         private readonly ILogger<JwtTokenService> _logger;
-        private readonly ConcurrentDictionary<string, string>
-        _invalidated = new ConcurrentDictionary<string, string>();
+        private readonly ConcurrentDictionary<string, string> _invalidated = new ConcurrentDictionary<string, string>();
 
         public JwtTokenService(
             IConfiguration configuration,
@@ -44,41 +39,33 @@ namespace MicroCredit.Services
             _context = context;
         }
 
-        public string GenerateJwtToken(string phone, string fp)
+        public string GenerateJwtToken(string phone, string fingerprint)
         {
-            var user = _context
-            .Users.FirstOrDefault
-            (u => u.Phone == phone);
+            var user = _context.Users.FirstOrDefault(u => u.Phone == phone);
             if (user == null)
-                throw new
-                Exception("User not found");
+                throw new Exception("User not found");
 
             var claims = new[]
             {
                 new Claim(JwtRegisteredClaimNames.Sub, phone),
                 new Claim("PhoneNumber", phone),
                 new Claim("Id", user.Id.ToString()),
-                new Claim("Fingerprint", fp),
-                new Claim(JwtRegisteredClaimNames.Jti,
-                Guid.NewGuid().ToString())
+                new Claim("Fingerprint", fingerprint),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 
-            var key = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes
-            (_configuration["Jwt:Key"]));
-            var creds = new SigningCredentials(
-            key, SecurityAlgorithms.HmacSha256);
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
             var token = new JwtSecurityToken(
-            issuer: _configuration["Jwt:Issuer"],
-            audience: _configuration["Jwt:Issuer"],
-            claims: claims, expires: DateTime
-            .Now.AddMinutes(30),
-            signingCredentials: creds);
-            var tokenString = new
-                JwtSecurityTokenHandler()
-                .WriteToken(token);
+                issuer: _configuration["Jwt:Issuer"],
+                audience: _configuration["Jwt:Audience"],
+                claims: claims,
+                expires: DateTime.UtcNow.AddMinutes(30),
+                signingCredentials: creds);
 
-            _logger.LogInformation("token generated");
+            var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
+
+            _logger.LogInformation("Token generated for user: {Phone}", phone);
 
             return tokenString;
         }
@@ -92,25 +79,72 @@ namespace MicroCredit.Services
         {
             return _invalidated.ContainsKey(userId);
         }
+
+        public bool IsTokenValid(string token, string currentFingerprint)
+        {
+            try
+            {
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]);
+
+                var principal = tokenHandler.ValidateToken(token, new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(key),
+                    ValidateIssuer = true,
+                    ValidIssuer = _configuration["Jwt:Issuer"],
+                    ValidateAudience = true,
+                    ValidAudience = _configuration["Jwt:Audience"],
+                    ValidateLifetime = true,
+                    ClockSkew = TimeSpan.Zero
+                }, out SecurityToken validatedToken);
+
+                var jwtToken = (JwtSecurityToken)validatedToken;
+                var tokenFingerprint = jwtToken.Claims.FirstOrDefault(c => c.Type == "Fingerprint")?.Value;
+
+                if (tokenFingerprint == null)
+                {
+                    _logger.LogWarning("Token does not contain a fingerprint claim.");
+                    return false;
+                }
+
+                if (tokenFingerprint != currentFingerprint)
+                {
+                    _logger.LogWarning("Token fingerprint does not match the current fingerprint.");
+                    return false;
+                }
+
+                _logger.LogInformation("Token is valid and fingerprint matches.");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Token validation failed.");
+                return false;
+            }
+        }
     }
 
     public class FingerprintService
     {
-        public string GenerateFingerprint(HttpContext c)
+        public string GenerateFingerprint(HttpContext context)
         {
-            var ipAddress = c.Connection
-            .RemoteIpAddress?.ToString();
-            var userAgent = c.Request
-            .Headers["User-Agent"].ToString();
-            var fp = $"{ipAddress}-{userAgent}";
+            // Retrieve IP address
+            var ipAddress = context.Request.Headers["X-Forwarded-For"].FirstOrDefault() ??
+                            context.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+
+            // Retrieve User-Agent
+            var userAgent = context.Request.Headers["User-Agent"].ToString();
+
+            // Combine IP and User-Agent
+            var fingerprintData = $"{ipAddress}-{userAgent}";
+
+            // Hash the fingerprint data
             using (var sha256 = SHA256.Create())
             {
-                var bytes = Encoding.
-                UTF8.GetBytes(fp);
-                var hash = sha256
-                .ComputeHash(bytes);
-                return Convert
-                .ToBase64String(hash);
+                var bytes = Encoding.UTF8.GetBytes(fingerprintData);
+                var hash = sha256.ComputeHash(bytes);
+                return Convert.ToBase64String(hash);
             }
         }
     }
