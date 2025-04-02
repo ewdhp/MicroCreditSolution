@@ -11,9 +11,6 @@ namespace MicroCredit.Models
         [Column(TypeName = "uuid")]
         public Guid Id { get; set; }
 
-        [ForeignKey("FaceId")]
-        public string FaceId { get; set; }
-
         [Required(ErrorMessage = "Phone is required.")]
         [RegularExpression(@"^\d{10}$",
         ErrorMessage = "Invalid phone number format." +
