@@ -30,11 +30,13 @@ public class JwtMiddleware
 
     public async Task Invoke(HttpContext context)
     {
-        var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
+        var token = context.Request.Headers["Authorization"]
+        .FirstOrDefault()?.Split(" ").Last();
 
         if (string.IsNullOrEmpty(token))
         {
-            _logger.LogWarning("Authorization header is missing or does not contain a token.");
+            _logger.LogWarning
+            ("Authorization header is missing or does not contain a token.");
             await _next(context); // Allow the request to proceed without a token
             return;
         }
@@ -48,7 +50,7 @@ public class JwtMiddleware
         catch (Exception ex)
         {
             _logger.LogError(ex, "Token validation failed");
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized; // Return 401 Unauthorized
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
             return; // Stop further processing
         }
 
@@ -60,9 +62,12 @@ public class JwtMiddleware
         var tokenHandler = new JwtSecurityTokenHandler();
         var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Key"]);
 
-        if (string.IsNullOrEmpty(_configuration["Jwt:Key"]) || _configuration["Jwt:Key"].Length < 32)
+        if (string.IsNullOrEmpty
+        (_configuration["Jwt:Key"]) ||
+        _configuration["Jwt:Key"].Length < 32)
         {
-            throw new ArgumentException("JWT Key must be at least 32 characters long.");
+            throw new ArgumentException
+            ("JWT Key must be at least 32 characters long.");
         }
 
         tokenHandler.ValidateToken(token,
@@ -79,8 +84,10 @@ public class JwtMiddleware
         }, out SecurityToken validatedToken);
 
         var jwtToken = (JwtSecurityToken)validatedToken;
-        var userId = jwtToken.Claims.FirstOrDefault(x => x.Type == "Id")?.Value;
-        var fingerprint = jwtToken.Claims.FirstOrDefault(x => x.Type == "Fingerprint")?.Value;
+        var userId = jwtToken.Claims.FirstOrDefault
+        (x => x.Type == "Id")?.Value;
+        var fingerprint = jwtToken.Claims.FirstOrDefault
+        (x => x.Type == "Fingerprint")?.Value;
 
         if (string.IsNullOrEmpty(userId))
         {
@@ -89,12 +96,15 @@ public class JwtMiddleware
         }
 
         var requestFingerprint = _fingerprintService.GenerateFingerprint(context);
-        _logger.LogInformation("Token Claims: {Claims}", string.Join(", ", jwtToken.Claims.Select(c => $"{c.Type}: {c.Value}")));
-        _logger.LogInformation("Token Fingerprint: {TokenFingerprint}, Request Fingerprint: {RequestFingerprint}", fingerprint, requestFingerprint);
+        _logger.LogInformation("Token Claims: {Claims}",
+        string.Join(", ", jwtToken.Claims.Select(c => $"{c.Type}: {c.Value}")));
+        _logger.LogInformation("Token Fingerprint: {TokenFingerprint}, " +
+        " Request Fingerprint: {RequestFingerprint}", fingerprint, requestFingerprint);
 
         if (fingerprint != requestFingerprint)
         {
-            _logger.LogWarning("Invalid fingerprint. Expected: {Expected}, Actual: {Actual}", fingerprint, requestFingerprint);
+            _logger.LogWarning("Invalid fingerprint. Expected: " +
+            " {Expected}, Actual: {Actual}", fingerprint, requestFingerprint);
             throw new SecurityTokenException("Invalid fingerprint");
         }
 

@@ -3,14 +3,14 @@ import Button from '../components/Button';
 
 const Refer = () => {
   const styles = {
-    container: {
-      backgroundColor: '#fff',
-      borderRadius: '8px',
-      padding: '20px',
-      boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)',
-      maxWidth: '800px',
-      margin: '20px auto',
-      textAlign: 'center',
+        container: {
+        maxWidth: '300px',
+        margin: '0px auto',
+        padding: '10px',
+        border: '1px solid #ccc',
+        borderRadius: '8px',
+        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+        textAlign: 'center',
     },
     heading: {
       fontSize: '2em',

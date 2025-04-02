@@ -26,7 +26,8 @@ const Navbar = ({ style }) => {
       zIndex: 1000,
       padding: '0 20px', // Add padding to the left and right
       boxSizing: 'border-box', // Include padding and border in the element's total width and height
-      backgroundColor: 'rgba(240, 238, 241, 0.9)', // Semi-transparent white background
+      backgroundColor: 'rgb(238, 238, 243)',
+
     },
     logoContainer: {
       display: 'flex',
@@ -39,14 +40,14 @@ const Navbar = ({ style }) => {
     logoText: {
       fontSize: '1.3em',
       fontWeight: 'bold',
-      color: 'rgb(30, 30, 31)',
+      color: 'rgb(61, 61, 61)',
     },
     navLinks: {
       display: 'flex',
       alignItems: 'center',
     },
     link: {
-      color: 'gray',
+
       fontSize: '1em',
       marginLeft: '20px', // Space between the links
       cursor: 'pointer', // Add pointer cursor for links

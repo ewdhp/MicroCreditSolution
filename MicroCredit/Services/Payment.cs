@@ -15,7 +15,8 @@ namespace MicroCredit.Services
     }
 
     public class PayService
-    (UDbContext dbContext,
+    (
+        UDbContext dbContext,
         IUCService user)
     {
         protected readonly IUCService _user = user ??
@@ -26,7 +27,8 @@ namespace MicroCredit.Services
     }
 
     public class PayOnline
-    (IUCService u, UDbContext c) :
+    (
+        IUCService u, UDbContext c) :
         PayService(c, u),
             IPay
     {

@@ -27,7 +27,8 @@ namespace MicroCredit.Services
         private readonly UDbContext _context;
         private readonly IConfiguration _configuration;
         private readonly ILogger<JwtTokenService> _logger;
-        private readonly ConcurrentDictionary<string, string> _invalidated = new ConcurrentDictionary<string, string>();
+        private readonly ConcurrentDictionary<string, string> _invalidated = new
+        ConcurrentDictionary<string, string>();
 
         public JwtTokenService(
             IConfiguration configuration,
@@ -54,7 +55,8 @@ namespace MicroCredit.Services
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+            var key = new SymmetricSecurityKey
+            (Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
             var token = new JwtSecurityToken(
                 issuer: _configuration["Jwt:Issuer"],
@@ -87,7 +89,8 @@ namespace MicroCredit.Services
                 var tokenHandler = new JwtSecurityTokenHandler();
                 var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]);
 
-                var principal = tokenHandler.ValidateToken(token, new TokenValidationParameters
+                var principal = tokenHandler.ValidateToken
+                (token, new TokenValidationParameters
                 {
                     ValidateIssuerSigningKey = true,
                     IssuerSigningKey = new SymmetricSecurityKey(key),
@@ -100,7 +103,8 @@ namespace MicroCredit.Services
                 }, out SecurityToken validatedToken);
 
                 var jwtToken = (JwtSecurityToken)validatedToken;
-                var tokenFingerprint = jwtToken.Claims.FirstOrDefault(c => c.Type == "Fingerprint")?.Value;
+                var tokenFingerprint = jwtToken.Claims.FirstOrDefault
+                (c => c.Type == "Fingerprint")?.Value;
 
                 if (tokenFingerprint == null)
                 {

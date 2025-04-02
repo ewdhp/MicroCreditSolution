@@ -2,18 +2,20 @@ import React, { useState, useEffect, useContext } from 'react';
 import { LoanContext } from '../context/LoanContext';
 import TakeLoan from './TakeLoan';
 import LoanInfo from './LoanInfo';
+import Loader from './Loader'; // Import the Loader component
 
 const PhaseManager = () => {
     const [phase, setPhaseData] = useState(null);
     const { amount } = useContext(LoanContext);
     const [isFirstLoad, setIsFirstLoad] = useState(true);
+    const [isLoading, setIsLoading] = useState(false); // Add loading state
 
     const fetchPhaseData = async (request) => {
         const token = localStorage.getItem('token'); 
+        setIsLoading(true); // Start loading
         try {
             console.log("🚀 Sending request", request);
-            const response = await 
-                fetch('https://localhost:5001/api/loan/next', {
+            const response = await fetch('https://localhost:5001/api/loan/next', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -29,16 +31,18 @@ const PhaseManager = () => {
                         'LoanInfo': LoanInfo
                     };
                     const ComponentToRender = fetchedData.component
-                    ? componentMap[fetchedData.component]: null;
+                        ? componentMap[fetchedData.component]
+                        : null;
                     const loanData = fetchedData.loanData || null;
                     if (!ComponentToRender) return;
-                    if(loanData.status == 7){
+                    if (loanData.status === 7) {
                         fetchPhaseData({ Amount: 0 });
                         return;
                     }    
                     setPhaseData({
-                      component: ComponentToRender, 
-                      props: { loan: loanData } });                 
+                        component: ComponentToRender, 
+                        props: { loan: loanData }
+                    });                 
                 } else {
                     console.error("Error:", fetchedData.msg);
                 }
@@ -46,20 +50,20 @@ const PhaseManager = () => {
                 const errorData = await response.json();
                 console.error("Error::", errorData);
                 if (errorData.response.msg === "Amount error.") {
-                    console.log("🚫 Amount error detected." + 
-                    "Showing TakeLoan component.");
-                    setPhaseData({ component: TakeLoan, 
-                        props: { loan: null } });
+                    console.log("🚫 Amount error detected. Showing TakeLoan component.");
+                    setPhaseData({ component: TakeLoan, props: { loan: null } });
                 }
             }
         } catch (error) {
             console.error(error);
+        } finally {
+            setIsLoading(false); // Stop loading
         }
     };
 
     const handleFetchAmount = (amount) => {
         console.log("Fetching next:", amount);
-        fetchPhaseData({ Amount: amount});       
+        fetchPhaseData({ Amount: amount });       
     };
 
     useEffect(() => {
@@ -69,17 +73,19 @@ const PhaseManager = () => {
         }
     }, [isFirstLoad]);
 
-    if (!phase) {
-        return <p>Loading phase</p>;
+    // Show the loader if loading or phase is not yet set
+    if (isLoading || !phase) {
+        return <Loader />;
     }
 
     const ComponentToRender = phase.component;
 
     return (
         <div>
-            <ComponentToRender {...phase.props} 
-            onFetchNextPhase={handleFetchAmount} 
-             />
+            <ComponentToRender 
+                {...phase.props} 
+                onFetchNextPhase={handleFetchAmount} 
+            />
         </div>
     );
 };

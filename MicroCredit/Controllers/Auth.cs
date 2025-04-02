@@ -19,7 +19,8 @@ namespace MicroCredit.Controllers
         private readonly IJwtTokenService _jwtTkService;
         private readonly FingerprintService _fpService;
 
-        public AuthController(
+        public AuthController
+        (
             UDbContext context,
             ILogger<AuthController> logger,
             IJwtTokenService jwtTkService,
@@ -73,28 +74,8 @@ namespace MicroCredit.Controllers
 
                 if (existingUser != null)
                 {
-                    // Check if the IP in the token matches the current IP
-                    var t = request.Token;
-                    if (!string.IsNullOrEmpty(t) &&
-                    _jwtTkService.IsTokenValid(t, fingerprint))
-                    {
-                        _logger.LogInformation
-                        ("Token is valid and IP matches for user: {Phone}",
-                        request.Phone);
-                        return Ok(new
-                        {
-                            message = "Login successful",
-                            token = t,
-                            loginProviders = existingUser.LoginProviders
-                        });
-                    }
-
-                    // Generate a new token if the IP does not match
-                    var newToken = _jwtTkService
-                    .GenerateJwtToken(existingUser.Phone, fingerprint);
-                    _logger.LogInformation
-                    ("Generated new token for user: {Phone}",
-                    request.Phone);
+                    var newToken = _jwtTkService.GenerateJwtToken
+                    (existingUser.Phone, fingerprint);
 
                     return Ok(new
                     {
@@ -104,7 +85,6 @@ namespace MicroCredit.Controllers
                     });
                 }
 
-                // Create a new user and generate a token
                 var newUser = new User
                 {
                     Phone = request.Phone,
@@ -117,9 +97,9 @@ namespace MicroCredit.Controllers
 
                 var newUserToken = _jwtTkService
                 .GenerateJwtToken(newUser.Phone, fingerprint);
+
                 _logger.LogInformation
-                ("Signup successful for user: {Phone}",
-                request.Phone);
+                ("Signup successful for user: {Phone}", request.Phone);
 
                 return Ok(new
                 {
@@ -140,8 +120,8 @@ namespace MicroCredit.Controllers
         [HttpGet("login-providers")]
         public IActionResult GetLoginProviders()
         {
-            var phone = HttpContext.User.Claims
-            .FirstOrDefault(c => c.Type == "PhoneNumber")?.Value;
+            var phone = HttpContext.User.Claims.FirstOrDefault
+            (c => c.Type == "PhoneNumber")?.Value;
             if (string.IsNullOrEmpty(phone))
             {
                 _logger.LogWarning
@@ -150,8 +130,8 @@ namespace MicroCredit.Controllers
                 (new { message = "Unauthorized access" });
             }
 
-            var user = _context.Users
-            .FirstOrDefault(u => u.Phone == phone);
+            var user = _context.Users.FirstOrDefault
+            (u => u.Phone == phone);
             if (user == null)
             {
                 return NotFound(new { message = "User not found" });

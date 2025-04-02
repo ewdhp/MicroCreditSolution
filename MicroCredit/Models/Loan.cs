@@ -54,7 +54,7 @@ namespace MicroCredit.Models
         [Required(ErrorMessage = "Loan description is required")]
         [StringLength(500, MinimumLength = 10,
         ErrorMessage = "Loan description must be between 10 and 500 chars")]
-        public string LoanDescription => "Credito por 7 dias con 5% de interes diario";
+        public string LoanDescription => "Credito por 7 dias";
 
         public Loan()
         {

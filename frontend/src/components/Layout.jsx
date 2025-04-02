@@ -1,19 +1,16 @@
 import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 
-const DashboardLayout = () => {
+const Layout = () => {
   const styles = {
     layout: {
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      padding: '10px',
+           
     },
     nav: {
-      backgroundColor: '#f8f9fa',
-      borderRadius: '8px',
-      padding: '10px',
-      marginTop: '20px',
+ marginTop: '10px', 
     },
     ul: {
       listStyle: 'none',
@@ -33,7 +30,6 @@ const DashboardLayout = () => {
       color: '#007bff', // Active color is blue
     },
     content: {
-      backgroundColor: 'white',
       borderRadius: '8px',
       margin: '0',
       padding: '0',
@@ -50,22 +46,16 @@ const DashboardLayout = () => {
             <NavLink
               to="/dashboard"
               end
-              style={({ isActive }) => {
-                console.log('Prestamo isActive:', isActive);
-                return isActive ? styles.activeLink : styles.link;
-              }}
+              style={({ isActive }) => (isActive ? styles.activeLink : styles.link)}
             >
-              Prestamo
+              Crédito
             </NavLink>
           </li>
           <li style={styles.li}>
             <NavLink
               to="/dashboard/history"
               end
-              style={({ isActive }) => {
-                console.log('Historial isActive:', isActive);
-                return isActive ? styles.activeLink : styles.link;
-              }}
+              style={({ isActive }) => (isActive ? styles.activeLink : styles.link)}
             >
               Historial
             </NavLink>
@@ -74,10 +64,7 @@ const DashboardLayout = () => {
             <NavLink
               to="/dashboard/refer"
               end
-              style={({ isActive }) => {
-                console.log('Referidos isActive:', isActive);
-                return isActive ? styles.activeLink : styles.link;
-              }}
+              style={({ isActive }) => (isActive ? styles.activeLink : styles.link)}
             >
               Referidos
             </NavLink>
@@ -91,4 +78,4 @@ const DashboardLayout = () => {
   );
 };
 
-export default DashboardLayout;
+export default Layout;

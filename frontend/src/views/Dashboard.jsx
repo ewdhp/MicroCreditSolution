@@ -7,13 +7,12 @@ const Dashboard = () => {
 
   const styles = {
     container: {
-      backgroundColor: '#fff',
-      maxWidth: '800px',
+      margin: '10px auto',
       textAlign: 'center',
     },
     heading: {
       fontSize: '2em',
-      marginBottom: '20px',
+
     },
   };
 

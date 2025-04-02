@@ -15,11 +15,7 @@ namespace MicroCredit.Services
         Task<(bool Success, Loan Loan)>
         CreateLoanAsync(decimal amount);
         Task<(bool, Loan)> GetCurrentLoanAsync();
-        Task<Loan> GetLoanByIdAsync(Guid id);
-        Task UpdateLoanStatusAsync(int status);
         Task<List<Loan>> GetAllLoansAsync();
-        Task DeleteAllLoansAsync();
-        Task<(bool, Loan loan)> AreAllPaidAsync();
     }
 
     public class LoanService : ILoanService
@@ -50,8 +46,8 @@ namespace MicroCredit.Services
             var userId = _context.GetUserId();
             // Check if the user already has any loan that is not in the Paid status
             var existingLoan = await _db.Loans.AsNoTracking() // Prevents tracking to avoid concurrency issues
-            .FirstOrDefaultAsync(l => l.UserId == userId &&
-              l.Status != CStatus.Paid);
+                .FirstOrDefaultAsync(l => l.UserId == userId &&
+                l.Status != CStatus.Paid);
 
             if (existingLoan != null)
             {
@@ -90,61 +86,21 @@ namespace MicroCredit.Services
                 return (false, null);
             }
         }
+
         public async Task<(bool, Loan)> GetCurrentLoanAsync()
         {
             var userId = _context.GetUserId();
             var loan = await _db.Loans.FirstOrDefaultAsync
-              (l => l.UserId == userId &&
-                (int)l.Status != 7);
+              (l => l.UserId == userId && (int)l.Status != 7);
             return (loan != null, loan);
         }
-        public async Task<Loan> GetLoanByIdAsync(Guid id)
-        {
-            return await _db.Loans.FindAsync(id);
-        }
-        public async Task UpdateLoanStatusAsync(int status)
-        {
-            var userId = _context.GetUserId();
-            var existingLoan = await _db.Loans
-              .FirstOrDefaultAsync
-              (l => l.UserId == userId);
-            if (existingLoan == null) throw new
-            InvalidOperationException("No loan found.");
-            existingLoan.Status = (CStatus)status;
-            _db.Loans.Update(existingLoan);
-            await _db.SaveChangesAsync();
-        }
+
         public async Task<List<Loan>> GetAllLoansAsync()
         {
             var userId = _context.GetUserId();
             return await _db.Loans.Where
                 (l => l.UserId == userId)
-                    .ToListAsync();
-        }
-        public async Task DeleteAllLoansAsync()
-        {
-            var userId = _context.GetUserId();
-            var userLoans = await _db.Loans
-              .Where(l => l.UserId == userId)
-              .ToListAsync();
-            if (!userLoans.Any()) throw new
-                InvalidOperationException
-                ("No loans found.");
-            _db.Loans
-            .RemoveRange(userLoans);
-            await _db.SaveChangesAsync();
-        }
-        public async Task<(bool, Loan)> AreAllPaidAsync()
-        {
-            var userId = _context.GetUserId();
-            var allPaid = !await _db.Loans.AnyAsync
-            (l => l.UserId == userId &&
-            l.Status != CStatus.Paid);
-            var loan = await _db.Loans
-            .FirstOrDefaultAsync
-            (l => l.UserId == userId &&
-            l.Status != CStatus.Paid);
-            return (allPaid, loan);
+                .ToListAsync();
         }
     }
 }

@@ -4,16 +4,17 @@ import Navbar from './components/Navbar';
 import Home from './views/Home';
 import LoginPage from './components/login/Login';
 import Dashboard from './views/Dashboard';
-import DashboardLayout from './components/DashboardLayout';
+import Layout from './components/Layout';
 import History from './views/History';
 import Refer from './views/Refer';
 
 import { AuthProvider, useAuth } from './context/AuthContext';
 import './App.css';
 
-const ProtectedRoute = ({ element }) => {
+// ProtectedRoute to handle authentication
+const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useAuth();
-  return isAuthenticated ? element : <Navigate to="/login" />;
+  return isAuthenticated ? children : <Navigate to="/login" />;
 };
 
 const App = () => {
@@ -21,7 +22,7 @@ const App = () => {
     navbar: {},
     mainContent: {
       marginTop: '65px', // Adjust this value based on the height of your Navbar
-      backgroundColor: 'rgba(183, 176, 187, 0.9)',
+      backgroundColor: 'rgb(255, 255, 255)',
     },
   };
 
@@ -31,17 +32,26 @@ const App = () => {
         <Navbar style={styles.navbar} />
         <div style={styles.mainContent}>
           <Routes>
+            {/* Public Routes */}
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<LoginPage />} />
+
+            {/* Protected Routes */}
             <Route
               path="/dashboard"
-              element={<ProtectedRoute element={<DashboardLayout />} />}
+              element={
+                <ProtectedRoute>
+                  <Layout />
+                </ProtectedRoute>
+              }
             >
               <Route index element={<Dashboard />} />
               <Route path="history" element={<History />} />
               <Route path="refer" element={<Refer />} />
             </Route>
+
+            {/* Catch-All Route */}
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </div>
