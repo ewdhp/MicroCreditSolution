@@ -6,7 +6,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build-test",
-            "program": "/home/ewd/MicroCreditSolution/MicroCredit/bin/Debug/net9.0/MicroCredit.dll",
+            "program": "{your path}/bin/Debug/net9.0/MicroCredit.dll",
             "args": [],
             "cwd": "${workspaceFolder}",
             "stopAtEntry": false,
@@ -17,9 +17,9 @@
             "env": {
                 "Jwt__Key": "YourSecretKeyHere1234567890!@#$%^&*()_+ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
                 "Jwt__Issuer": "YourIssuerHere",
-                "Twilio__AccountSid": "AC23f88289374bd1212027f88ec0bf0c27",
-                "Twilio__AuthToken": "2269e69c15c86407bbdec1a486657b0a",
-                "Twilio__ServiceSid": "VAc6245af6c94f63ff1903cb8024c918ad"
+                "Twilio__AccountSid": "",
+                "Twilio__AuthToken": "",
+                "Twilio__ServiceSid": ""
             },
             "sourceFileMap": {
                 "/Views": "${workspaceFolder}/Views"
