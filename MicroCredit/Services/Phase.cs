@@ -142,7 +142,7 @@ namespace MicroCredit.Services
         }
         private async Task<PhaseResponse> Approval(PhaseRequest request)
         {
-            _logger.LogInformation("\nApproval ->Active\n");
+            _logger.LogInformation("\nPending ->Active\n");
 
             try
             {
@@ -183,7 +183,7 @@ namespace MicroCredit.Services
 
         private async Task<PhaseResponse> Pay(PhaseRequest request)
         {
-            _logger.LogInformation("\nPay ->Paid\n");
+            _logger.LogInformation("\nActive ->Paid\n");
 
             try
             {
