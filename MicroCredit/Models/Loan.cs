@@ -75,13 +75,5 @@ namespace MicroCredit.Models
                 return InterestRate * Amount * totalDays / totalDays;
             return 0;
         }
-
-        private static Guid GetCurrentUserId()
-        {
-            // Replace this with your actual logic to retrieve the current user's ID
-            // For example, if using ASP.NET Core, you might use:
-            // return Guid.Parse(HttpContext.Current.User.FindFirst(ClaimTypes.NameIdentifier).Value);
-            return Guid.NewGuid(); // Placeholder for demonstration
-        }
     }
 }
