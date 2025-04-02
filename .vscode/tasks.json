@@ -7,7 +7,7 @@
             "type": "process",
             "args": [
                 "build",
-                "/home/ewd/MicroCreditSolution/MicroCredit/MicroCredit.csproj"
+                "/MicroCreditSolution/MicroCredit/MicroCredit.csproj"
             ],
             "problemMatcher": "$msCompile",
             "group": {
@@ -22,7 +22,7 @@
             "type": "process",
             "args": [
                 "test",
-                "/home/ewd/MicroCreditSolution/MicroCredit.Tests/MicroCredit.Tests.csproj"
+                "/MicroCreditSolution/MicroCredit.Tests/MicroCredit.Tests.csproj"
             ],
             "problemMatcher": "$msCompile"
         },
@@ -45,7 +45,7 @@
             "args": [
                 "watch",
                 "--project",
-                "/home/ewd/MicroCreditSolution/MicroCredit.Tests/MicroCredit.Tests.csproj"
+                "/MicroCreditSolution/MicroCredit.Tests/MicroCredit.Tests.csproj"
             ],
             "problemMatcher": "$msCompile",
             "detail": "Watch the MicroCredit.Tests.csproj project and run tests on changes"
