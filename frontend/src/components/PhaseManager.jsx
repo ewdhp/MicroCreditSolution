@@ -9,6 +9,7 @@ const PhaseManager = () => {
     const { amount } = useContext(LoanContext);
     const [isFirstLoad, setIsFirstLoad] = useState(true);
     const [isLoading, setIsLoading] = useState(false); // Add loading state
+    const [loanStatus, setLoanStatus] = useState(null); // Track loan status
 
     const fetchPhaseData = async (request) => {
         const token = localStorage.getItem('token'); 
@@ -38,7 +39,8 @@ const PhaseManager = () => {
                     if (loanData.status === 7) {
                         fetchPhaseData({ Amount: 0 });
                         return;
-                    }    
+                    }
+                    setLoanStatus(loanData.status); // Update loan status
                     setPhaseData({
                         component: ComponentToRender, 
                         props: { loan: loanData }
@@ -72,6 +74,18 @@ const PhaseManager = () => {
             setIsFirstLoad(false);
         }
     }, [isFirstLoad]);
+
+    // Automatically fetch data every 5 seconds if loanStatus > 1
+    useEffect(() => {
+        if (loanStatus > 1) {
+            const interval = setInterval(() => {
+                console.log("Auto-fetching data...");
+                fetchPhaseData({ Amount: 0 });
+            }, 2000); // Fetch every 5 seconds
+
+            return () => clearInterval(interval); // Cleanup interval on unmount
+        }
+    }, [loanStatus]);
 
     // Show the loader if loading or phase is not yet set
     if (isLoading || !phase) {
