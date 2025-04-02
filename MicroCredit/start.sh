@@ -17,7 +17,7 @@ else
 fi
 
 # Run the application
-dotnet run
+dotnet build && dotnet run
 
 #curl -k -X POST "https://localhost:5001/api/auth/send" -H "Content-Type: application/json" -d '{"phone": "+523321890176"}'
 #curl -k -X POST "https://localhost:5001/api/auth/verify"  -H "Content-Type: application/json" -d '{"phone": "+523321890176", "code": "133589"}'

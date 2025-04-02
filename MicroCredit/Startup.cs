@@ -13,6 +13,7 @@ using MicroCredit.Data;
 using System.Net.Http;
 using System;
 using MicroCredit.Services.Auth;
+
 namespace MicroCredit
 {
     public class Startup
@@ -27,10 +28,9 @@ namespace MicroCredit
         public void ConfigureServices(IServiceCollection services)
         {
             // Register services
-            services.AddDbContext<UDbContext>
-            (options => options.UseNpgsql
-            (Configuration.GetConnectionString
-            ("DefaultConnection")));
+            services.AddDbContext<UDbContext>(options =>
+                options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection")));
+
             services.AddScoped<JwtTokenService>();
             services.AddScoped<FingerprintService>();
 
@@ -119,6 +119,10 @@ namespace MicroCredit
             {
                 options.AddPolicy("UserPolicy", policy => policy.RequireClaim("UserId"));
             });
+
+            // Register FileWatcherService and CleanupBackgroundService
+            services.AddSingleton<FileWatcherService>();
+            services.AddHostedService<CleanupBackgroundService>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -152,13 +156,10 @@ namespace MicroCredit
             // Add JwtMiddleware for HTTP requests
             app.UseMiddleware<JwtMiddleware>();
 
-            // Add WebSocketAuthMiddleware for 
-            // WebSocket requests
+            // Add WebSocketAuthMiddleware for WebSocket requests
             app.UseMiddleware<UnifiedAuth>();
 
-            // Lock middleware
-            // to prevent multiple requests
-            // from the same user
+            // Lock middleware to prevent multiple requests from the same user
             app.UseMiddleware<UserRequestLockMiddleware>();
 
             app.UseEndpoints(endpoints =>
